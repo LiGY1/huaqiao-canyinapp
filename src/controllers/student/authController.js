@@ -5,8 +5,10 @@ const { USER_ROLES } = require("../../config/constants");
 
 exports.login = async (req, res) => {
   try {
+    // 解构出请求体中的用户名和密码
     const { username, password } = req.body;
 
+    // 如果用户名或密码为空，返回错误
     if (!username || !password) {
       return error(res, "请提供用户名和密码", 400);
     }

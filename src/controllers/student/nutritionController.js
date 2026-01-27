@@ -1,12 +1,12 @@
-const chalk = require('chalk');
-const NutritionRecord = require('../../models/NutritionRecord');
-const Order = require('../../models/Order');
-const AIReport = require('../../models/AIReport');
-const AIChatHistory = require('../../models/AIChatHistory');
-const { success, error } = require('../../utils/responseFormatter');
-const { getStartOfDay, getEndOfDay, getWeekRange, getMonthRange, formatDate } = require('../../utils/dateUtils');
-const axios = require('axios');
-const DIFY_CONFIG = require('../../config/dify');
+const chalk = require("chalk");
+const NutritionRecord = require("../../models/NutritionRecord");
+const Order = require("../../models/Order");
+const AIReport = require("../../models/AIReport");
+const AIChatHistory = require("../../models/AIChatHistory");
+const { success, error } = require("../../utils/responseFormatter");
+const { getStartOfDay, getEndOfDay, getWeekRange, getMonthRange, formatDate } = require("../../utils/dateUtils");
+const axios = require("axios");
+const DIFY_CONFIG = require("../../config/dify");
 
 // 获取今日餐次状态（统一接口）
 exports.getMealStatus = async (req, res) => {
@@ -21,32 +21,32 @@ exports.getMealStatus = async (req, res) => {
       user: userId,
       date: {
         $gte: todayStart,
-        $lte: todayEnd
-      }
+        $lte: todayEnd,
+      },
     });
 
     const mealStatus = {
       breakfast: false,
       lunch: false,
-      dinner: false
+      dinner: false,
     };
 
     if (record && record.meals && record.meals.length > 0) {
       // 从营养记录的meals中提取餐次
-      record.meals.forEach(meal => {
-        if (meal.mealType === 'breakfast') {
+      record.meals.forEach((meal) => {
+        if (meal.mealType === "breakfast") {
           mealStatus.breakfast = true;
-        } else if (meal.mealType === 'lunch') {
+        } else if (meal.mealType === "lunch") {
           mealStatus.lunch = true;
-        } else if (meal.mealType === 'dinner') {
+        } else if (meal.mealType === "dinner") {
           mealStatus.dinner = true;
         }
       });
 
-      console.log('✅ 从营养记录获取餐次状态:', mealStatus);
+      console.log("✅ 从营养记录获取餐次状态:", mealStatus);
       return success(res, {
         date: formatDate(today),
-        ...mealStatus
+        ...mealStatus,
       });
     }
 
@@ -54,71 +54,73 @@ exports.getMealStatus = async (req, res) => {
     // 使用日期字符串比较，避免时区问题
     // 获取今天的本地日期字符串（YYYY-MM-DD）
     const todayLocal = new Date();
-    const todayLocalStr = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth() + 1).padStart(2, '0')}-${String(todayLocal.getDate()).padStart(2, '0')}`;
-    
+    const todayLocalStr = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth() + 1).padStart(2, "0")}-${String(todayLocal.getDate()).padStart(2, "0")}`;
+
     // 获取最近3天的订单（考虑时区问题，扩展查询范围）
     const threeDaysAgo = new Date(todayStart);
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 2); // 向前2天，确保包含所有今天的订单
-    
+
     const recentOrders = await Order.find({
       user: userId,
-      $or: [
-        { orderDate: { $gte: threeDaysAgo } },
-        { scheduledDate: { $gte: threeDaysAgo } }
-      ],
-      status: { $in: ['paid', 'preparing', 'ready', 'completed'] }
+      $or: [{ orderDate: { $gte: threeDaysAgo } }, { scheduledDate: { $gte: threeDaysAgo } }],
+      status: { $in: ["paid", "preparing", "ready", "completed"] },
     }).sort({ orderDate: -1 });
-    
+
     // 过滤出今天的订单（比较日期字符串）
     // 将订单日期转换为本地日期字符串进行比较
-    const orders = recentOrders.filter(order => {
+    const orders = recentOrders.filter((order) => {
       if (!order.orderDate && !order.scheduledDate) return false;
-      
+
       // 将订单日期转换为本地日期字符串
       const getLocalDateStr = (date) => {
         if (!date) return null;
         const d = new Date(date);
         const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, "0");
+        const day = String(d.getDate()).padStart(2, "0");
         return `${year}-${month}-${day}`;
       };
-      
+
       const orderDateLocalStr = getLocalDateStr(order.orderDate);
       const scheduledDateLocalStr = getLocalDateStr(order.scheduledDate);
-      
+
       // 匹配今天的本地日期
       return orderDateLocalStr === todayLocalStr || scheduledDateLocalStr === todayLocalStr;
     });
 
-    orders.forEach(order => {
-      if (order.mealType === 'breakfast') {
+    orders.forEach((order) => {
+      if (order.mealType === "breakfast") {
         mealStatus.breakfast = true;
-      } else if (order.mealType === 'lunch') {
+      } else if (order.mealType === "lunch") {
         mealStatus.lunch = true;
-      } else if (order.mealType === 'dinner') {
+      } else if (order.mealType === "dinner") {
         mealStatus.dinner = true;
       }
     });
 
-    console.log('✅ 从订单获取餐次状态:', mealStatus, `(找到${orders.length}个订单)`);
-    console.log('📅 今天本地日期:', todayLocalStr);
+    console.log("✅ 从订单获取餐次状态:", mealStatus, `(找到${orders.length}个订单)`);
+    console.log("📅 今天本地日期:", todayLocalStr);
     if (orders.length > 0) {
-      console.log('📋 订单详情:', orders.map(o => ({
-        mealType: o.mealType,
-        orderDate: o.orderDate ? new Date(o.orderDate).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) : null,
-        scheduledDate: o.scheduledDate ? new Date(o.scheduledDate).toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' }) : null,
-        status: o.status
-      })));
+      console.log(
+        "📋 订单详情:",
+        orders.map((o) => ({
+          mealType: o.mealType,
+          orderDate: o.orderDate ? new Date(o.orderDate).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" }) : null,
+          scheduledDate: o.scheduledDate
+            ? new Date(o.scheduledDate).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })
+            : null,
+          status: o.status,
+        })),
+      );
     }
-    
+
     success(res, {
       date: todayLocalStr,
-      ...mealStatus
+      ...mealStatus,
     });
   } catch (err) {
-    console.error('获取餐次状态失败:', err);
-    error(res, '获取餐次状态失败', 500);
+    console.error("获取餐次状态失败:", err);
+    error(res, "获取餐次状态失败", 500);
   }
 };
 
@@ -133,8 +135,8 @@ exports.getTodayNutrition = async (req, res) => {
       user: userId,
       date: {
         $gte: todayStart,
-        $lte: todayEnd
-      }
+        $lte: todayEnd,
+      },
     });
 
     const targetCalories = req.user.targetCalories || 2000;
@@ -143,57 +145,54 @@ exports.getTodayNutrition = async (req, res) => {
     const targetCarbs = 250;
     const targetFiber = 25;
 
-    const intake = record ? record.intake : {
-      calories: 0,
-      protein: 0,
-      fat: 0,
-      carbs: 0,
-      fiber: 0,
-      vitaminC: 0,
-      iron: 0
-    };
+    const intake = record
+      ? record.intake
+      : {
+          calories: 0,
+          protein: 0,
+          fat: 0,
+          carbs: 0,
+          fiber: 0,
+          vitaminC: 0,
+          iron: 0,
+        };
 
     // 从订单中获取餐次信息（始终从订单获取，确保数据最新）
     const todayLocal = new Date();
-    const todayLocalStr = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth() + 1).padStart(2, '0')}-${String(todayLocal.getDate()).padStart(2, '0')}`;
-    
+    const todayLocalStr = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth() + 1).padStart(2, "0")}-${String(todayLocal.getDate()).padStart(2, "0")}`;
+
     const threeDaysAgo = new Date(todayStart);
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 2);
-    
+
     const recentOrders = await Order.find({
       user: userId,
-      $or: [
-        { orderDate: { $gte: threeDaysAgo } },
-        { scheduledDate: { $gte: threeDaysAgo } }
-      ],
-      status: { $in: ['paid', 'preparing', 'ready', 'completed'] }
+      $or: [{ orderDate: { $gte: threeDaysAgo } }, { scheduledDate: { $gte: threeDaysAgo } }],
+      status: { $in: ["paid", "preparing", "ready", "completed"] },
     }).sort({ orderDate: -1 });
-    
+
     const getLocalDateStr = (date) => {
       if (!date) return null;
       const d = new Date(date);
       const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
     };
-    
-    const todayOrders = recentOrders.filter(order => {
+
+    const todayOrders = recentOrders.filter((order) => {
       if (!order.orderDate && !order.scheduledDate) return false;
       const orderDateLocalStr = getLocalDateStr(order.orderDate);
       const scheduledDateLocalStr = getLocalDateStr(order.scheduledDate);
       return orderDateLocalStr === todayLocalStr || scheduledDateLocalStr === todayLocalStr;
     });
-    
+
     // 构建 meals 数组（始终从订单构建，确保完整性）
-    const meals = todayOrders.map(order => ({
+    const meals = todayOrders.map((order) => ({
       order: order._id,
       mealType: order.mealType,
       time: order.orderDate || order.scheduledDate,
-      items: order.items.map(item => item.dishName)
+      items: order.items.map((item) => item.dishName),
     }));
-    
-    console.log('✅ 从订单构建餐次信息:', meals.length, '个餐次', meals.map(m => m.mealType));
 
     success(res, {
       date: formatDate(today),
@@ -211,68 +210,124 @@ exports.getTodayNutrition = async (req, res) => {
       targetFiber,
       targetVitaminC: 100,
       targetIron: 15,
-      meals: meals // 返回餐次信息
+      meals: meals, // 返回餐次信息
     });
   } catch (err) {
     console.error(err);
-    error(res, '获取今日营养失败', 500);
+    error(res, "获取今日营养失败", 500);
   }
+};
+
+/**
+ * 1. 提取用户营养目标（处理默认值）
+ */
+const getUserTargets = (user) => ({
+  calories: user.targetCalories || 2000,
+  protein: user.targetProtein || 75,
+  fat: user.targetFat || 60,
+  carbs: user.targetCarbs || 300, // 补充碳水默认值
+  fiber: user.targetFiber || 25,
+});
+
+/**
+ * 2. 核心算法：将分散的记录聚合为7天的数组数据
+ * 处理了“一天多条记录”的累加逻辑
+ */
+const aggregateDailyRecords = (records) => {
+  // 初始化数据结构
+  const data = {
+    calories: new Array(7).fill(0),
+    protein: new Array(7).fill(0),
+    fat: new Array(7).fill(0),
+    carbs: new Array(7).fill(0),
+    fiber: new Array(7).fill(0),
+  };
+
+  records.forEach((record) => {
+    if (!record.intake) return;
+
+    // 计算索引：周一为0，周日为6
+    const dayIndex = new Date(record.date).getDay();
+    const idx = dayIndex === 0 ? 6 : dayIndex - 1;
+
+    // 累加数据 (修复了原代码覆盖数据的 bug)
+    data.calories[idx] += record.intake.calories || 0;
+    data.protein[idx] += record.intake.protein || 0;
+    data.fat[idx] += record.intake.fat || 0;
+    data.carbs[idx] += record.intake.carbs || 0;
+    data.fiber[idx] += record.intake.fiber || 0;
+  });
+
+  return data;
+};
+
+/**
+ * 3. 计算周平均值和营养得分
+ */
+const calculateMetrics = (dailyData, targets) => {
+  // 辅助：数组求和
+  const sum = (arr) => arr.reduce((a, b) => a + b, 0);
+
+  // 辅助：计算单项分数 (上限100)
+  // 逻辑：(周总摄入 / 7天 / 目标值) * 100
+  const calcScore = (arr, targetVal) => {
+    if (!targetVal) return 0;
+    const weeklyAvg = sum(arr) / 7;
+    return Math.min(100, Math.round((weeklyAvg / targetVal) * 100));
+  };
+
+  const avgCalories = Math.round(sum(dailyData.calories) / 7);
+
+  return {
+    avgCalories,
+    calorieDeficit: avgCalories * 7 - targets.calories * 7,
+    scores: {
+      // 如果你的业务逻辑是用卡路里完成度代表碳水，保留原逻辑；这里我按碳水计算
+      carbs: calcScore(dailyData.carbs, targets.carbs),
+      protein: calcScore(dailyData.protein, targets.protein),
+      fat: calcScore(dailyData.fat, targets.fat),
+      fiber: calcScore(dailyData.fiber, targets.fiber),
+      vitamin: 80, // 暂时硬编码
+    },
+  };
 };
 
 exports.getWeeklyReport = async (req, res) => {
   try {
+    // ---------- 1. 取出用户id --------------
     const userId = req.user._id;
+
+    // ---------- 2. 得到本周的时间范围 --------------
     const { start, end } = getWeekRange();
 
+    // ---------- 3. 数据库查询 --------------
     const records = await NutritionRecord.find({
       user: userId,
-      date: { $gte: start, $lte: end }
-    }).sort({ date: 1 });
+      date: { $gte: start, $lte: end },
+    }).lean();
 
-    const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-    const dailyCalories = new Array(7).fill(0);
-    const dailyProtein = new Array(7).fill(0);
-    const dailyFat = new Array(7).fill(0);
-    const dailyCarbs = new Array(7).fill(0);
-    const dailyFiber = new Array(7).fill(0);
+    const dailyData = aggregateDailyRecords(records);
+    const targets = getUserTargets(req.user);
+    const metrics = calculateMetrics(dailyData, targets);
 
-    records.forEach(record => {
-      const dayIndex = new Date(record.date).getDay();
-      const adjustedIndex = dayIndex === 0 ? 6 : dayIndex - 1;
-
-      dailyCalories[adjustedIndex] = record.intake.calories || 0;
-      dailyProtein[adjustedIndex] = record.intake.protein || 0;
-      dailyFat[adjustedIndex] = record.intake.fat || 0;
-      dailyCarbs[adjustedIndex] = record.intake.carbs || 0;
-      dailyFiber[adjustedIndex] = record.intake.fiber || 0;
-    });
-
-    const avgCalories = Math.round(dailyCalories.reduce((a, b) => a + b, 0) / 7);
-    const targetCalories = req.user.targetCalories || 2000;
-
+    const days = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
     success(res, {
       weekRange: `${formatDate(start)} 至 ${formatDate(end)}`,
-      dailyCalories,
-      dailyProtein,
-      dailyFat,
-      dailyCarbs,
-      dailyFiber,
       days,
-      avgCalories,
-      targetCalories,
-      calorieDeficit: avgCalories * 7 - targetCalories * 7,
+      dailyCalories: dailyData.calories,
+      dailyProtein: dailyData.protein,
+      dailyFat: dailyData.fat,
+      dailyCarbs: dailyData.carbs,
+      dailyFiber: dailyData.fiber,
+      avgCalories: metrics.avgCalories,
+      targetCalories: targets.calories,
+      calorieDeficit: metrics.calorieDeficit,
       avgSugar: 45,
-      nutritionScore: {
-        carbs: Math.min(100, Math.round((avgCalories / targetCalories) * 100)),
-        protein: Math.min(100, Math.round((dailyProtein.reduce((a, b) => a + b, 0) / 7 / 75) * 100)),
-        fat: Math.min(100, Math.round((dailyFat.reduce((a, b) => a + b, 0) / 7 / 60) * 100)),
-        fiber: Math.min(100, Math.round((dailyFiber.reduce((a, b) => a + b, 0) / 7 / 25) * 100)),
-        vitamin: 80
-      }
+      nutritionScore: metrics.scores,
     });
   } catch (err) {
-    console.error(err);
-    error(res, '获取周报失败', 500);
+    console.error("Weekly report error:", err);
+    error(res, "获取周报失败", 500);
   }
 };
 
@@ -283,13 +338,13 @@ exports.getMonthlyReport = async (req, res) => {
 
     const records = await NutritionRecord.find({
       user: userId,
-      date: { $gte: start, $lte: end }
+      date: { $gte: start, $lte: end },
     }).sort({ date: 1 });
 
     const daysInMonth = new Date(end.getFullYear(), end.getMonth() + 1, 0).getDate();
     const dailyCalories = new Array(daysInMonth).fill(0);
 
-    records.forEach(record => {
+    records.forEach((record) => {
       const day = new Date(record.date).getDate();
       dailyCalories[day - 1] = record.intake.calories || 0;
     });
@@ -302,23 +357,23 @@ exports.getMonthlyReport = async (req, res) => {
       month: `${end.getFullYear()}年${end.getMonth() + 1}月`,
       dailyCalories,
       avgCalories,
-      targetCalories
+      targetCalories,
     });
   } catch (err) {
     console.error(err);
-    error(res, '获取月报失败', 500);
+    error(res, "获取月报失败", 500);
   }
 };
 
 function parseAIResponse(aiText) {
-  const lines = aiText.split('\n').filter(line => line.trim());
+  const lines = aiText.split("\n").filter((line) => line.trim());
 
   const result = {
-    summary: '',
+    summary: "",
     highlights: [],
     suggestions: [],
-    nextPlan: '',
-    fullText: aiText
+    nextPlan: "",
+    fullText: aiText,
   };
 
   let currentSection = null;
@@ -326,28 +381,36 @@ function parseAIResponse(aiText) {
   for (const line of lines) {
     const trimmed = line.trim();
 
-    if (trimmed.includes('总体评价') || trimmed.includes('总结')) {
-      currentSection = 'summary';
+    if (trimmed.includes("总体评价") || trimmed.includes("总结")) {
+      currentSection = "summary";
       continue;
-    } else if (trimmed.includes('亮点') || trimmed.includes('成就') || trimmed.includes('进步')) {
-      currentSection = 'highlights';
+    } else if (trimmed.includes("亮点") || trimmed.includes("成就") || trimmed.includes("进步")) {
+      currentSection = "highlights";
       continue;
-    } else if (trimmed.includes('建议') || trimmed.includes('改进')) {
-      currentSection = 'suggestions';
+    } else if (trimmed.includes("建议") || trimmed.includes("改进")) {
+      currentSection = "suggestions";
       continue;
-    } else if (trimmed.includes('下周') || trimmed.includes('下月') || trimmed.includes('计划') || trimmed.includes('目标')) {
-      currentSection = 'nextPlan';
+    } else if (
+      trimmed.includes("下周") ||
+      trimmed.includes("下月") ||
+      trimmed.includes("计划") ||
+      trimmed.includes("目标")
+    ) {
+      currentSection = "nextPlan";
       continue;
     }
 
-    if (currentSection === 'summary' && trimmed) {
-      result.summary += (result.summary ? ' ' : '') + trimmed;
-    } else if (currentSection === 'highlights' && (trimmed.startsWith('') || trimmed.startsWith('') || trimmed.match(/^\d+\./))) {
+    if (currentSection === "summary" && trimmed) {
+      result.summary += (result.summary ? " " : "") + trimmed;
+    } else if (
+      currentSection === "highlights" &&
+      (trimmed.startsWith("") || trimmed.startsWith("") || trimmed.match(/^\d+\./))
+    ) {
       result.highlights.push(trimmed);
-    } else if (currentSection === 'suggestions' && (trimmed.match(/^\d+\./) || trimmed.startsWith('-'))) {
-      result.suggestions.push(trimmed.replace(/^\d+\.\s*/, '').replace(/^-\s*/, ''));
-    } else if (currentSection === 'nextPlan' && trimmed) {
-      result.nextPlan += (result.nextPlan ? ' ' : '') + trimmed;
+    } else if (currentSection === "suggestions" && (trimmed.match(/^\d+\./) || trimmed.startsWith("-"))) {
+      result.suggestions.push(trimmed.replace(/^\d+\.\s*/, "").replace(/^-\s*/, ""));
+    } else if (currentSection === "nextPlan" && trimmed) {
+      result.nextPlan += (result.nextPlan ? " " : "") + trimmed;
     }
   }
 
@@ -361,32 +424,26 @@ function parseAIResponse(aiText) {
 
 async function callDifyAPI(prompt) {
   try {
-    console.log('调用 Dify API...');
-    console.log('API URL:', DIFY_CONFIG.apiUrl);
-    console.log('超时设置:', DIFY_CONFIG.timeout, 'ms');
-
     const response = await axios.post(
       DIFY_CONFIG.apiUrl,
       {
         inputs: {},
         query: prompt,
-        response_mode: 'blocking',
-        conversation_id: '',
-        user: 'student-nutrition-report'
+        response_mode: "blocking",
+        conversation_id: "",
+        user: "student-nutrition-report",
       },
       {
         headers: {
-          'Authorization': `Bearer ${DIFY_CONFIG.apiKey}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${DIFY_CONFIG.apiKey}`,
+          "Content-Type": "application/json",
         },
-        timeout: DIFY_CONFIG.timeout
-      }
+        timeout: DIFY_CONFIG.timeout,
+      },
     );
 
-    console.log(chalk.green('[Dify] API 调用成功'));
-
     const result = response.data;
-    let aiText = '';
+    let aiText = "";
 
     if (result.answer) {
       aiText = result.answer;
@@ -396,247 +453,269 @@ async function callDifyAPI(prompt) {
       aiText = JSON.stringify(result);
     }
 
-    console.log('AI 响应长度:', aiText.length, '字符');
-
     return {
       success: true,
       text: aiText,
-      conversationId: result.conversation_id || ''
+      conversationId: result.conversation_id || "",
     };
   } catch (err) {
-    console.error(chalk.red('Dify API 调用失败:'), err.message);
-    
+    console.error(chalk.red("Dify API 调用失败:"), err.message);
+
     // 详细错误日志
-    if (err.code === 'ECONNREFUSED') {
-      console.error(chalk.red('  原因: 连接被拒绝 - Dify 服务可能未运行'));
-    } else if (err.code === 'ETIMEDOUT' || err.message.includes('timeout')) {
-      console.error(chalk.red('  原因: 连接超时 - Dify 服务不可达'));
-    } else if (err.code === 'ENOTFOUND') {
-      console.error(chalk.red('  原因: 域名/IP 无法解析'));
+    if (err.code === "ECONNREFUSED") {
+      console.error(chalk.red("  原因: 连接被拒绝 - Dify 服务可能未运行"));
+    } else if (err.code === "ETIMEDOUT" || err.message.includes("timeout")) {
+      console.error(chalk.red("  原因: 连接超时 - Dify 服务不可达"));
+    } else if (err.code === "ENOTFOUND") {
+      console.error(chalk.red("  原因: 域名/IP 无法解析"));
     } else if (err.response) {
-      console.error(chalk.red('  HTTP状态:'), err.response.status);
-      console.error(chalk.red('  错误详情:'), err.response.data);
+      console.error(chalk.red("  HTTP状态:"), err.response.status);
+      console.error(chalk.red("  错误详情:"), err.response.data);
     }
 
     return {
       success: false,
       error: err.message,
-      errorCode: err.code
+      errorCode: err.code,
     };
   }
 }
 
-exports.generateAIReport = async (req, res) => {
-  try {
-    const userId = req.user._id;
-    const { reportType = 'weekly' } = req.body;
+/**
+ * 1. 获取日期范围
+ */
+const getDateRange = (type) => {
+  if (type === "weekly") {
+    // 假设 getWeekRange 返回标准 Date 对象
+    return getWeekRange();
+  } else {
+    // 假设 getMonthRange 返回标准 Date 对象
+    return getMonthRange();
+  }
+};
 
-    let dateRange, records, dataSummary, prompt;
+/**
+ * 2. 核心：聚合数据库记录到每日数组
+ * 解决了原代码中用 '=' 导致数据被覆盖的 Bug，改为 '+='
+ */
+const aggregateRecords = (records, type, endDate) => {
+  // 确定数组长度：周报7天，月报则是当月总天数
+  const totalDays = type === "weekly" ? 7 : new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0).getDate();
 
-    if (reportType === 'weekly') {
+  const data = {
+    calories: new Array(totalDays).fill(0),
+    protein: new Array(totalDays).fill(0),
+    fat: new Array(totalDays).fill(0),
+    carbs: new Array(totalDays).fill(0),
+    fiber: new Array(totalDays).fill(0),
+    totalDays, // 保存总天数供后续计算使用
+  };
 
-      const { start, end } = getWeekRange();
-      dateRange = { start, end };
+  records.forEach((record) => {
+    if (!record.intake) return;
 
-      records = await NutritionRecord.find({
-        user: userId,
-        date: { $gte: start, $lte: end }
-      }).sort({ date: 1 });
+    let idx;
+    const date = new Date(record.date);
 
-      const days = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-      const dailyCalories = new Array(7).fill(0);
-      const dailyProtein = new Array(7).fill(0);
-      const dailyFat = new Array(7).fill(0);
-      const dailyCarbs = new Array(7).fill(0);
-      const dailyFiber = new Array(7).fill(0);
-
-      records.forEach(record => {
-        const dayIndex = new Date(record.date).getDay();
-        const adjustedIndex = dayIndex === 0 ? 6 : dayIndex - 1;
-
-        dailyCalories[adjustedIndex] = record.intake.calories || 0;
-        dailyProtein[adjustedIndex] = record.intake.protein || 0;
-        dailyFat[adjustedIndex] = record.intake.fat || 0;
-        dailyCarbs[adjustedIndex] = record.intake.carbs || 0;
-        dailyFiber[adjustedIndex] = record.intake.fiber || 0;
-      });
-
-      const avgCalories = Math.round(dailyCalories.reduce((a, b) => a + b, 0) / 7);
-      const avgProtein = Math.round(dailyProtein.reduce((a, b) => a + b, 0) / 7);
-      const avgFat = Math.round(dailyFat.reduce((a, b) => a + b, 0) / 7);
-      const avgCarbs = Math.round(dailyCarbs.reduce((a, b) => a + b, 0) / 7);
-      const avgFiber = Math.round(dailyFiber.reduce((a, b) => a + b, 0) / 7);
-      const targetCalories = req.user.targetCalories || 2000;
-
-      dataSummary = {
-        avgCalories,
-        avgProtein,
-        avgFat,
-        avgCarbs,
-        avgFiber,
-        totalDays: 7,
-        targetCalories,
-        nutritionScore: {
-          carbs: Math.min(100, Math.round((avgCalories / targetCalories) * 100)),
-          protein: Math.min(100, Math.round((avgProtein / 75) * 100)),
-          fat: Math.min(100, Math.round((avgFat / 60) * 100)),
-          fiber: Math.min(100, Math.round((avgFiber / 25) * 100)),
-          vitamin: 80
-        }
-      };
-
-      const dailyDataStr = days.map((day, idx) =>
-        `${day}: 热量${dailyCalories[idx]}千卡, 蛋白质${dailyProtein[idx]}g, 脂肪${dailyFat[idx]}g, 碳水${dailyCarbs[idx]}g, 纤维${dailyFiber[idx]}g`
-      ).join('\n');
-
-      prompt = DIFY_CONFIG.weeklyPrompt
-        .replace('{avgCalories}', avgCalories)
-        .replace('{targetCalories}', targetCalories)
-        .replace('{avgProtein}', avgProtein)
-        .replace('{avgFat}', avgFat)
-        .replace('{avgCarbs}', avgCarbs)
-        .replace('{avgFiber}', avgFiber)
-        .replace('{totalDays}', 7)
-        .replace('{dateRange}', `${formatDate(start)} 至 ${formatDate(end)}`)
-        .replace('{dailyData}', dailyDataStr)
-        .replace('{scoreCarbs}', dataSummary.nutritionScore.carbs)
-        .replace('{scoreProtein}', dataSummary.nutritionScore.protein)
-        .replace('{scoreFat}', dataSummary.nutritionScore.fat)
-        .replace('{scoreFiber}', dataSummary.nutritionScore.fiber)
-        .replace('{scoreVitamin}', dataSummary.nutritionScore.vitamin);
-
-      prompt = `STU1_FE_BG,${prompt}`;
-
+    if (type === "weekly") {
+      // 周报索引：周一(0) - 周日(6)
+      const dayIndex = date.getDay();
+      idx = dayIndex === 0 ? 6 : dayIndex - 1;
     } else {
-
-      const { start, end } = getMonthRange();
-      dateRange = { start, end };
-
-      records = await NutritionRecord.find({
-        user: userId,
-        date: { $gte: start, $lte: end }
-      }).sort({ date: 1 });
-
-      const daysInMonth = new Date(end.getFullYear(), end.getMonth() + 1, 0).getDate();
-      const dailyCalories = new Array(daysInMonth).fill(0);
-      const dailyProtein = new Array(daysInMonth).fill(0);
-      const dailyFat = new Array(daysInMonth).fill(0);
-      const dailyCarbs = new Array(daysInMonth).fill(0);
-      const dailyFiber = new Array(daysInMonth).fill(0);
-
-      records.forEach(record => {
-        const day = new Date(record.date).getDate();
-        dailyCalories[day - 1] = record.intake.calories || 0;
-        dailyProtein[day - 1] = record.intake.protein || 0;
-        dailyFat[day - 1] = record.intake.fat || 0;
-        dailyCarbs[day - 1] = record.intake.carbs || 0;
-        dailyFiber[day - 1] = record.intake.fiber || 0;
-      });
-
-      const totalCalories = dailyCalories.reduce((a, b) => a + b, 0);
-      const avgCalories = Math.round(totalCalories / daysInMonth);
-      const avgProtein = Math.round(dailyProtein.reduce((a, b) => a + b, 0) / daysInMonth);
-      const avgFat = Math.round(dailyFat.reduce((a, b) => a + b, 0) / daysInMonth);
-      const avgCarbs = Math.round(dailyCarbs.reduce((a, b) => a + b, 0) / daysInMonth);
-      const avgFiber = Math.round(dailyFiber.reduce((a, b) => a + b, 0) / daysInMonth);
-      const targetCalories = req.user.targetCalories || 2000;
-
-      dataSummary = {
-        avgCalories,
-        avgProtein,
-        avgFat,
-        avgCarbs,
-        avgFiber,
-        totalDays: daysInMonth,
-        targetCalories,
-        nutritionScore: {
-          carbs: Math.min(100, Math.round((avgCalories / targetCalories) * 100)),
-          protein: Math.min(100, Math.round((avgProtein / 75) * 100)),
-          fat: Math.min(100, Math.round((avgFat / 60) * 100)),
-          fiber: Math.min(100, Math.round((avgFiber / 25) * 100)),
-          vitamin: 80
-        }
-      };
-
-      const weeks = Math.ceil(daysInMonth / 7);
-      const weeklyTrend = [];
-      for (let w = 0; w < weeks; w++) {
-        const weekStart = w * 7;
-        const weekEnd = Math.min((w + 1) * 7, daysInMonth);
-        const weekCalories = dailyCalories.slice(weekStart, weekEnd);
-        const weekAvg = Math.round(weekCalories.reduce((a, b) => a + b, 0) / weekCalories.length);
-        weeklyTrend.push(`第${w + 1}周平均: ${weekAvg}千卡`);
-      }
-
-      prompt = DIFY_CONFIG.monthlyPrompt
-        .replace('{avgCalories}', avgCalories)
-        .replace('{targetCalories}', targetCalories)
-        .replace('{avgProtein}', avgProtein)
-        .replace('{avgFat}', avgFat)
-        .replace('{avgCarbs}', avgCarbs)
-        .replace('{avgFiber}', avgFiber)
-        .replace('{totalDays}', daysInMonth)
-        .replace('{dateRange}', `${formatDate(start)} 至 ${formatDate(end)}`)
-        .replace('{weeklyTrend}', weeklyTrend.join('\n'))
-        .replace('{scoreCarbs}', dataSummary.nutritionScore.carbs)
-        .replace('{scoreProtein}', dataSummary.nutritionScore.protein)
-        .replace('{scoreFat}', dataSummary.nutritionScore.fat)
-        .replace('{scoreFiber}', dataSummary.nutritionScore.fiber)
-        .replace('{scoreVitamin}', dataSummary.nutritionScore.vitamin);
-
-      prompt = `STU1_FE_BG,${prompt}`;
+      // 月报索引：1号(0) - 31号(30)
+      idx = date.getDate() - 1;
     }
 
-    const report = new AIReport({
+    // 安全累加
+    data.calories[idx] += record.intake.calories || 0;
+    data.protein[idx] += record.intake.protein || 0;
+    data.fat[idx] += record.intake.fat || 0;
+    data.carbs[idx] += record.intake.carbs || 0;
+    data.fiber[idx] += record.intake.fiber || 0;
+  });
+
+  return data;
+};
+
+/**
+ * 3. 计算统计数据和评分
+ */
+const calculateStats = (dailyData, userTargets) => {
+  const { totalDays } = dailyData;
+  const sum = (arr) => arr.reduce((a, b) => a + b, 0);
+
+  const avgCalories = Math.round(sum(dailyData.calories) / totalDays);
+  const avgProtein = Math.round(sum(dailyData.protein) / totalDays);
+  const avgFat = Math.round(sum(dailyData.fat) / totalDays);
+  const avgCarbs = Math.round(sum(dailyData.carbs) / totalDays);
+  const avgFiber = Math.round(sum(dailyData.fiber) / totalDays);
+
+  return {
+    avgCalories,
+    avgProtein,
+    avgFat,
+    avgCarbs,
+    avgFiber,
+    totalDays,
+    targetCalories: userTargets.calories,
+    nutritionScore: {
+      carbs: Math.min(100, Math.round((avgCalories / userTargets.calories) * 100)), // 原逻辑似乎是用热量占比代表碳水得分？
+      protein: Math.min(100, Math.round((avgProtein / (userTargets.protein || 75)) * 100)),
+      fat: Math.min(100, Math.round((avgFat / (userTargets.fat || 60)) * 100)),
+      fiber: Math.min(100, Math.round((avgFiber / (userTargets.fiber || 25)) * 100)),
+      vitamin: 80,
+    },
+  };
+};
+
+/**
+ * 4. 构建 Prompt 字符串
+ * 处理周报详情或月报趋势
+ */
+const buildPromptContext = (type, dailyData, stats, dateRange) => {
+  let detailString = "";
+  let baseTemplate = "";
+
+  if (type === "weekly") {
+    const days = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
+    detailString = days
+      .map(
+        (day, i) =>
+          `${day}: 热量${dailyData.calories[i]}千卡, 蛋白质${dailyData.protein[i]}g, 脂肪${dailyData.fat[i]}g, 碳水${dailyData.carbs[i]}g`,
+      )
+      .join("\n");
+    baseTemplate = DIFY_CONFIG.weeklyPrompt;
+  } else {
+    // 月报计算周趋势
+    const weeks = Math.ceil(stats.totalDays / 7);
+    const weeklyTrend = [];
+    for (let w = 0; w < weeks; w++) {
+      const start = w * 7;
+      const end = Math.min((w + 1) * 7, stats.totalDays);
+      const slice = dailyData.calories.slice(start, end);
+      const weekAvg = Math.round(slice.reduce((a, b) => a + b, 0) / slice.length) || 0;
+      weeklyTrend.push(`第${w + 1}周平均: ${weekAvg}千卡`);
+    }
+    detailString = weeklyTrend.join("\n");
+    baseTemplate = DIFY_CONFIG.monthlyPrompt;
+  }
+
+  // 替换通用占位符
+  let prompt = baseTemplate
+    .replace("{avgCalories}", stats.avgCalories)
+    .replace("{targetCalories}", stats.targetCalories)
+    .replace("{avgProtein}", stats.avgProtein)
+    .replace("{avgFat}", stats.avgFat)
+    .replace("{avgCarbs}", stats.avgCarbs)
+    .replace("{avgFiber}", stats.avgFiber)
+    .replace("{totalDays}", stats.totalDays)
+    .replace("{dateRange}", `${formatDate(dateRange.start)} 至 ${formatDate(dateRange.end)}`)
+    .replace("{scoreCarbs}", stats.nutritionScore.carbs)
+    .replace("{scoreProtein}", stats.nutritionScore.protein)
+    .replace("{scoreFat}", stats.nutritionScore.fat)
+    .replace("{scoreFiber}", stats.nutritionScore.fiber)
+    .replace("{scoreVitamin}", stats.nutritionScore.vitamin);
+
+  // 替换特定占位符
+  if (type === "weekly") {
+    prompt = prompt.replace("{dailyData}", detailString);
+  } else {
+    prompt = prompt.replace("{weeklyTrend}", detailString);
+  }
+
+  return `STU1_FE_BG,${prompt}`;
+};
+
+exports.generateAIReport = async (req, res) => {
+  let reportRecord = null;
+
+  try {
+    const userId = req.user._id;
+    const { reportType = "weekly" } = req.body;
+    const { start, end } = getDateRange(reportType);
+    const dateRange = { start, end };
+
+    // 2. 查询数据库 
+    const records = await NutritionRecord.find({
+      user: userId,
+      date: { $gte: start, $lte: end },
+    })
+      .sort({ date: 1 })
+      .lean();    // 调用lean方法
+
+    // 3. 数据聚合与统计
+    const dailyData = aggregateRecords(records, reportType, end);
+    const userTargets = {
+      calories: req.user.targetCalories || 2000,
+      protein: req.user.targetProtein, // 可以为空，helpers里有默认值
+      fat: req.user.targetFat,
+      fiber: req.user.targetFiber,
+    };
+    const dataSummary = calculateStats(dailyData, userTargets);
+
+    // 4. 构建 Prompt
+    const prompt = buildPromptContext(reportType, dailyData, dataSummary, dateRange);
+
+    // 5. 初始化报告记录
+    reportRecord = new AIReport({
       student: userId,
       reportType,
       dateRange,
       dataSummary,
-      status: 'generating'
+      status: "generating",
     });
+    await reportRecord.save();
 
-    await report.save();
-
+    // 6. 调用 AI 服务
     const difyResult = await callDifyAPI(prompt);
 
+    // 7. 处理结果
     if (difyResult.success) {
-
       const parsedContent = parseAIResponse(difyResult.text);
 
-      report.content = parsedContent;
-      report.conversationId = difyResult.conversationId;
-      report.status = 'completed';
-      await report.save();
+      reportRecord.content = parsedContent;
+      reportRecord.conversationId = difyResult.conversationId;
+      reportRecord.status = "completed";
+      await reportRecord.save();
 
       success(res, {
-        reportId: report._id,
+        reportId: reportRecord._id,
         reportType,
         dateRange,
         content: parsedContent,
         dataSummary,
-        createdAt: report.createdAt
+        createdAt: reportRecord.createdAt,
       });
     } else {
-
-      report.status = 'failed';
-      report.errorMessage = difyResult.error;
-      await report.save();
-
-      // 返回更友好的错误信息
-      let errorMessage = 'AI报告生成失败';
-      if (difyResult.errorCode === 'ECONNREFUSED' || difyResult.errorCode === 'ETIMEDOUT') {
-        errorMessage = 'AI服务暂时不可用，请稍后重试或联系管理员检查Dify服务状态';
-      } else if (difyResult.errorCode === 'ENOTFOUND') {
-        errorMessage = 'AI服务配置错误，请联系管理员';
-      }
-
-      error(res, errorMessage, 503); // 503 Service Unavailable
+      // AI 调用失败逻辑
+      await handleAiFailure(reportRecord, difyResult, res);
     }
-
   } catch (err) {
-    console.error('生成AI报告错误:', err);
-    error(res, '生成AI报告失败', 500);
+    console.error("生成AI报告系统错误:", err);
+    // 尝试更新数据库状态为失败
+    if (reportRecord) {
+      reportRecord.status = "failed";
+      reportRecord.errorMessage = "Internal Server Error";
+      await reportRecord.save().catch(() => {});
+    }
+    error(res, "生成AI报告失败", 500);
   }
+};
+
+// 辅助：单独提取 AI 失败处理逻辑
+const handleAiFailure = async (reportModel, result, res) => {
+  reportModel.status = "failed";
+  reportModel.errorMessage = result.error;
+  await reportModel.save();
+
+  let clientMsg = "AI报告生成失败";
+  if (result.errorCode === "ECONNREFUSED" || result.errorCode === "ETIMEDOUT") {
+    clientMsg = "AI服务暂时不可用，请稍后重试";
+  } else if (result.errorCode === "ENOTFOUND") {
+    clientMsg = "AI服务配置错误";
+  }
+
+  error(res, clientMsg, 503);
 };
 
 exports.getAIReportHistory = async (req, res) => {
@@ -646,10 +725,10 @@ exports.getAIReportHistory = async (req, res) => {
 
     const query = {
       student: userId,
-      status: 'completed'
+      status: "completed",
     };
 
-    if (reportType && (reportType === 'weekly' || reportType === 'monthly')) {
+    if (reportType && (reportType === "weekly" || reportType === "monthly")) {
       query.reportType = reportType;
     }
 
@@ -657,7 +736,7 @@ exports.getAIReportHistory = async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(parseInt(limit))
       .skip(parseInt(offset))
-      .select('-__v');
+      .select("-__v");
 
     const total = await AIReport.countDocuments(query);
 
@@ -666,12 +745,11 @@ exports.getAIReportHistory = async (req, res) => {
       total,
       limit: parseInt(limit),
       offset: parseInt(offset),
-      hasMore: total > parseInt(offset) + parseInt(limit)
+      hasMore: total > parseInt(offset) + parseInt(limit),
     });
-
   } catch (err) {
-    console.error('获取报告历史错误:', err);
-    error(res, '获取报告历史失败', 500);
+    console.error("获取报告历史错误:", err);
+    error(res, "获取报告历史失败", 500);
   }
 };
 
@@ -682,74 +760,54 @@ exports.getAIReportById = async (req, res) => {
 
     const report = await AIReport.findOne({
       _id: reportId,
-      student: userId
+      student: userId,
     });
 
     if (!report) {
-      return error(res, '报告不存在', 404);
+      return error(res, "报告不存在", 404);
     }
 
     success(res, report);
-
   } catch (err) {
-    console.error('获取报告详情错误:', err);
-    error(res, '获取报告详情失败', 500);
+    console.error("获取报告详情错误:", err);
+    error(res, "获取报告详情失败", 500);
   }
 };
 
 exports.saveChatHistory = async (req, res) => {
   try {
     const userId = req.user._id;
-    const {
-      conversationId,
-      sender,
-      userMessage,
-      aiMessage,
-      timestamp,
-      metadata,
-      summary,
-      tags,
-      files
-    } = req.body;
+    const { conversationId, sender, userMessage, aiMessage, timestamp, metadata, summary, tags, files } = req.body;
 
-    if (!sender || (sender !== 'user' && sender !== 'ai')) {
-      return error(res, '无效的发送者类型', 400);
+    if (!sender || (sender !== "user" && sender !== "ai")) {
+      return error(res, "无效的发送者类型", 400);
     }
 
     const chatHistory = new AIChatHistory({
       user: userId,
-      source: 'student',
-      conversationId: conversationId || '',
+      source: "student",
+      conversationId: conversationId || "",
       sender,
-      userMessage: userMessage || '',
-      aiMessage: aiMessage || '',
+      userMessage: userMessage || "",
+      aiMessage: aiMessage || "",
       files: files || [],
       timestamp: timestamp ? new Date(timestamp) : new Date(),
       metadata: metadata || {},
-      summary: summary || '',
+      summary: summary || "",
       tags: tags || [],
-      isFavorite: false
+      isFavorite: false,
     });
 
     await chatHistory.save();
 
-    console.log(chalk.green(`[学生] 聊天记录保存成功: ${chatHistory._id} (文件数: ${(files || []).length})`));
-
     const savedChat = await AIChatHistory.findById(chatHistory._id);
-    console.log(' 验证保存后的数据:', {
-      hasFiles: !!savedChat.files,
-      filesLength: savedChat.files?.length || 0,
-      files: savedChat.files
-    });
-
     success(res, {
       chatId: chatHistory._id,
-      message: '聊天记录保存成功'
+      message: "聊天记录保存成功",
     });
-
   } catch (err) {
-    console.error('保存聊天记录错误:', err);
-    error(res, '保存聊天记录失败', 500);
+    console.error("保存聊天记录错误:", err);
+    error(res, "保存聊天记录失败", 500);
   }
 };
 
@@ -759,52 +817,44 @@ exports.saveChatHistoryBatch = async (req, res) => {
     const { messages } = req.body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return error(res, '消息数组不能为空', 400);
+      return error(res, "消息数组不能为空", 400);
     }
 
-    const chatHistories = messages.map(msg => ({
+    const chatHistories = messages.map((msg) => ({
       user: userId,
-      source: 'student',
-      conversationId: msg.conversationId || '',
+      source: "student",
+      conversationId: msg.conversationId || "",
       sender: msg.sender,
-      userMessage: msg.userMessage || '',
-      aiMessage: msg.aiMessage || '',
+      userMessage: msg.userMessage || "",
+      aiMessage: msg.aiMessage || "",
       files: msg.files || [],
       timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date(),
       metadata: msg.metadata || {},
-      summary: msg.summary || '',
+      summary: msg.summary || "",
       tags: msg.tags || [],
-      isFavorite: false
+      isFavorite: false,
     }));
 
     const result = await AIChatHistory.insertMany(chatHistories);
 
     success(res, {
       count: result.length,
-      message: `成功保存${result.length}条聊天记录`
+      message: `成功保存${result.length}条聊天记录`,
     });
-
   } catch (err) {
-    console.error('批量保存聊天记录错误:', err);
-    error(res, '批量保存聊天记录失败', 500);
+    console.error("批量保存聊天记录错误:", err);
+    error(res, "批量保存聊天记录失败", 500);
   }
 };
 
 exports.getChatHistory = async (req, res) => {
   try {
     const userId = req.user._id;
-    const {
-      conversationId,
-      limit = 50,
-      offset = 0,
-      startDate,
-      endDate,
-      isFavorite
-    } = req.query;
+    const { conversationId, limit = 50, offset = 0, startDate, endDate, isFavorite } = req.query;
 
     const query = {
       user: userId,
-      source: 'student'
+      source: "student",
     };
 
     if (conversationId) {
@@ -822,39 +872,27 @@ exports.getChatHistory = async (req, res) => {
     }
 
     if (isFavorite !== undefined) {
-      query.isFavorite = isFavorite === 'true' || isFavorite === true;
+      query.isFavorite = isFavorite === "true" || isFavorite === true;
     }
 
     const chatHistory = await AIChatHistory.find(query)
       .sort({ timestamp: 1 })
       .limit(parseInt(limit))
       .skip(parseInt(offset))
-      .select('-__v');
+      .select("-__v");
 
     const total = await AIChatHistory.countDocuments(query);
-
-    console.log(' 获取聊天记录:', {
-      total,
-      返回数量: chatHistory.length,
-      示例数据: chatHistory.length > 0 ? {
-        id: chatHistory[0]._id,
-        hasFiles: !!chatHistory[0].files,
-        filesCount: chatHistory[0].files?.length || 0,
-        files: chatHistory[0].files
-      } : null
-    });
 
     success(res, {
       chatHistory,
       total,
       limit: parseInt(limit),
       offset: parseInt(offset),
-      hasMore: total > parseInt(offset) + parseInt(limit)
+      hasMore: total > parseInt(offset) + parseInt(limit),
     });
-
   } catch (err) {
-    console.error('获取聊天记录错误:', err);
-    error(res, '获取聊天记录失败', 500);
+    console.error("获取聊天记录错误:", err);
+    error(res, "获取聊天记录失败", 500);
   }
 };
 
@@ -867,37 +905,37 @@ exports.getConversationList = async (req, res) => {
       {
         $match: {
           user: userId,
-          source: 'student',
-          conversationId: { $ne: '' }
-        }
+          source: "student",
+          conversationId: { $ne: "" },
+        },
       },
       {
-        $sort: { timestamp: -1 }
+        $sort: { timestamp: -1 },
       },
       {
         $group: {
-          _id: '$conversationId',
-          lastMessage: { $first: '$$ROOT' },
+          _id: "$conversationId",
+          lastMessage: { $first: "$$ROOT" },
           messageCount: { $sum: 1 },
-          firstTimestamp: { $min: '$timestamp' },
-          lastTimestamp: { $max: '$timestamp' }
-        }
+          firstTimestamp: { $min: "$timestamp" },
+          lastTimestamp: { $max: "$timestamp" },
+        },
       },
       {
-        $sort: { lastTimestamp: -1 }
+        $sort: { lastTimestamp: -1 },
       },
       {
-        $skip: parseInt(offset)
+        $skip: parseInt(offset),
       },
       {
-        $limit: parseInt(limit)
-      }
+        $limit: parseInt(limit),
+      },
     ]);
 
-    const totalConversations = await AIChatHistory.distinct('conversationId', {
+    const totalConversations = await AIChatHistory.distinct("conversationId", {
       user: userId,
-      source: 'student',
-      conversationId: { $ne: '' }
+      source: "student",
+      conversationId: { $ne: "" },
     });
 
     success(res, {
@@ -905,12 +943,11 @@ exports.getConversationList = async (req, res) => {
       total: totalConversations.length,
       limit: parseInt(limit),
       offset: parseInt(offset),
-      hasMore: totalConversations.length > parseInt(offset) + parseInt(limit)
+      hasMore: totalConversations.length > parseInt(offset) + parseInt(limit),
     });
-
   } catch (err) {
-    console.error('获取对话列表错误:', err);
-    error(res, '获取对话列表失败', 500);
+    console.error("获取对话列表错误:", err);
+    error(res, "获取对话列表失败", 500);
   }
 };
 
@@ -922,20 +959,19 @@ exports.deleteChatHistory = async (req, res) => {
     const chatHistory = await AIChatHistory.findOneAndDelete({
       _id: chatId,
       user: userId,
-      source: 'student'
+      source: "student",
     });
 
     if (!chatHistory) {
-      return error(res, '聊天记录不存在', 404);
+      return error(res, "聊天记录不存在", 404);
     }
 
     success(res, {
-      message: '聊天记录删除成功'
+      message: "聊天记录删除成功",
     });
-
   } catch (err) {
-    console.error('删除聊天记录错误:', err);
-    error(res, '删除聊天记录失败', 500);
+    console.error("删除聊天记录错误:", err);
+    error(res, "删除聊天记录失败", 500);
   }
 };
 
@@ -946,18 +982,17 @@ exports.deleteConversation = async (req, res) => {
 
     const result = await AIChatHistory.deleteMany({
       user: userId,
-      source: 'student',
-      conversationId: conversationId
+      source: "student",
+      conversationId: conversationId,
     });
 
     success(res, {
       deletedCount: result.deletedCount,
-      message: `成功删除${result.deletedCount}条聊天记录`
+      message: `成功删除${result.deletedCount}条聊天记录`,
     });
-
   } catch (err) {
-    console.error('删除对话错误:', err);
-    error(res, '删除对话失败', 500);
+    console.error("删除对话错误:", err);
+    error(res, "删除对话失败", 500);
   }
 };
 
@@ -969,11 +1004,11 @@ exports.toggleChatFavorite = async (req, res) => {
     const chatHistory = await AIChatHistory.findOne({
       _id: chatId,
       user: userId,
-      source: 'student'
+      source: "student",
     });
 
     if (!chatHistory) {
-      return error(res, '聊天记录不存在', 404);
+      return error(res, "聊天记录不存在", 404);
     }
 
     chatHistory.isFavorite = !chatHistory.isFavorite;
@@ -982,12 +1017,11 @@ exports.toggleChatFavorite = async (req, res) => {
     success(res, {
       chatId: chatHistory._id,
       isFavorite: chatHistory.isFavorite,
-      message: chatHistory.isFavorite ? '已收藏' : '已取消收藏'
+      message: chatHistory.isFavorite ? "已收藏" : "已取消收藏",
     });
-
   } catch (err) {
-    console.error('切换收藏状态错误:', err);
-    error(res, '切换收藏状态失败', 500);
+    console.error("切换收藏状态错误:", err);
+    error(res, "切换收藏状态失败", 500);
   }
 };
 
@@ -997,228 +1031,168 @@ exports.clearAllChatHistory = async (req, res) => {
 
     const result = await AIChatHistory.deleteMany({
       user: userId,
-      source: 'student'
+      source: "student",
     });
 
     success(res, {
       deletedCount: result.deletedCount,
-      message: `成功清空${result.deletedCount}条聊天记录`
+      message: `成功清空${result.deletedCount}条聊天记录`,
     });
-
   } catch (err) {
-    console.error('清空聊天记录错误:', err);
-    error(res, '清空聊天记录失败', 500);
+    console.error("清空聊天记录错误:", err);
+    error(res, "清空聊天记录失败", 500);
   }
 };
 
-// Dify 流式聊天代理（学生端）
-exports.streamChat = async (req, res) => {
+const formatError = (err) => {
+  let userMessage = "AI 服务暂时不可用，请稍后重试";
+  let logDetail = "";
+
+  // 提取错误信息
+  const errCode = err.code;
+  const status = err.response?.status;
+
+  if (errCode === "ECONNREFUSED") {
+    logDetail = "原因: 连接被拒绝 - Dify 服务未运行";
+    userMessage = "AI 服务未启动，请联系管理员";
+  } else if (errCode === "ETIMEDOUT" || err.message.includes("timeout")) {
+    logDetail = `原因: 连接超时 - Dify 服务不可达 (Timeout: ${DIFY_CONFIG.timeout}ms)`;
+    userMessage = "AI 服务连接超时，请检查网络或稍后重试";
+  } else if (errCode === "ENOTFOUND") {
+    logDetail = "原因: 域名/IP 无法解析";
+    userMessage = "AI 服务配置错误，请联系管理员";
+  } else if (errCode === "ECONNRESET") {
+    logDetail = "原因: 连接被重置 - Dify 服务不稳定";
+    userMessage = "AI 服务连接中断，请重试";
+  } else if (status) {
+    logDetail = `HTTP状态: ${status} - ${JSON.stringify(err.response.data || {})}`;
+    if (status === 404) userMessage = "AI 服务接口不存在或会话已失效";
+    if ([401, 403].includes(status)) userMessage = "AI 服务认证失败，请联系管理员";
+  }
+
+  return { userMessage, logMessage: err.message, logDetail };
+};
+
+const callDifyApi = async (conversationId, { inputs, query, user }) => {
+  return axios.post(
+    DIFY_CONFIG.apiUrl,
+    {
+      inputs: inputs || {},
+      query: query,
+      response_mode: "streaming",
+      conversation_id: conversationId,
+      user: user,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${DIFY_CONFIG.apiKey}`,
+        "Content-Type": "application/json",
+        Accept: "text/event-stream",
+      },
+      timeout: DIFY_CONFIG.timeout,
+      responseType: "stream",
+    },
+  );
+};
+
+const pipeStreamToResponse = (sourceStream, res) => {
+  // 1. 数据传输
+  sourceStream.on("data", (chunk) => {
+    res.write(chunk);
+    // 确保数据立即发送（绕过某些压缩中间件的缓冲）
+    if (typeof res.flush === "function") {
+      res.flush();
+    }
+  });
+
+  // 2. 传输结束
+  sourceStream.on("end", () => {
+    res.end();
+  });
+
+  // 3. 传输中途出错
+  sourceStream.on("error", (err) => {
+    console.error(chalk.red("[学生AI助手] 流传输中断:"), err.message);
+    const { userMessage } = formatError(err);
+
+    // 此时流已开启，必须通过 SSE 事件发送错误
+    res.write(
+      `data: ${JSON.stringify({
+        event: "error",
+        message: userMessage,
+        code: err.code,
+      })}\n\n`,
+    );
+    res.end();
+  });
+};
+
+const getChatStreamService = async (conversationId, payloadData) => {
+  // 情况 A: 初始请求，无会话ID -> 直接开启新会话
+  if (!conversationId || !conversationId.trim()) {
+    return await callDifyApi("", payloadData);
+  }
+
+  // 情况 B: 尝试延续现有会话
   try {
-    let { inputs, query, conversation_id, user: clientUser } = req.body;
-    const userId = req.user._id;
-
-    console.log(chalk.cyan('[学生AI助手] 开始流式对话'));
-    console.log('用户ID:', userId);
-    console.log('对话ID:', conversation_id);
-    console.log('问题:', query);
-    console.log('Dify API URL:', DIFY_CONFIG.apiUrl);
-    console.log('输入参数:', inputs);
-
-    // 设置 SSE 响应头 - 禁用所有缓冲
-    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
-    res.setHeader('Cache-Control', 'no-cache, no-transform');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('X-Accel-Buffering', 'no');  // Nginx 不缓冲
-    res.setHeader('Transfer-Encoding', 'chunked');  // 分块传输
-    
-    // 立即发送响应头
-    res.flushHeaders();
-
-    let response;
-    
-    // 如果 conversation_id 为空，直接发送请求，不进行重试
-    if (!conversation_id || conversation_id.trim() === '') {
-      console.log(chalk.cyan('[学生AI助手] 开始新对话'));
-      response = await axios.post(
-        DIFY_CONFIG.apiUrl,
-        {
-          inputs: inputs || {},
-          query: query,
-          response_mode: 'streaming',
-          conversation_id: '',
-          user: clientUser || `student-${userId}`
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${DIFY_CONFIG.apiKey}`,
-            'Content-Type': 'application/json',
-            'Accept': 'text/event-stream'
-          },
-          timeout: DIFY_CONFIG.timeout,
-          responseType: 'stream'
-        }
-      );
-    } else {
-      // 有 conversation_id，先尝试使用它
-      try {
-        response = await axios.post(
-          DIFY_CONFIG.apiUrl,
-          {
-            inputs: inputs || {},
-            query: query,
-            response_mode: 'streaming',
-            conversation_id: conversation_id,
-            user: clientUser || `student-${userId}`
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${DIFY_CONFIG.apiKey}`,
-              'Content-Type': 'application/json',
-              'Accept': 'text/event-stream'
-            },
-            timeout: DIFY_CONFIG.timeout,
-            responseType: 'stream'
-          }
-        );
-      } catch (firstError) {
-        // 如果是 404，说明对话不存在，重试不带 conversation_id
-        if (firstError.response?.status === 404) {
-          console.log(chalk.yellow('[学生AI助手] 对话不存在(404)，开始新对话'));
-          
-          // 第二次尝试：不带 conversation_id，开始新对话
-          response = await axios.post(
-            DIFY_CONFIG.apiUrl,
-            {
-              inputs: inputs || {},
-              query: query,
-              response_mode: 'streaming',
-              conversation_id: '',
-              user: clientUser || `student-${userId}`
-            },
-            {
-              headers: {
-                'Authorization': `Bearer ${DIFY_CONFIG.apiKey}`,
-                'Content-Type': 'application/json',
-                'Accept': 'text/event-stream'
-              },
-              timeout: DIFY_CONFIG.timeout,
-              responseType: 'stream'
-            }
-          );
-        } else {
-          // 其他错误，抛出
-          throw firstError;
-        }
-      }
-    }
-
-    console.log(chalk.green('[学生AI助手] Dify API 连接成功'));
-
-    // 将 Dify 的流式响应转发给客户端
-    let chunkCount = 0;
-    let totalBytes = 0;
-    
-    response.data.on('data', (chunk) => {
-      chunkCount++;
-      totalBytes += chunk.length;
-      const chunkStr = chunk.toString('utf-8');
-      console.log(chalk.cyan(`[学生AI助手] 收到数据块 #${chunkCount} (${chunk.length} bytes) - 立即转发`));
-      
-      // 如果包含error事件，显示完整内容
-      if (chunkStr.includes('"event": "error"') || chunkStr.includes('"event":"error"')) {
-        console.log(chalk.red('⚠️ 检测到错误事件，完整内容：'));
-        console.log(chalk.red(chunkStr));
-      } else {
-        console.log(chalk.gray(chunkStr.substring(0, 200)));
-      }
-      
-      // 立即写入并刷新缓冲区
-      res.write(chunk);
-      
-      // 尝试立即刷新（如果可用）
-      if (typeof res.flush === 'function') {
-        res.flush();
-      }
-    });
-
-    response.data.on('end', () => {
-      console.log(chalk.green(`[学生AI助手] 流式响应结束 - 共收到 ${chunkCount} 个数据块，总计 ${totalBytes} bytes`));
-      res.end();
-    });
-
-    response.data.on('error', (err) => {
-      console.error(chalk.red('[学生AI助手] 流式响应错误:'), err);
-      
-      // 详细错误诊断
-      if (err.code === 'ECONNRESET') {
-        console.error(chalk.red('  原因: Dify 服务连接被重置 - 可能服务不稳定或已关闭'));
-      } else if (err.code === 'ETIMEDOUT') {
-        console.error(chalk.red('  原因: Dify 服务响应超时'));
-      } else if (err.code === 'ECONNREFUSED') {
-        console.error(chalk.red('  原因: Dify 服务拒绝连接'));
-      }
-      
-      // 发送友好的错误消息
-      const errorMessage = err.code === 'ECONNRESET' 
-        ? 'AI 服务连接中断，请稍后重试' 
-        : 'AI 服务暂时不可用';
-      
-      res.write(`data: ${JSON.stringify({ 
-        event: 'error', 
-        message: errorMessage,
-        details: err.message,
-        code: err.code 
-      })}\n\n`);
-      res.end();
-    });
-
+    return await callDifyApi(conversationId, payloadData);
   } catch (err) {
-    console.error(chalk.red('[学生AI助手] 流式对话失败:'), err.message);
-    
-    // 详细错误诊断
-    let userMessage = 'AI 服务暂时不可用，请稍后重试';
-    
-    if (err.code === 'ECONNREFUSED') {
-      console.error(chalk.red('  原因: 连接被拒绝 - Dify 服务未运行'));
-      userMessage = 'AI 服务未启动，请联系管理员';
-    } else if (err.code === 'ETIMEDOUT' || err.message.includes('timeout')) {
-      console.error(chalk.red('  原因: 连接超时 - Dify 服务不可达'));
-      console.error(chalk.yellow(`  建议: 检查 DIFY_API_URL 配置: ${DIFY_CONFIG.apiUrl}`));
-      userMessage = 'AI 服务连接超时，请检查网络或稍后重试';
-    } else if (err.code === 'ENOTFOUND') {
-      console.error(chalk.red('  原因: 域名/IP 无法解析'));
-      userMessage = 'AI 服务配置错误，请联系管理员';
-    } else if (err.code === 'ECONNRESET') {
-      console.error(chalk.red('  原因: 连接被重置 - Dify 服务不稳定'));
-      userMessage = 'AI 服务连接中断，请重试';
-    } else if (err.response) {
-      console.error(chalk.red('  HTTP状态:'), err.response.status);
-      console.error(chalk.red('  错误详情:'), err.response.data);
-      if (err.response.status === 404) {
-        userMessage = 'AI 服务接口不存在，请联系管理员';
-      } else if (err.response.status === 401 || err.response.status === 403) {
-        userMessage = 'AI 服务认证失败，请联系管理员';
-      }
+    // 捕获 404 错误 -> 意味着 Dify 端找不到该会话
+    if (err.response?.status === 404) {
+      console.warn(chalk.yellow("[学生AI助手] 会话失效 (404)，自动开启新会话..."));
+      // 降级策略：传空字符串作为 ID，开启新会话
+      return await callDifyApi("", payloadData);
     }
-
-    // 如果还没有发送响应头，发送错误响应
-    if (!res.headersSent) {
-      res.status(503).json({  // 503 Service Unavailable
-        success: false,
-        message: userMessage,
-        error: err.message,
-        code: err.code
-      });
-    } else {
-      // 如果已经发送了响应头，通过 SSE 发送错误事件
-      res.write(`data: ${JSON.stringify({ 
-        event: 'error', 
-        message: userMessage,
-        details: err.message,
-        code: err.code
-      })}\n\n`);
-      res.end();
-    }
+    // 其他错误（如网络超时、500错误）直接抛出
+    throw err;
   }
 };
 
+exports.streamChat = async (req, res) => {
+  // 1. 结构出请求参数
+  const { inputs, query, conversation_id, user } = req.body;
+
+  res.writeHead(200, {
+    "Content-Type": "text/event-stream; charset=utf-8",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive",
+    "X-Accel-Buffering": "no",
+    "Transfer-Encoding": "chunked",
+  });
+
+  if (typeof res.flushHeaders === "function") {
+    res.flushHeaders();
+  }
+
+  try {
+    // 2. 编写请求体
+    const payloadData = {
+      inputs,
+      query,
+      user,
+    };
+
+    // 3. 请求大模型获取流式响应
+    const response = await getChatStreamService(conversation_id, payloadData);
+
+    // 4. 将流式响应输出到客户端
+    pipeStreamToResponse(response.data, res);
+  } catch (err) {
+    console.error(chalk.red("[学生AI助手] 初始化失败:"), err.message);
+    const { userMessage, logDetail } = formatError(err);
+
+    if (logDetail) {
+      console.error(chalk.red(`  ${logDetail}`));
+    }
+
+    res.write(
+      `data: ${JSON.stringify({
+        event: "error",
+        message: userMessage,
+        details: err.message,
+        code: err.code,
+      })}\n\n`,
+    );
+    res.end();
+  }
+};
