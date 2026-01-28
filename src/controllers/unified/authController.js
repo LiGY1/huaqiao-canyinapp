@@ -118,10 +118,8 @@ function getRedirectUrl(role, req = null) {
 /**
  * 验证用户凭证（查找、比对密码、检查激活）
  */
-async function verifyUserCredentials(req) {
-  validateLoginInput(req);
-
-  const { username, password, roleType } = req.body;
+async function verifyUserCredentials(username, password, roleType) {
+  validateLoginInput(username, password, roleType);
 
   // 查找用户
   const user = await User.findOne({ username }).populate("children", "name studentId class grade");
@@ -237,9 +235,7 @@ function getRoleSpecificData(user) {
 /**
  * 校验登录基础参数
  */
-function validateLoginInput(req) {
-  const { username, password, roleType } = req.body;
-
+function validateLoginInput(username, password, roleType) {
   if (!username || !password) {
     throw { isBusinessError: true, message: "请提供用户名和密码", statusCode: 400 };
   }
@@ -254,8 +250,11 @@ function validateLoginInput(req) {
  */
 exports.login = async (req, res) => {
   try {
-    // 1. 核心验证（查找用户、验证密码）
-    const user = await verifyUserCredentials(req);
+    // 1. 结构出用户名、密码、角色类型
+    const { username, password, roleType } = req.body;
+    
+    // 2. 验证用户凭证
+    const user = await verifyUserCredentials(username, password, roleType);
 
     // 2. 生成 Token
     const token = await generateToken(user._id);

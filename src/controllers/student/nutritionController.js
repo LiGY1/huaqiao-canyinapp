@@ -635,28 +635,24 @@ exports.generateAIReport = async (req, res) => {
     const { start, end } = getDateRange(reportType);
     const dateRange = { start, end };
 
-    // 2. 查询数据库 
+    // 2. 查询数据库
     const records = await NutritionRecord.find({
       user: userId,
       date: { $gte: start, $lte: end },
     })
       .sort({ date: 1 })
-      .lean();    // 调用lean方法
+      .lean(); // 调用lean方法
 
     // 3. 数据聚合与统计
     const dailyData = aggregateRecords(records, reportType, end);
-    const userTargets = {
+    const dataSummary = calculateStats(dailyData, {
       calories: req.user.targetCalories || 2000,
       protein: req.user.targetProtein, // 可以为空，helpers里有默认值
       fat: req.user.targetFat,
       fiber: req.user.targetFiber,
-    };
-    const dataSummary = calculateStats(dailyData, userTargets);
+    });
 
-    // 4. 构建 Prompt
-    const prompt = buildPromptContext(reportType, dailyData, dataSummary, dateRange);
-
-    // 5. 初始化报告记录
+    // 4. 初始化报告记录
     reportRecord = new AIReport({
       student: userId,
       reportType,
@@ -665,6 +661,9 @@ exports.generateAIReport = async (req, res) => {
       status: "generating",
     });
     await reportRecord.save();
+
+    // 5. 构建 Prompt
+    const prompt = buildPromptContext(reportType, dailyData, dataSummary, dateRange);
 
     // 6. 调用 AI 服务
     const difyResult = await callDifyAPI(prompt);
@@ -1149,9 +1148,6 @@ const getChatStreamService = async (conversationId, payloadData) => {
 };
 
 exports.streamChat = async (req, res) => {
-  // 1. 结构出请求参数
-  const { inputs, query, conversation_id, user } = req.body;
-
   res.writeHead(200, {
     "Content-Type": "text/event-stream; charset=utf-8",
     "Cache-Control": "no-cache, no-transform",
@@ -1165,7 +1161,10 @@ exports.streamChat = async (req, res) => {
   }
 
   try {
-    // 2. 编写请求体
+    // 1. 结构出请求参数
+    const { inputs, query, user, conversation_id } = req.body;
+
+    // 2. 构建大模型接口的请求参数
     const payloadData = {
       inputs,
       query,
