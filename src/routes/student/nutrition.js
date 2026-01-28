@@ -8,6 +8,7 @@ router.use(protect);
 // 营养数据
 router.get('/weekly-report', nutritionController.getWeeklyReport);
 router.get('/today', nutritionController.getTodayNutrition);
+router.get('/getRecommend', nutritionController.getRecommend);
 router.get('/meal-status', nutritionController.getMealStatus);
 router.get('/monthly-report', nutritionController.getMonthlyReport);
 

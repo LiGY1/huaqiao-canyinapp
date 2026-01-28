@@ -7,6 +7,41 @@ const { success, error } = require("../../utils/responseFormatter");
 const { getStartOfDay, getEndOfDay, getWeekRange, getMonthRange, formatDate } = require("../../utils/dateUtils");
 const axios = require("axios");
 const DIFY_CONFIG = require("../../config/dify");
+const { DISH_STATUS } = require("../../config/constants");
+
+const Dish = require("../../models/Dish");
+
+const filter = { status: DISH_STATUS.AVAILABLE };
+
+const adaptMealData = (meal) => {
+  return {
+    id: meal._id || meal.id,
+    name: meal.name,
+    category: meal.category,
+    price: meal.price,
+    image: meal.image || "https://via.placeholder.com/150",
+    calories: meal.nutrition?.calories || 0,
+    protein: meal.nutrition?.protein || 0,
+    fat: meal.nutrition?.fat || 0,
+    carbs: meal.nutrition?.carbs || 0,
+    fiber: meal.nutrition?.fiber || 0,
+    matchScore: meal.matchScore || 0,
+    seasonal: meal.seasonal || false,
+    solarTerm: meal.solarTerm || "",
+    nutritionDescription: meal.nutritionDescription || "",
+    ingredients: meal.ingredients || [],
+    isRecommended: meal.isRecommended || false,
+  };
+};
+
+const getMealList = async () => {
+  return await Dish.find(filter).sort({
+    seasonal: -1,
+    isRecommended: -1,
+    isPopular: -1,
+    salesCount: -1,
+  });
+};
 
 // 获取今日餐次状态（统一接口）
 exports.getMealStatus = async (req, res) => {
@@ -121,6 +156,519 @@ exports.getMealStatus = async (req, res) => {
   } catch (err) {
     console.error("获取餐次状态失败:", err);
     error(res, "获取餐次状态失败", 500);
+  }
+};
+
+const DEFAULT_TARGETS = {
+  protein: 75,
+  fat: 60,
+  carbs: 250,
+  fiber: 25,
+  vitaminC: 100,
+  iron: 15,
+};
+
+const DEFAULT_INTAKE = {
+  calories: 0,
+  protein: 0,
+  fat: 0,
+  carbs: 0,
+  fiber: 0,
+  vitaminC: 0,
+  iron: 0,
+};
+
+/**
+ * 1. 计算基础营养匹配度
+ */
+const calculateNutritionMatch = (meal, nutritionNeeds, todayNutrition) => {
+  let score = 30; // 基础分
+  const reasons = [];
+
+  // 计算当前餐次的推荐热量
+  const hour = new Date().getHours();
+  let mealRatio = 0.35; // 默认午餐
+  if (hour >= 6 && hour < 9)
+    mealRatio = 0.25; // 早餐
+  else if (hour >= 11 && hour < 14)
+    mealRatio = 0.35; // 午餐
+  else if (hour >= 17 && hour < 20) mealRatio = 0.35; // 晚餐
+
+  const targetCalories = nutritionNeeds?.targetCalories || 2000;
+  const targetProtein = nutritionNeeds?.targetProtein || 60;
+  const targetCarbs = nutritionNeeds?.targetCarbs || 300;
+  const targetFiber = nutritionNeeds?.targetFiber || 25;
+
+  const recommendedCalories = targetCalories * mealRatio;
+  const currentCalories = todayNutrition.calories || 0;
+  const neededCalories = Math.max(200, recommendedCalories - currentCalories);
+
+  // 热量匹配度
+  if (meal.calories > 0) {
+    if (meal.calories >= 100 && meal.calories <= 800) {
+      score += 5;
+      const caloriesDiff = Math.abs(meal.calories - neededCalories);
+      if (caloriesDiff <= neededCalories * 0.3) {
+        score += 10;
+        reasons.push("热量匹配");
+      } else if (caloriesDiff <= neededCalories * 0.5) {
+        score += 5;
+      }
+    } else if (meal.calories < 100) {
+      score -= 5;
+    } else if (meal.calories > 1000) {
+      score -= 10;
+    }
+  } else {
+    score -= 5;
+  }
+
+  // 蛋白质匹配度
+  const recommendedProtein = targetProtein * mealRatio;
+  const currentProtein = todayNutrition.protein || 0;
+  const neededProtein = Math.max(5, recommendedProtein - currentProtein);
+  if (meal.protein > 0) {
+    if (meal.protein >= 5) {
+      score += 5;
+      if (meal.protein >= neededProtein * 0.5) {
+        score += 5;
+        reasons.push("蛋白质充足");
+      }
+    }
+  }
+
+  // 碳水匹配度
+  const recommendedCarbs = targetCarbs * mealRatio;
+  const currentCarbs = todayNutrition.carbs || 0;
+  const neededCarbs = Math.max(20, recommendedCarbs - currentCarbs);
+  if (meal.carbs > 0 && meal.carbs >= 20) {
+    score += 3;
+    if (meal.carbs >= neededCarbs * 0.5) {
+      score += 2;
+    }
+  }
+
+  if (meal.fiber > 0) {
+    if (meal.fiber >= 2) {
+      score += 2;
+      if (meal.fiber >= 3) {
+        score += 3;
+        reasons.push("富含纤维");
+      }
+    }
+  }
+
+  return { score, reasons };
+};
+
+/**
+ * 2. 检查健康限制（过敏、疾病等）
+ */
+const checkHealthRestrictions = (meal, userInfo) => {
+  let score = 0;
+  const reasons = [];
+
+  if (!userInfo || !userInfo.healthInfo) {
+    return { score: 0, reasons: [] };
+  }
+
+  const healthInfo = userInfo.healthInfo;
+
+  // 检查过敏原
+  if (healthInfo.allergies && Array.isArray(healthInfo.allergies) && healthInfo.allergies.length > 0) {
+    const mealIngredients = (meal.ingredients || []).map((ing) => ing.toLowerCase());
+    const allergies = healthInfo.allergies.map((a) => a.toLowerCase());
+
+    const hasAllergen = allergies.some((allergy) =>
+      mealIngredients.some((ing) => ing.includes(allergy) || allergy.includes(ing)),
+    );
+
+    if (hasAllergen) {
+      score -= 50;
+      reasons.push("含过敏原");
+      return { score, reasons };
+    }
+  }
+
+  // 检查糖尿病
+  if (healthInfo.hasDiabetes === true) {
+    const carbsRatio = (meal.carbs / (meal.calories || 1)) * 100;
+    if (carbsRatio > 70) {
+      score -= 20;
+      reasons.push("碳水过高");
+    } else if (carbsRatio < 40) {
+      score += 5;
+      reasons.push("适合控糖");
+    }
+  }
+
+  // 检查高血压
+  if (healthInfo.hasHypertension === true) {
+    const fatRatio = (meal.fat / (meal.calories || 1)) * 100;
+    if (fatRatio > 40) {
+      score -= 15;
+      reasons.push("脂肪过高");
+    }
+  }
+
+  // BMI 相关检查
+  if (userInfo.bmi) {
+    if (userInfo.bmi < 18.5) {
+      // 偏瘦
+      if (meal.calories > 300 && meal.protein > 15) {
+        score += 5;
+        reasons.push("适合增重");
+      }
+    } else if (userInfo.bmi > 24) {
+      // 超重
+      if (meal.calories < 250 && meal.fiber > 2) {
+        score += 5;
+        reasons.push("适合减重");
+      } else if (meal.calories > 400) {
+        score -= 10;
+        reasons.push("热量偏高");
+      }
+    }
+  }
+
+  return { score, reasons };
+};
+
+/**
+ * 3. 评估营养均衡性
+ */
+const evaluateNutritionalBalance = (meal) => {
+  let score = 0;
+  const reasons = [];
+
+  if (meal.calories === 0) return { score: 0, reasons: [] };
+
+  const proteinRatio = ((meal.protein * 4) / meal.calories) * 100;
+  const fatRatio = ((meal.fat * 9) / meal.calories) * 100;
+  const carbsRatio = ((meal.carbs * 4) / meal.calories) * 100;
+
+  let balanceScore = 10;
+
+  if (proteinRatio < 10) balanceScore -= 3;
+  else if (proteinRatio > 25) balanceScore -= 2;
+  else if (proteinRatio >= 15 && proteinRatio <= 20) {
+    balanceScore += 2;
+    reasons.push("蛋白质比例均衡");
+  }
+
+  if (fatRatio < 15 || fatRatio > 35) balanceScore -= 2;
+  else if (fatRatio >= 20 && fatRatio <= 30) {
+    balanceScore += 1;
+  }
+
+  if (carbsRatio < 45 || carbsRatio > 65) balanceScore -= 2;
+  else if (carbsRatio >= 50 && carbsRatio <= 55) {
+    balanceScore += 1;
+  }
+
+  score += Math.max(0, balanceScore);
+
+  if (meal.fiber > 0) {
+    const fiberScore = Math.min(10, (meal.fiber / 5) * 10);
+    score += fiberScore * 0.5;
+    if (meal.fiber >= 3) {
+      reasons.push("高纤维");
+    }
+  }
+
+  return { score, reasons };
+};
+
+/**
+ * 4. 评估多样性
+ */
+const evaluateDiversity = (meal) => {
+  let score = 5;
+  const reasons = [];
+
+  if (meal.category === "mixed") {
+    score += 5;
+    reasons.push("荤素搭配");
+  } else if (meal.category === "vegetable") {
+    score += 2;
+    reasons.push("蔬菜类");
+  } else if (meal.category === "meat") {
+    score += 3;
+    reasons.push("肉类");
+  }
+
+  if (meal.seasonal === true) {
+    score += 2;
+    reasons.push("应季菜品");
+  }
+
+  return { score, reasons };
+};
+
+/**
+ * 5. 计算总评分
+ */
+const calculateNutritionalScore = (meal, nutritionNeeds, userInfo, todayNutrition) => {
+  let score = 0;
+  const reasons = [];
+
+  const nutritionScore = calculateNutritionMatch(meal, nutritionNeeds, todayNutrition);
+  score += nutritionScore.score;
+  reasons.push(...nutritionScore.reasons);
+
+  const healthScore = checkHealthRestrictions(meal, userInfo);
+  score += healthScore.score;
+  if (healthScore.reasons.length > 0) {
+    reasons.push(...healthScore.reasons);
+  }
+
+  const balanceScore = evaluateNutritionalBalance(meal);
+  score += balanceScore.score;
+  reasons.push(...balanceScore.reasons);
+
+  const diversityScore = evaluateDiversity(meal);
+  score += diversityScore.score;
+  reasons.push(...diversityScore.reasons);
+
+  score = Math.max(0, Math.min(100, score));
+
+  return {
+    score: Math.round(score),
+    reasons: reasons.slice(0, 3),
+  };
+};
+
+/**
+ * 6. 选择套餐组合
+ */
+const selectBalancedMealCombo = (scoredMeals, nutritionNeeds, todayNutrition) => {
+  if (!scoredMeals || scoredMeals.length === 0) return [];
+
+  const hour = new Date().getHours();
+  let mealRatio = 0.35;
+  if (hour >= 6 && hour < 9) mealRatio = 0.25;
+  else if (hour >= 17 && hour < 20) mealRatio = 0.35;
+
+  const targetCaloriesTotal = nutritionNeeds?.targetCalories || 2000;
+  const targetProteinTotal = nutritionNeeds?.targetProtein || 60;
+
+  const targetCalories = Math.max(300, targetCaloriesTotal * mealRatio - (todayNutrition.calories || 0));
+  const targetProtein = Math.max(10, targetProteinTotal * mealRatio - (todayNutrition.protein || 0));
+
+  const selected = [];
+  let currentCalories = 0;
+  let currentProtein = 0;
+
+  // 策略1：优先选择高评分
+  for (const meal of scoredMeals) {
+    if (targetCalories > 0 && meal.calories > targetCalories * 2) continue;
+    if (selected.some((m) => m.id === meal.id)) continue;
+
+    selected.push(meal);
+    currentCalories += meal.calories || 0;
+    currentProtein += meal.protein || 0;
+
+    if (selected.length >= 5) break;
+    if (selected.length >= 3 && currentCalories >= targetCalories * 0.7 && currentProtein >= targetProtein * 0.6) break;
+  }
+
+  // 补足至少3个
+  if (selected.length < 3) {
+    for (const meal of scoredMeals) {
+      if (selected.length >= 3) break;
+      if (!selected.some((m) => m.id === meal.id)) selected.push(meal);
+    }
+  }
+
+  // 确保主食和主菜
+  const hasStaple = selected.some((m) => m.category === "staple");
+  const hasMainDish = selected.some((m) => ["meat", "mixed", "vegetable"].includes(m.category));
+
+  // 补主食
+  if (!hasStaple) {
+    const staple = scoredMeals.find((m) => m.category === "staple" && !selected.some((s) => s.id === m.id));
+    if (staple) {
+      const lastNonStapleIndex = selected.findIndex((m) => m.category !== "staple");
+      if (lastNonStapleIndex >= 0 && selected.length >= 3) {
+        selected[lastNonStapleIndex] = staple;
+      } else if (selected.length < 5) {
+        selected.push(staple);
+      }
+    }
+  }
+
+  // 补主菜
+  if (!hasMainDish) {
+    const mainDish = scoredMeals.find(
+      (m) => ["meat", "mixed", "vegetable"].includes(m.category) && !selected.some((s) => s.id === m.id),
+    );
+    if (mainDish) {
+      if (selected.length < 5) {
+        selected.push(mainDish);
+      } else {
+        const lastIndex = selected.length - 1;
+        if (lastIndex >= 0 && selected[lastIndex].category === "staple") {
+          const replaceIndex = selected.findIndex((m, idx) => idx < selected.length - 1 && m.category !== "staple");
+          if (replaceIndex >= 0) selected[replaceIndex] = mainDish;
+        } else if (lastIndex >= 0) {
+          selected[lastIndex] = mainDish;
+        }
+      }
+    }
+  }
+
+  return selected.slice(0, 5);
+};
+
+/**
+ * 7. 生成推荐理由文本
+ */
+const generateRecommendationReason = (meals, nutritionNeeds, todayNutrition, userInfo) => {
+  const reasons = [];
+  const hour = new Date().getHours();
+
+  if (hour >= 6 && hour < 9) reasons.push("早餐推荐");
+  else if (hour >= 11 && hour < 14) reasons.push("午餐推荐");
+  else if (hour >= 17 && hour < 20) reasons.push("晚餐推荐");
+
+  const targetCal = nutritionNeeds?.targetCalories || 2000;
+  const caloriesPercent = (todayNutrition.calories / targetCal) * 100;
+
+  if (caloriesPercent < 50) reasons.push("您今日热量摄入不足，推荐营养均衡的菜品组合");
+  else if (caloriesPercent > 120) reasons.push("您今日热量已达标，推荐清淡低热量的菜品");
+  else reasons.push("根据您的营养需求，推荐以下均衡搭配");
+
+  if (userInfo?.healthInfo) {
+    if (userInfo.healthInfo.hasDiabetes) reasons.push("已考虑控糖需求");
+    if (userInfo.healthInfo.hasHypertension) reasons.push("已考虑低脂低钠");
+  }
+
+  const totalCalories = meals.reduce((sum, m) => sum + m.calories, 0);
+  const totalProtein = meals.reduce((sum, m) => sum + m.protein, 0);
+  reasons.push(`预计补充热量${Math.round(totalCalories)}千卡，蛋白质${Math.round(totalProtein)}g`);
+
+  return reasons.join("，");
+};
+
+const generateSmartRecommendation = (allMeals, nutritionNeeds, userInfo, todayNutrition) => {
+  if (!allMeals || allMeals.length === 0) {
+    return { recommendedMeals: [], reason: "暂无可用菜品" };
+  }
+
+  // 评分
+  const scoredMeals = allMeals.map((meal) => {
+    const result = calculateNutritionalScore(meal, nutritionNeeds, userInfo, todayNutrition);
+    return {
+      ...meal,
+      matchScore: result.score,
+      matchReasons: result.reasons,
+    };
+  });
+
+  // 排序
+  scoredMeals.sort((a, b) => b.matchScore - a.matchScore);
+
+  // 阈值筛选
+  const threshold = Math.max(20, Math.floor(scoredMeals[Math.floor(scoredMeals.length * 0.3)]?.matchScore || 0));
+  const qualifiedMeals = scoredMeals.filter((meal) => meal.matchScore >= threshold);
+  let candidates =
+    qualifiedMeals.length >= 3 ? qualifiedMeals : scoredMeals.slice(0, Math.max(3, Math.min(5, scoredMeals.length)));
+
+  // 组合
+  const recommendedMeals = selectBalancedMealCombo(candidates, nutritionNeeds, todayNutrition);
+
+  // 兜底
+  if (!recommendedMeals || recommendedMeals.length === 0) {
+    const fallbackMeals = scoredMeals.slice(0, Math.min(5, scoredMeals.length));
+    if (fallbackMeals.length > 0) {
+      return {
+        recommendedMeals: fallbackMeals,
+        reason: generateRecommendationReason(fallbackMeals, nutritionNeeds, todayNutrition, userInfo),
+        totalScore: fallbackMeals.reduce((sum, m) => sum + (m.matchScore || 0), 0) / fallbackMeals.length,
+      };
+    }
+    return { recommendedMeals: [], reason: "无法生成推荐" };
+  }
+
+  // 理由
+  const reason = generateRecommendationReason(recommendedMeals, nutritionNeeds, todayNutrition, userInfo);
+
+  return {
+    recommendedMeals,
+    reason,
+    totalScore: recommendedMeals.reduce((sum, m) => sum + (m.matchScore || 0), 0) / recommendedMeals.length,
+  };
+};
+
+/**
+ * 调用 AI 营养大模型生成结构化建议
+ * @param {Object} intake 用户当前摄入
+ * @param {Object} targets 目标设定
+ * @returns {Promise<Object>} 包含分析结论和推荐菜品列表的结构化数据
+ */
+const getAiDietarySuggestion = async (intake, mealList, userInfo) => {
+  const allMeals = (mealList || []).map(adaptMealData);
+
+  return generateSmartRecommendation(allMeals, intake, userInfo, intake);
+};
+
+const fetchNutritionIntake = async (userId, startOfDay, endOfDay) => {
+  const record = await NutritionRecord.findOne({
+    user: userId,
+    date: { $gte: startOfDay, $lte: endOfDay },
+  }).lean();
+  return record ? record.intake : DEFAULT_INTAKE;
+};
+
+const fetchTodayMeals = async (userId, startOfDay, endOfDay) => {
+  const query = {
+    user: userId,
+    status: { $in: ["paid", "preparing", "ready", "completed"] },
+    $or: [{ orderDate: { $gte: startOfDay, $lte: endOfDay } }, { scheduledDate: { $gte: startOfDay, $lte: endOfDay } }],
+  };
+
+  const orders = await Order.find(query)
+    .sort({ orderDate: -1 })
+    .select("orderDate scheduledDate mealType items")
+    .lean();
+
+  return orders.map((order) => ({
+    order: order._id,
+    mealType: order.mealType,
+    time: order.scheduledDate || order.orderDate,
+    items: order.items.map((item) => item.dishName),
+  }));
+};
+
+exports.getRecommend = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const today = new Date();
+    const todayStart = getStartOfDay(today);
+    const todayEnd = getEndOfDay(today);
+
+    const mealList = await getMealList();
+
+    // 1. 获取今日已摄入的营养素
+    const intake = await fetchNutritionIntake(userId, todayStart, todayEnd);
+
+    // 2. 调用AI接口
+    const aiSuggestion = await getAiDietarySuggestion(intake, mealList, req.user);
+
+    const meals = await fetchTodayMeals(userId, todayStart, todayEnd);
+
+    // 3. 将ai建议添加到响应中
+    success(res, {
+      aiSuggestion,
+      date: formatDate(today),
+      ...intake,
+      vitaminC: intake.vitaminC || 0,
+      iron: intake.iron || 0,
+      meals: meals,
+    });
+  } catch (err) {
+    console.error(err);
+    error(res, "获取今日营养及推荐失败", 500);
   }
 };
 
