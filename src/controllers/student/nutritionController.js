@@ -606,7 +606,7 @@ const generateSmartRecommendation = (allMeals, nutritionNeeds, userInfo, todayNu
  * @param {Object} targets 目标设定
  * @returns {Promise<Object>} 包含分析结论和推荐菜品列表的结构化数据
  */
-const getAiDietarySuggestion = async (intake, mealList, userInfo) => {
+const recommendDiet = async (intake, mealList, userInfo) => {
   const allMeals = (mealList || []).map(adaptMealData);
 
   return generateSmartRecommendation(allMeals, intake, userInfo, intake);
@@ -652,14 +652,14 @@ exports.getRecommend = async (req, res) => {
     // 1. 获取今日已摄入的营养素
     const intake = await fetchNutritionIntake(userId, todayStart, todayEnd);
 
-    // 2. 调用AI接口
-    const aiSuggestion = await getAiDietarySuggestion(intake, mealList, req.user);
+    // 2. 调用智能算法生成推荐
+    const suggestion = await recommendDiet(intake, mealList, req.user);
 
     const meals = await fetchTodayMeals(userId, todayStart, todayEnd);
 
-    // 3. 将ai建议添加到响应中
+    // 3. 将建议添加到响应中
     success(res, {
-      aiSuggestion,
+      suggestion,
       date: formatDate(today),
       ...intake,
       vitaminC: intake.vitaminC || 0,
@@ -840,6 +840,24 @@ const calculateMetrics = (dailyData, targets) => {
   };
 };
 
+const formatWeeklyData = (dailyData) => {
+  return {
+    dailyCalories: dailyData.calories,
+    dailyProtein: dailyData.protein,
+    dailyFat: dailyData.fat,
+    dailyCarbs: dailyData.carbs,
+    dailyFiber: dailyData.fiber,
+  };
+};
+
+const formatMetrics = (metrics) => {
+  return {
+    avgCalories: metrics.avgCalories,
+    calorieDeficit: metrics.calorieDeficit,
+    nutritionScore: metrics.scores,
+  };
+};
+
 exports.getWeeklyReport = async (req, res) => {
   try {
     // ---------- 1. 取出用户id --------------
@@ -860,18 +878,12 @@ exports.getWeeklyReport = async (req, res) => {
 
     const days = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
     success(res, {
-      weekRange: `${formatDate(start)} 至 ${formatDate(end)}`,
+      ...formatWeeklyData(dailyData),
       days,
-      dailyCalories: dailyData.calories,
-      dailyProtein: dailyData.protein,
-      dailyFat: dailyData.fat,
-      dailyCarbs: dailyData.carbs,
-      dailyFiber: dailyData.fiber,
-      avgCalories: metrics.avgCalories,
+      weekRange: `${formatDate(start)} 至 ${formatDate(end)}`,
       targetCalories: targets.calories,
-      calorieDeficit: metrics.calorieDeficit,
       avgSugar: 45,
-      nutritionScore: metrics.scores,
+      ...formatMetrics(metrics),
     });
   } catch (err) {
     console.error("Weekly report error:", err);

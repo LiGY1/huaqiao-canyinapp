@@ -246,13 +246,15 @@ function validateLoginInput(username, password, roleType) {
 
 /**
  * 统一登录接口
- * 根据用户角色自动返回对应的跳转URL
+ * @param {object} req
+ * @param {object} res
+ * @returns
  */
 exports.login = async (req, res) => {
   try {
     // 1. 结构出用户名、密码、角色类型
     const { username, password, roleType } = req.body;
-    
+
     // 2. 验证用户凭证
     const user = await verifyUserCredentials(username, password, roleType);
 
