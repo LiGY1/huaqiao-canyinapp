@@ -35,7 +35,7 @@ const connectDB = async () => {
       console.log(chalk.yellow('[缓存] 使用内存缓存 (Redis 未配置)'));
     }
     
-    console.log(chalk.cyan(`[API] 桂教通/Dify API 已连接`));
+    console.log(chalk.cyan(`[API] Dify API 已连接`));
   } catch (error) {
     console.error(chalk.red(`[数据库] MongoDB 连接失败: ${error.message}`));
     process.exit(1);
