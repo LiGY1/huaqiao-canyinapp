@@ -1,4 +1,3 @@
-const os = require("os");
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
@@ -8,7 +7,6 @@ const connectDB = require("./config/database");
 const errorHandler = require("./middleware/errorHandler");
 const requestLogger = require("./middleware/requestLogger");
 const { initBucket } = require("./config/minio");
-
 const studentRoutes = require("./routes/student");
 const parentRoutes = require("./routes/parent");
 const schoolRoutes = require("./routes/school");
@@ -21,7 +19,6 @@ const tokenManagementRoutes = require("./routes/tokenManagement");
 const app = express();
 
 connectDB();
-
 initBucket();
 
 // 启用 Gzip 压缩
@@ -83,32 +80,8 @@ app.use((req, res) => {
 app.use(errorHandler);
 const PORT = process.env.PORT || 8000;
 
-function getLocalIP() {
-  const interfaces = os.networkInterfaces();
-  for (const name of Object.keys(interfaces)) {
-    for (const iface of interfaces[name]) {
-      if (iface.family === "IPv4" && !iface.internal) {
-        return iface.address;
-      }
-    }
-  }
-  return "localhost";
-}
-
 const server = app.listen(PORT, () => {
-  const currentIP = getLocalIP();
-  console.log(chalk.cyan("\n[服务器] 后端服务已启动"));
-  console.log(chalk.gray(`[服务器] 端口: ${PORT} | IP: ${currentIP}`));
-  console.log(chalk.gray("[服务器] 接口列表:"));
-  console.log(chalk.gray(`[统一登录] http://${currentIP}:${PORT}/api/unified`));
-  console.log(chalk.gray(`[学生端]   http://${currentIP}:${PORT}/api/student`));
-  console.log(chalk.gray(`[家长端]   http://${currentIP}:${PORT}/api/parent`));
-  console.log(chalk.gray(`[学校端]   http://${currentIP}:${PORT}/api/school`));
-  console.log(chalk.gray(`[食堂端]   http://${currentIP}:${PORT}/api/canteen`));
-  console.log(chalk.gray(`[角色查询] http://${currentIP}:${PORT}/api/role-query/llm`));
-  console.log(chalk.gray(`[性能监控] http://${currentIP}:${PORT}/api/monitoring/stats`));
-  console.log(chalk.gray(`[健康检查] http://${currentIP}:${PORT}/health`));
-  console.log("");
+  console.log(`[服务器] 后端服务已启动 | 端口: ${PORT}`);
 });
 
 process.on("unhandledRejection", (err) => {

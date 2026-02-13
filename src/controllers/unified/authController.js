@@ -176,9 +176,6 @@ function ensureRoleMatches(user, inputRoleType) {
  * 构建返回给前端的用户信息对象
  */
 function buildUserInfo(user, req) {
-  // 获取跳转URL
-  const redirectUrl = getRedirectUrl(user.role, req);
-
   // 基础信息
   const baseInfo = {
     id: user._id,
@@ -186,7 +183,6 @@ function buildUserInfo(user, req) {
     name: user.name,
     role: user.role,
     avatar: user.avatar,
-    redirectUrl,
     tokenType: "standard",
   };
 
