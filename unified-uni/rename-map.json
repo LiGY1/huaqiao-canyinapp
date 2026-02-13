@@ -1,0 +1,7 @@
+{
+  "pages/parent/ai-assistant/ai-assistant.vue": "pages/parent/ai-assistant/aiAssistant.vue",
+  "pages/parent/order-status/order-status.vue": "pages/parent/order-status/orderStatus.vue",
+  "pages/student/ai-assistant/ai-assistant.vue": "pages/student/ai-assistant/aiAssistant.vue",
+  "pages/student/order-status/order-status.vue": "pages/student/order-status/orderStatus.vue",
+  "pages/token-management/token-management.vue": "pages/token-management/tokenManagement.vue"
+}

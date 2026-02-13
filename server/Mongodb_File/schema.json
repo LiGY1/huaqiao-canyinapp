@@ -1,0 +1,6510 @@
+{
+  "User": {
+    "collectionName": "users",
+    "fields": {
+      "username": {
+        "type": "String",
+        "required": true,
+        "unique": true,
+        "index": true,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "password": {
+        "type": "String",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "name": {
+        "type": "String",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "role": {
+        "type": "String",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "student",
+          "parent",
+          "teacher",
+          "principal",
+          "admin",
+          "canteen_admin",
+          "canteen_staff"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "email": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": true,
+        "sparse": true,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "phone": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": true,
+        "sparse": true,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "avatar": {
+        "type": "String",
+        "required": false,
+        "default": "",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "studentId": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "class": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "grade": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "age": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "gender": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "height": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "weight": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "allergies": {
+        "type": "Array",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "itemType": "String"
+      },
+      "hasDiabetes": {
+        "type": "Boolean",
+        "required": false,
+        "default": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "hasHereditaryDisease": {
+        "type": "Boolean",
+        "required": false,
+        "default": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "hereditaryDiseaseDesc": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "targetCalories": {
+        "type": "Number",
+        "required": false,
+        "default": 2000,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "balance": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "children": {
+        "type": "Array",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "User",
+        "comment": null,
+        "itemType": "ObjectId"
+      },
+      "schoolId": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "schoolName": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "department": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "managedClasses": {
+        "type": "Array",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "itemType": "String"
+      },
+      "isActive": {
+        "type": "Boolean",
+        "required": false,
+        "default": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "lastTokenReset": {
+        "type": "Date",
+        "required": false,
+        "default": null,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "reminderSettings": {
+        "type": "Object",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "schema": {
+          "breakfast": {
+            "type": "Boolean",
+            "required": false,
+            "default": true,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "min": null,
+            "max": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "lunch": {
+            "type": "Boolean",
+            "required": false,
+            "default": true,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "min": null,
+            "max": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "dinner": {
+            "type": "Boolean",
+            "required": false,
+            "default": true,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "min": null,
+            "max": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "dailySummary": {
+            "type": "Boolean",
+            "required": false,
+            "default": true,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "min": null,
+            "max": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "nutritionAlert": {
+            "type": "Boolean",
+            "required": false,
+            "default": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "min": null,
+            "max": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "healthTips": {
+            "type": "Boolean",
+            "required": false,
+            "default": true,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "min": null,
+            "max": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          }
+        }
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "username_1",
+        "fields": {
+          "username": 1
+        },
+        "options": {
+          "unique": true,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "email_1",
+        "fields": {
+          "email": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": true,
+          "background": true
+        }
+      },
+      {
+        "name": "phone_1",
+        "fields": {
+          "phone": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": true,
+          "background": true
+        }
+      },
+      {
+        "name": "role_managedClasses",
+        "fields": {
+          "role": 1,
+          "managedClasses": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "role_children",
+        "fields": {
+          "role": 1,
+          "children": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "role_name",
+        "fields": {
+          "role": 1,
+          "name": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "role_class",
+        "fields": {
+          "role": 1,
+          "class": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "name_text",
+        "fields": {
+          "_fts": "text",
+          "_ftsx": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "idx_role",
+        "fields": {
+          "role": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "idx_class",
+        "fields": {
+          "class": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "idx_managed_classes",
+        "fields": {
+          "managedClasses": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "idx_children",
+        "fields": {
+          "children": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "idx_student_id",
+        "fields": {
+          "studentId": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "idx_role_studentid",
+        "fields": {
+          "role": 1,
+          "studentId": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "idx_name",
+        "fields": {
+          "name": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "idx_username",
+        "fields": {
+          "username": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "name_1_studentId_1",
+        "fields": {
+          "name": 1,
+          "studentId": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "name_1_role_1",
+        "fields": {
+          "name": 1,
+          "role": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "idx_name_studentid_role_opt",
+        "fields": {
+          "name": 1,
+          "studentId": 1,
+          "role": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "idx_role_class_name_opt",
+        "fields": {
+          "role": 1,
+          "class": 1,
+          "name": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "idx_role_name_children_opt",
+        "fields": {
+          "role": 1,
+          "name": 1,
+          "children": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "idx_role_class_studentid_opt",
+        "fields": {
+          "role": 1,
+          "class": 1,
+          "studentId": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      }
+    ],
+    "relations": [
+      {
+        "field": "children",
+        "ref": "User",
+        "type": "Array Reference"
+      }
+    ],
+    "timestamps": true
+  },
+  "AIChatHistory": {
+    "collectionName": "aichathistories",
+    "fields": {
+      "user": {
+        "type": "ObjectId",
+        "required": true,
+        "unique": true,
+        "index": true,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "User",
+        "comment": null
+      },
+      "source": {
+        "type": "String",
+        "required": true,
+        "default": "student",
+        "unique": true,
+        "index": true,
+        "sparse": false,
+        "enum": [
+          "student",
+          "parent",
+          "school",
+          "canteen"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "conversationId": {
+        "type": "String",
+        "required": false,
+        "default": "",
+        "unique": true,
+        "index": true,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "sender": {
+        "type": "String",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "user",
+          "ai"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "userMessage": {
+        "type": "String",
+        "required": false,
+        "default": "",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "aiMessage": {
+        "type": "String",
+        "required": false,
+        "default": "",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "files": {
+        "type": "Object",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "schema": {
+          "filename": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          },
+          "url": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          },
+          "type": {
+            "type": "String",
+            "required": false,
+            "default": "image",
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [
+              "image",
+              "video",
+              "audio",
+              "document",
+              "other"
+            ],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          },
+          "size": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "mimeType": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          }
+        }
+      },
+      "timestamp": {
+        "type": "Date",
+        "required": false,
+        "unique": true,
+        "index": true,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "metadata.wrappedQuery": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "metadata.tokens.prompt": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "metadata.tokens.completion": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "metadata.tokens.total": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "metadata.responseTime": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "metadata.extras": {
+        "type": "Mixed",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "summary": {
+        "type": "String",
+        "required": false,
+        "default": "",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "tags": {
+        "type": "Array",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "itemType": "String"
+      },
+      "isFavorite": {
+        "type": "Boolean",
+        "required": false,
+        "default": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": true,
+        "index": true,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "user_1",
+        "fields": {
+          "user": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "source_1",
+        "fields": {
+          "source": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "conversationId_1",
+        "fields": {
+          "conversationId": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "timestamp_1",
+        "fields": {
+          "timestamp": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "createdAt_1",
+        "fields": {
+          "createdAt": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "user_1_source_1_createdAt_-1",
+        "fields": {
+          "user": 1,
+          "source": 1,
+          "createdAt": -1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "user_1_source_1_conversationId_1",
+        "fields": {
+          "user": 1,
+          "source": 1,
+          "conversationId": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "user_1_isFavorite_1_createdAt_-1",
+        "fields": {
+          "user": 1,
+          "isFavorite": 1,
+          "createdAt": -1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      }
+    ],
+    "relations": [
+      {
+        "field": "user",
+        "ref": "User",
+        "type": "Reference"
+      }
+    ],
+    "timestamps": true
+  },
+  "AIReport": {
+    "collectionName": "aireports",
+    "fields": {
+      "student": {
+        "type": "ObjectId",
+        "required": true,
+        "unique": true,
+        "index": true,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "User",
+        "comment": null
+      },
+      "reportType": {
+        "type": "String",
+        "required": true,
+        "unique": true,
+        "index": true,
+        "sparse": false,
+        "enum": [
+          "weekly",
+          "monthly"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "dateRange.start": {
+        "type": "Date",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "dateRange.end": {
+        "type": "Date",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "content.summary": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "content.highlights": {
+        "type": "Array",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "itemType": "String"
+      },
+      "content.suggestions": {
+        "type": "Array",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "itemType": "String"
+      },
+      "content.nextPlan": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "content.fullText": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "dataSummary.avgCalories": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "dataSummary.avgProtein": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "dataSummary.avgFat": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "dataSummary.avgCarbs": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "dataSummary.avgFiber": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "dataSummary.totalDays": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "dataSummary.targetCalories": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "dataSummary.nutritionScore.carbs": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "dataSummary.nutritionScore.protein": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "dataSummary.nutritionScore.fat": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "dataSummary.nutritionScore.fiber": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "dataSummary.nutritionScore.vitamin": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "conversationId": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "status": {
+        "type": "String",
+        "required": false,
+        "default": "generating",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "generating",
+          "completed",
+          "failed"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "errorMessage": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": true,
+        "index": true,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "student_1",
+        "fields": {
+          "student": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "reportType_1",
+        "fields": {
+          "reportType": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "createdAt_1",
+        "fields": {
+          "createdAt": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "student_1_reportType_1_createdAt_-1",
+        "fields": {
+          "student": 1,
+          "reportType": 1,
+          "createdAt": -1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "student_1_dateRange.start_1_dateRange.end_1",
+        "fields": {
+          "student": 1,
+          "dateRange.start": 1,
+          "dateRange.end": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      }
+    ],
+    "relations": [
+      {
+        "field": "student",
+        "ref": "User",
+        "type": "Reference"
+      }
+    ],
+    "timestamps": true
+  },
+  "AuthToken": {
+    "collectionName": "auth",
+    "fields": {
+      "token": {
+        "type": "String",
+        "required": true,
+        "unique": true,
+        "index": true,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "isActive": {
+        "type": "Boolean",
+        "required": false,
+        "default": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "lastUsedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "token_1",
+        "fields": {
+          "token": 1
+        },
+        "options": {
+          "unique": true,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "isActive_1",
+        "fields": {
+          "isActive": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      }
+    ],
+    "relations": [],
+    "timestamps": true
+  },
+  "ClassHealthReport": {
+    "collectionName": "classhealthreports",
+    "fields": {
+      "generatedBy": {
+        "type": "ObjectId",
+        "required": true,
+        "unique": true,
+        "index": true,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "User",
+        "comment": null
+      },
+      "filters.grade": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "filters.class": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "filters.keyword": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "filters.healthStatus": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "scope": {
+        "type": "String",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "summary.total": {
+        "type": "Number",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "summary.healthy": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "summary.attention": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "summary.abnormal": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "summary.healthyRate": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "summary.avgHeight": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "summary.avgWeight": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "summary.avgBMI": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "summary.avgNutritionScore": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "content.overview": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "content.highlights": {
+        "type": "Array",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "itemType": "String"
+      },
+      "content.suggestions": {
+        "type": "Array",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "itemType": "String"
+      },
+      "content.nextPlan": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "students": {
+        "type": "Object",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "schema": {
+          "studentId": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          },
+          "studentName": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          },
+          "healthStatus": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          },
+          "bmi": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          }
+        }
+      },
+      "conversationId": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "status": {
+        "type": "String",
+        "required": false,
+        "default": "generating",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "generating",
+          "completed",
+          "failed"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "errorMessage": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": true,
+        "index": true,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "generatedBy_1",
+        "fields": {
+          "generatedBy": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "createdAt_1",
+        "fields": {
+          "createdAt": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "generatedBy_1_createdAt_-1",
+        "fields": {
+          "generatedBy": 1,
+          "createdAt": -1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "scope_1_createdAt_-1",
+        "fields": {
+          "scope": 1,
+          "createdAt": -1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      }
+    ],
+    "relations": [
+      {
+        "field": "generatedBy",
+        "ref": "User",
+        "type": "Reference"
+      }
+    ],
+    "timestamps": true
+  },
+  "Dish": {
+    "collectionName": "dishes",
+    "fields": {
+      "name": {
+        "type": "String",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "category": {
+        "type": "String",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "meat",
+          "vegetable",
+          "mixed",
+          "staple",
+          "soup",
+          "dessert",
+          "beverage",
+          "seasonal"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "price": {
+        "type": "Number",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "cost": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "image": {
+        "type": "String",
+        "required": false,
+        "default": "https://via.placeholder.com/150",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "description": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "nutrition.calories": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": "热量（千卡）"
+      },
+      "nutrition.protein": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": "蛋白质（克）"
+      },
+      "nutrition.fat": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": "脂肪（克）"
+      },
+      "nutrition.carbs": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": "碳水化合物（克）"
+      },
+      "nutrition.fiber": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": "膳食纤维（克）"
+      },
+      "nutrition.vitaminA": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": "维生素A（微克）"
+      },
+      "nutrition.vitaminC": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": "维生素C（毫克）"
+      },
+      "nutrition.vitaminD": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": "维生素D（微克）"
+      },
+      "nutrition.vitaminE": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": "维生素E（毫克）"
+      },
+      "nutrition.calcium": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": "钙（毫克）"
+      },
+      "nutrition.iron": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": "铁（毫克）"
+      },
+      "nutrition.zinc": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": "锌（毫克）"
+      },
+      "nutrition.sodium": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": "钠（毫克）"
+      },
+      "nutrition.potassium": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": "钾（毫克）"
+      },
+      "stock": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "status": {
+        "type": "Number",
+        "required": false,
+        "default": 1,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "ingredients": {
+        "type": "Array",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "itemType": "String"
+      },
+      "allergens": {
+        "type": "Array",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "itemType": "String"
+      },
+      "isPopular": {
+        "type": "Boolean",
+        "required": false,
+        "default": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "salesCount": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "averageRating": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "reviewCount": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "recommendScore": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "seasonal": {
+        "type": "Boolean",
+        "required": false,
+        "default": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": "是否为节气菜品"
+      },
+      "solarTerm": {
+        "type": "String",
+        "required": false,
+        "default": "",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": "对应的节气名称（如：霜降、立冬）"
+      },
+      "isRecommended": {
+        "type": "Boolean",
+        "required": false,
+        "default": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": "是否为推荐菜品"
+      },
+      "nutritionDescription": {
+        "type": "String",
+        "required": false,
+        "default": "",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": "营养描述文本（AI生成）"
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "name",
+        "fields": {
+          "name": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "category",
+        "fields": {
+          "category": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "idx_dish_status",
+        "fields": {
+          "status": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      }
+    ],
+    "relations": [],
+    "timestamps": true
+  },
+  "EducationMaterial": {
+    "collectionName": "educationmaterials",
+    "fields": {
+      "title": {
+        "type": "String",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "type": {
+        "type": "String",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "course",
+          "class-meeting",
+          "material"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "category": {
+        "type": "String",
+        "required": false,
+        "default": "nutrition",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "nutrition",
+          "health",
+          "safety",
+          "hygiene",
+          "other"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "content": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "fileType": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "ppt",
+          "pdf",
+          "video",
+          "image",
+          "document",
+          "link"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "fileUrl": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "targetGrades": {
+        "type": "Array",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "itemType": "String"
+      },
+      "targetClasses": {
+        "type": "Array",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "itemType": "String"
+      },
+      "duration": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "completionRate": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "scheduledDate": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "sendDate": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "readCount": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "author": {
+        "type": "ObjectId",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "User",
+        "comment": null
+      },
+      "authorName": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "publishDate": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "isPublished": {
+        "type": "Boolean",
+        "required": false,
+        "default": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "viewCount": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "downloadCount": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "description": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "tags": {
+        "type": "Array",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "itemType": "String"
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      }
+    ],
+    "relations": [
+      {
+        "field": "author",
+        "ref": "User",
+        "type": "Reference"
+      }
+    ],
+    "timestamps": true
+  },
+  "Favorite": {
+    "collectionName": "favorites",
+    "fields": {
+      "user": {
+        "type": "ObjectId",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "User",
+        "comment": null
+      },
+      "dish": {
+        "type": "ObjectId",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "Dish",
+        "comment": null
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "user_1_dish_1",
+        "fields": {
+          "user": 1,
+          "dish": 1
+        },
+        "options": {
+          "unique": true,
+          "sparse": false,
+          "background": true
+        }
+      }
+    ],
+    "relations": [
+      {
+        "field": "user",
+        "ref": "User",
+        "type": "Reference"
+      },
+      {
+        "field": "dish",
+        "ref": "Dish",
+        "type": "Reference"
+      }
+    ],
+    "timestamps": true
+  },
+  "FoodSafetyRecord": {
+    "collectionName": "foodsafetyrecords",
+    "fields": {
+      "type": {
+        "type": "String",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "inspection",
+          "disinfection",
+          "temperature"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "ingredient": {
+        "type": "ObjectId",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "Inventory",
+        "comment": null
+      },
+      "ingredientName": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "supplier": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "quantity": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "unit": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "qualityStatus": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "qualified",
+          "unqualified",
+          "pending"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "temperature": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "freshness": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "area": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "method": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "UV",
+          "chemical",
+          "heat",
+          "other"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "concentration": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "duration": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "inspector": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "date": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "result": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "remark": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "images": {
+        "type": "Array",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "itemType": "String"
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      }
+    ],
+    "relations": [
+      {
+        "field": "ingredient",
+        "ref": "Inventory",
+        "type": "Reference"
+      }
+    ],
+    "timestamps": true
+  },
+  "HealthRecord": {
+    "collectionName": "healthrecords",
+    "fields": {
+      "user": {
+        "type": "ObjectId",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "User",
+        "comment": null
+      },
+      "date": {
+        "type": "Date",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "weight": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "height": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "bmi": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "bloodPressure.systolic": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "bloodPressure.diastolic": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "bloodSugar.fasting": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "bloodSugar.postprandial": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "temperature": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "heartRate": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "sleepHours": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "exerciseMinutes": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "waterIntake": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "healthStatus": {
+        "type": "String",
+        "required": false,
+        "default": "good",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "excellent",
+          "good",
+          "fair",
+          "poor"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "symptoms": {
+        "type": "Array",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "itemType": "String"
+      },
+      "notes": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "user_1_date_-1",
+        "fields": {
+          "user": 1,
+          "date": -1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "user",
+        "fields": {
+          "user": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      }
+    ],
+    "relations": [
+      {
+        "field": "user",
+        "ref": "User",
+        "type": "Reference"
+      }
+    ],
+    "timestamps": true
+  },
+  "Inventory": {
+    "collectionName": "inventories",
+    "fields": {
+      "name": {
+        "type": "String",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "category": {
+        "type": "String",
+        "required": false,
+        "default": "other",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "meat",
+          "vegetable",
+          "grain",
+          "seasoning",
+          "oil",
+          "dairy",
+          "other"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "quantity": {
+        "type": "Number",
+        "required": true,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "unit": {
+        "type": "String",
+        "required": true,
+        "default": "斤",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "warningLevel": {
+        "type": "Number",
+        "required": false,
+        "default": 100,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "unitPrice": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "supplier": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "lastStockIn": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "expiryDate": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "storageLocation": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "stockHistory": {
+        "type": "Object",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "schema": {
+          "type": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [
+              "in",
+              "out"
+            ],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          },
+          "quantity": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "date": {
+            "type": "Date",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "operator": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          },
+          "remark": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          }
+        }
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      }
+    ],
+    "relations": [],
+    "timestamps": true
+  },
+  "NutritionRecord": {
+    "collectionName": "nutritionrecords",
+    "fields": {
+      "user": {
+        "type": "ObjectId",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "User",
+        "comment": null
+      },
+      "date": {
+        "type": "Date",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "intake.calories": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "intake.protein": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "intake.fat": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "intake.carbs": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "intake.fiber": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "intake.vitaminC": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "intake.iron": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "intake.sugar": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "meals": {
+        "type": "Object",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "schema": {
+          "order": {
+            "type": "ObjectId",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "min": null,
+            "max": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": "Order",
+            "comment": null
+          },
+          "mealType": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          },
+          "time": {
+            "type": "Date",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "items": {
+            "type": "Array",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "min": null,
+            "max": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null,
+            "itemType": "String"
+          }
+        }
+      },
+      "weight": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "bloodPressure": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "bloodSugar": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "notes": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "user_1_date_1",
+        "fields": {
+          "user": 1,
+          "date": 1
+        },
+        "options": {
+          "unique": true,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "user_date",
+        "fields": {
+          "user": 1,
+          "date": -1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      }
+    ],
+    "relations": [
+      {
+        "field": "user",
+        "ref": "User",
+        "type": "Reference"
+      },
+      {
+        "field": "meals.order",
+        "ref": "Order",
+        "type": "Nested Reference"
+      }
+    ],
+    "timestamps": true
+  },
+  "Order": {
+    "collectionName": "orders",
+    "fields": {
+      "orderNumber": {
+        "type": "String",
+        "required": true,
+        "unique": true,
+        "index": true,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "user": {
+        "type": "ObjectId",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "User",
+        "comment": null
+      },
+      "studentUser": {
+        "type": "ObjectId",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "User",
+        "comment": null
+      },
+      "items": {
+        "type": "Object",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "schema": {
+          "dish": {
+            "type": "ObjectId",
+            "required": true,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "min": null,
+            "max": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": "Dish",
+            "comment": null
+          },
+          "dishName": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          },
+          "dishCategory": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          },
+          "dishImage": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          },
+          "quantity": {
+            "type": "Number",
+            "required": true,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "price": {
+            "type": "Number",
+            "required": true,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "nutrition.calories": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "nutrition.protein": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "nutrition.fat": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "nutrition.carbs": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "nutrition.fiber": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "nutrition.vitaminA": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "nutrition.vitaminC": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "nutrition.vitaminD": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "nutrition.vitaminE": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "nutrition.calcium": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "nutrition.iron": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "nutrition.zinc": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "nutrition.sodium": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "nutrition.potassium": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          }
+        }
+      },
+      "totalAmount": {
+        "type": "Number",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "status": {
+        "type": "String",
+        "required": false,
+        "default": "pending",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "pending",
+          "paid",
+          "preparing",
+          "ready",
+          "completed",
+          "cancelled"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "mealType": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "breakfast",
+          "lunch",
+          "dinner",
+          "snack"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "orderDate": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "scheduledDate": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "completedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "remark": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "location.campus": {
+        "type": "String",
+        "required": false,
+        "default": "主校区",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": "校区"
+      },
+      "location.canteen": {
+        "type": "String",
+        "required": false,
+        "default": "第一食堂",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": "食堂"
+      },
+      "location.floor": {
+        "type": "String",
+        "required": false,
+        "default": "1楼",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": "楼层"
+      },
+      "location.window": {
+        "type": "String",
+        "required": false,
+        "default": "1号窗口",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": "窗口"
+      },
+      "totalNutrition.calories": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "totalNutrition.protein": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "totalNutrition.fat": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "totalNutrition.carbs": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "totalNutrition.fiber": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "totalNutrition.vitaminA": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "totalNutrition.vitaminC": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "totalNutrition.vitaminD": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "totalNutrition.vitaminE": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "totalNutrition.calcium": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "totalNutrition.iron": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "totalNutrition.zinc": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "totalNutrition.sodium": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "totalNutrition.potassium": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "orderNumber_1",
+        "fields": {
+          "orderNumber": 1
+        },
+        "options": {
+          "unique": true,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "user_orderDate",
+        "fields": {
+          "user": 1,
+          "orderDate": -1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "orderDate_desc",
+        "fields": {
+          "orderDate": -1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "user",
+        "fields": {
+          "user": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "mealType",
+        "fields": {
+          "mealType": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "user_mealType_orderDate",
+        "fields": {
+          "user": 1,
+          "mealType": 1,
+          "orderDate": -1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "idx_status",
+        "fields": {
+          "status": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "studentUser_1",
+        "fields": {
+          "studentUser": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "studentUser_1_orderDate_-1",
+        "fields": {
+          "studentUser": 1,
+          "orderDate": -1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      }
+    ],
+    "relations": [
+      {
+        "field": "user",
+        "ref": "User",
+        "type": "Reference"
+      },
+      {
+        "field": "studentUser",
+        "ref": "User",
+        "type": "Reference"
+      },
+      {
+        "field": "items.dish",
+        "ref": "Dish",
+        "type": "Nested Reference"
+      }
+    ],
+    "timestamps": true
+  },
+  "PhysicalExam": {
+    "collectionName": "physicalexams",
+    "fields": {
+      "student": {
+        "type": "ObjectId",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "User",
+        "comment": null
+      },
+      "examDate": {
+        "type": "Date",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "height": {
+        "type": "Number",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "weight": {
+        "type": "Number",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "bmi": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "vision.left": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "vision.right": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "bloodPressure.systolic": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "bloodPressure.diastolic": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "heartRate": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "hemoglobin": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "healthStatus": {
+        "type": "String",
+        "required": false,
+        "default": "good",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "excellent",
+          "good",
+          "fair",
+          "poor"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "nutritionScore": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "notes": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "examiner": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      }
+    ],
+    "relations": [
+      {
+        "field": "student",
+        "ref": "User",
+        "type": "Reference"
+      }
+    ],
+    "timestamps": true
+  },
+  "ProductionPlan": {
+    "collectionName": "productionplans",
+    "fields": {
+      "dish": {
+        "type": "ObjectId",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "Dish",
+        "comment": null
+      },
+      "dishName": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "dishCategory": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "dishImage": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "date": {
+        "type": "Date",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "mealType": {
+        "type": "String",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "breakfast",
+          "lunch",
+          "dinner"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "plannedQuantity": {
+        "type": "Number",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "completedQuantity": {
+        "type": "Number",
+        "required": false,
+        "default": 0,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "status": {
+        "type": "String",
+        "required": false,
+        "default": "pending",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "pending",
+          "in_progress",
+          "completed",
+          "cancelled"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "chef": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": "负责厨师"
+      },
+      "startTime": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "completedTime": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "remark": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "aiSuggested": {
+        "type": "Boolean",
+        "required": false,
+        "default": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "suggestedReason": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "usedIngredients": {
+        "type": "Object",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "schema": {
+          "ingredient": {
+            "type": "ObjectId",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "min": null,
+            "max": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": "Inventory",
+            "comment": null
+          },
+          "ingredientName": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          },
+          "quantity": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "unit": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          }
+        }
+      },
+      "quality": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "excellent",
+          "good",
+          "fair",
+          "poor"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": "成品质量"
+      },
+      "qualityRemark": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "date_1_mealType_1_status_1",
+        "fields": {
+          "date": 1,
+          "mealType": 1,
+          "status": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "dish_1_date_1",
+        "fields": {
+          "dish": 1,
+          "date": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      }
+    ],
+    "relations": [
+      {
+        "field": "dish",
+        "ref": "Dish",
+        "type": "Reference"
+      },
+      {
+        "field": "usedIngredients.ingredient",
+        "ref": "Inventory",
+        "type": "Nested Reference"
+      }
+    ],
+    "timestamps": true
+  },
+  "PurchaseOrder": {
+    "collectionName": "purchaseorders",
+    "fields": {
+      "orderNumber": {
+        "type": "String",
+        "required": true,
+        "unique": true,
+        "index": true,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "items": {
+        "type": "Object",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "schema": {
+          "ingredient": {
+            "type": "ObjectId",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "min": null,
+            "max": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": "Inventory",
+            "comment": null
+          },
+          "ingredientName": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          },
+          "quantity": {
+            "type": "Number",
+            "required": true,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "unit": {
+            "type": "String",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": [],
+            "min": null,
+            "max": null,
+            "ref": null,
+            "comment": null
+          },
+          "unitPrice": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          },
+          "totalPrice": {
+            "type": "Number",
+            "required": false,
+            "unique": false,
+            "index": false,
+            "sparse": false,
+            "enum": null,
+            "minlength": null,
+            "maxlength": null,
+            "trim": false,
+            "ref": null,
+            "comment": null
+          }
+        }
+      },
+      "supplier": {
+        "type": "String",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "totalAmount": {
+        "type": "Number",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "status": {
+        "type": "String",
+        "required": false,
+        "default": "pending",
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [
+          "pending",
+          "approved",
+          "purchasing",
+          "received",
+          "rejected"
+        ],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "requestedBy": {
+        "type": "ObjectId",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "User",
+        "comment": null
+      },
+      "approvedBy": {
+        "type": "ObjectId",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "User",
+        "comment": null
+      },
+      "expectedDate": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "receiveDate": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "actualAmount": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "remark": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "approvalRemark": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "orderNumber_1",
+        "fields": {
+          "orderNumber": 1
+        },
+        "options": {
+          "unique": true,
+          "sparse": false,
+          "background": true
+        }
+      }
+    ],
+    "relations": [
+      {
+        "field": "items.ingredient",
+        "ref": "Inventory",
+        "type": "Nested Reference"
+      },
+      {
+        "field": "requestedBy",
+        "ref": "User",
+        "type": "Reference"
+      },
+      {
+        "field": "approvedBy",
+        "ref": "User",
+        "type": "Reference"
+      }
+    ],
+    "timestamps": true
+  },
+  "Review": {
+    "collectionName": "reviews",
+    "fields": {
+      "user": {
+        "type": "ObjectId",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "User",
+        "comment": null
+      },
+      "order": {
+        "type": "ObjectId",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "Order",
+        "comment": null
+      },
+      "dish": {
+        "type": "ObjectId",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "Dish",
+        "comment": null
+      },
+      "rating": {
+        "type": "Number",
+        "required": true,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "taste": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "freshness": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "portionSize": {
+        "type": "Number",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "comment": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "images": {
+        "type": "Array",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null,
+        "itemType": "String"
+      },
+      "isAnonymous": {
+        "type": "Boolean",
+        "required": false,
+        "default": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "reply.content": {
+        "type": "String",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": [],
+        "min": null,
+        "max": null,
+        "ref": null,
+        "comment": null
+      },
+      "reply.repliedBy": {
+        "type": "ObjectId",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "min": null,
+        "max": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": "User",
+        "comment": null
+      },
+      "reply.repliedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "createdAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      },
+      "updatedAt": {
+        "type": "Date",
+        "required": false,
+        "unique": false,
+        "index": false,
+        "sparse": false,
+        "enum": null,
+        "minlength": null,
+        "maxlength": null,
+        "trim": false,
+        "ref": null,
+        "comment": null
+      }
+    },
+    "indexes": [
+      {
+        "name": "_id_",
+        "fields": {
+          "_id": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": false
+        }
+      },
+      {
+        "name": "user_1",
+        "fields": {
+          "user": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "order_1",
+        "fields": {
+          "order": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "dish_1",
+        "fields": {
+          "dish": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      },
+      {
+        "name": "rating_1",
+        "fields": {
+          "rating": 1
+        },
+        "options": {
+          "unique": false,
+          "sparse": false,
+          "background": true
+        }
+      }
+    ],
+    "relations": [
+      {
+        "field": "user",
+        "ref": "User",
+        "type": "Reference"
+      },
+      {
+        "field": "order",
+        "ref": "Order",
+        "type": "Reference"
+      },
+      {
+        "field": "dish",
+        "ref": "Dish",
+        "type": "Reference"
+      },
+      {
+        "field": "reply.repliedBy",
+        "ref": "User",
+        "type": "Reference"
+      }
+    ],
+    "timestamps": true
+  }
+}

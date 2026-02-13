@@ -1,0 +1,257 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "uni-app"
+      }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "登录"
+      }
+    },
+    {
+      "path": "pages/token-management/tokenManagement",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "Token管理"
+      }
+    },
+    {
+      "path": "pages/student/home/home",
+      "style": {
+        "navigationBarTitleText": "学生中心",
+        "navigationBarBackButtonHidden": true
+      }
+    },
+    {
+      "path": "pages/student/order/order",
+      "style": {
+        "navigationBarTitleText": "点餐",
+        "navigationBarBackButtonHidden": true
+      }
+    },
+    {
+      "path": "pages/student/ai-assistant/aiAssistant",
+      "style": {
+        "navigationBarTitleText": "AI 智膳伙伴",
+        "navigationBarBackButtonHidden": true
+      }
+    },
+    {
+      "path": "pages/student/report/report",
+      "style": {
+        "navigationBarTitleText": "报告",
+        "navigationBarBackButtonHidden": true
+      }
+    },
+    {
+      "path": "pages/student/profile/profile",
+      "style": {
+        "navigationBarTitleText": "我的",
+        "navigationBarBackButtonHidden": true
+      }
+    },
+    {
+      "path": "pages/student/order-status/orderStatus",
+      "style": {
+        "navigationBarTitleText": "订单状态"
+      }
+    },
+    {
+      "path": "pages/parent/home/home",
+      "style": {
+        "navigationBarTitleText": "家长中心"
+      }
+    },
+    {
+      "path": "pages/parent/order/order",
+      "style": {
+        "navigationBarTitleText": "点餐"
+      }
+    },
+    {
+      "path": "pages/parent/ai-assistant/aiAssistant",
+      "style": {
+        "navigationBarTitleText": "AI 智膳伙伴"
+      }
+    },
+    {
+      "path": "pages/parent/report/report",
+      "style": {
+        "navigationBarTitleText": "报告"
+      }
+    },
+    {
+      "path": "pages/parent/profile/profile",
+      "style": {
+        "navigationBarTitleText": "我的"
+      }
+    },
+    {
+      "path": "pages/parent/order-status/orderStatus",
+      "style": {
+        "navigationBarTitleText": "订单状态"
+      }
+    },
+    {
+      "path": "pages/parent/bind-child/bindChild",
+      "style": {
+        "navigationBarTitleText": "绑定孩子"
+      }
+    },
+    {
+      "path": "pages/parent/meal-history/mealHistory",
+      "style": {
+        "navigationBarTitleText": "饮食历史"
+      }
+    },
+    {
+      "path": "pages/parent/report-history/reportHistory",
+      "style": {
+        "navigationBarTitleText": "报告历史"
+      }
+    },
+    {
+      "path": "pages/parent/store-history/storeHistory",
+      "style": {
+        "navigationBarTitleText": "消费记录"
+      }
+    },
+    {
+      "path": "pages/parent/voice-call/voiceCall",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "语音通话"
+      }
+    },
+    {
+      "path": "pages/school/dashboard/dashboard",
+      "style": {
+        "navigationBarTitleText": "监控大屏"
+      }
+    },
+    {
+      "path": "pages/school/reports",
+      "style": {
+        "navigationBarTitleText": "学生健康"
+      }
+    },
+    {
+      "path": "pages/school/students/students",
+      "style": {
+        "navigationBarTitleText": "学生健康管理"
+      }
+    },
+    {
+      "path": "pages/school/education/education",
+      "style": {
+        "navigationBarTitleText": "营养教育"
+      }
+    },
+    {
+      "path": "pages/school/ai-assistant/aiAssistant",
+      "style": {
+        "navigationBarTitleText": "AI助手"
+      }
+    },
+    {
+      "path": "pages/school/profile/profile",
+      "style": {
+        "navigationBarTitleText": "个人中心"
+      }
+    },
+    {
+      "path": "pages/canteen/dashboard",
+      "style": {
+        "navigationBarTitleText": "食堂管理"
+      }
+    },
+    {
+      "path": "pages/canteen/menu/menu",
+      "style": {
+        "navigationBarTitleText": "菜单管理"
+      }
+    },
+    {
+      "path": "pages/canteen/orders/orders",
+      "style": {
+        "navigationBarTitleText": "订单管理"
+      }
+    },
+    {
+      "path": "pages/canteen/inventory/inventory",
+      "style": {
+        "navigationBarTitleText": "库存管理"
+      }
+    },
+    {
+      "path": "pages/canteen/production/production",
+      "style": {
+        "navigationBarTitleText": "生产计划"
+      }
+    },
+    {
+      "path": "pages/canteen/purchase/purchase",
+      "style": {
+        "navigationBarTitleText": "采购管理"
+      }
+    },
+    {
+      "path": "pages/canteen/profile/profile",
+      "style": {
+        "navigationBarTitleText": "个人中心"
+      }
+    }
+  ],
+  "tabBar": {
+    "color": "#909399",
+    "selectedColor": "#409EFF",
+    "borderStyle": "white",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/student/home/home",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/student/order/order",
+        "text": "点餐"
+      },
+      {
+        "pagePath": "pages/student/ai-assistant/aiAssistant",
+        "text": "AI"
+      },
+      {
+        "pagePath": "pages/student/report/report",
+        "text": "报告"
+      },
+      {
+        "pagePath": "pages/student/profile/profile",
+        "text": "我的"
+      },
+      {
+        "pagePath": "pages/parent/home/home",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/parent/ai-assistant/aiAssistant",
+        "text": "AI至善伙伴"
+      },
+      {
+        "pagePath": "pages/parent/profile/profile",
+        "text": "我的"
+      }
+    ]
+  },
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "uni-app",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8"
+  },
+  "uniIdRouter": {}
+}

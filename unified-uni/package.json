@@ -1,0 +1,22 @@
+{
+  "name": "unified-uni",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.17.1",
+  "dependencies": {
+    "mp-html": "^2.5.2"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.28.5",
+    "@babel/preset-env": "^7.28.5",
+    "@rollup/plugin-babel": "^6.1.0",
+    "@vitejs/plugin-legacy": "4.1.1"
+  }
+}
