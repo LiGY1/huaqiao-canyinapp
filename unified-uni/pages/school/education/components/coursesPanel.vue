@@ -1,7 +1,7 @@
 <template>
   <view class="courses-panel">
     <view class="action-bar" v-if="!isTeacher">
-      <button class="add-btn" @click="showAddDialog">
+      <button class="add-btn">
         <uni-icons type="plus" size="18" color="#fff"></uni-icons>
         <text>创建营养课程</text>
       </button>
@@ -20,7 +20,7 @@
             {{ course.status }}
           </text>
         </view>
-        
+
         <view class="course-body">
           <text class="desc">{{ course.description }}</text>
           <view class="info-grid">
@@ -37,7 +37,7 @@
               <text>{{ course.duration }}分钟</text>
             </view>
           </view>
-          
+
           <view class="stats-row">
             <text>已参与班级: {{ course.participantClasses }}</text>
             <text>完成率: {{ course.completionRate }}%</text>
@@ -47,14 +47,16 @@
         <view class="card-footer">
           <view class="footer-btn" @click="viewCourse(course)">查看详情</view>
           <template v-if="!isTeacher">
-            <view v-if="course.status !== '已推送'" class="footer-btn primary" @click="publishCourse(course)">推送</view>
+            <view v-if="course.status !== '已推送'" class="footer-btn primary" @click="publishCourse(course)"
+              >推送</view
+            >
             <text v-else class="status-label">已推送</text>
             <view class="footer-btn warning" @click="editCourse(course)">编辑</view>
             <view class="footer-btn danger" @click="deleteCourse(course)">删除</view>
           </template>
         </view>
       </view>
-      
+
       <view v-if="courses.length === 0" class="empty-state">
         <image src="/static/empty.png" mode="aspectFit" class="empty-img"></image>
         <text>暂无相关课程</text>
@@ -70,23 +72,28 @@
             <text class="label">当前课程</text>
             <text class="value">{{ currentCourse?.title }}</text>
           </view>
-          
+
           <view class="form-item row">
             <text class="label">推送到系统</text>
-            <switch :checked="pushForm.pushToSystem" @change="e => pushForm.pushToSystem = e.detail.value" color="#4facfe" />
+            <switch
+              :checked="pushForm.pushToSystem"
+              @change="(e) => (pushForm.pushToSystem = e.detail.value)"
+              color="#4facfe"
+            />
           </view>
 
           <view class="form-item row">
             <text class="label">推送到钉钉</text>
-            <switch :checked="pushForm.pushToDingtalk" @change="e => pushForm.pushToDingtalk = e.detail.value" color="#4facfe" />
+            <switch
+              :checked="pushForm.pushToDingtalk"
+              @change="(e) => (pushForm.pushToDingtalk = e.detail.value)"
+              color="#4facfe"
+            />
           </view>
 
           <view class="form-item" v-if="pushForm.pushToDingtalk || pushForm.pushToSystem">
             <text class="label">推送对象</text>
-            <uni-data-select
-              v-model="pushForm.targetGrade"
-              :localdata="gradeOptions"
-            ></uni-data-select>
+            <uni-data-select v-model="pushForm.targetGrade" :localdata="gradeOptions"></uni-data-select>
           </view>
         </scroll-view>
         <view class="popup-footer">
@@ -99,9 +106,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
-import { educationApi } from '@/api/school/education';
-import storage from '@/utils/storage';
+import { ref, onMounted } from "vue";
+import { educationApi } from "@/api/school/education";
+import storage from "@/utils/storage";
 
 const isTeacher = ref(true); // 实际应从store获取
 const courses = ref([]);
@@ -112,30 +119,30 @@ const currentCourse = ref(null);
 const pushForm = ref({
   pushToSystem: true,
   pushToDingtalk: true,
-  targetGrade: '全校'
+  targetGrade: "全校",
 });
 
 const gradeOptions = [
-  { value: '全校', text: '所有班主任' },
-  { value: '2025级', text: '2025级班主任' }
+  { value: "全校", text: "所有班主任" },
+  { value: "2025级", text: "2025级班主任" },
 ];
 
 const loadCourses = async () => {
   try {
     loading.value = true;
-    const res = await educationApi.getMaterials({ type: 'course' });
+    const res = await educationApi.getMaterials({ type: "course" });
     if (res.code === 200 || res.success) {
       const data = res.data?.list || res.data || [];
-      courses.value = data.map(item => ({
+      courses.value = data.map((item) => ({
         id: item._id || item.id,
         title: item.title,
         description: item.description || item.content,
         date: new Date(item.createdAt).toLocaleDateString(),
-        targetGrade: item.targetGrades?.[0] || '全校',
+        targetGrade: item.targetGrades?.[0] || "全校",
         duration: item.duration || 45,
         participantClasses: item.readCount || 0,
         completionRate: item.completionRate || 0,
-        status: item.isPublished ? '已推送' : '草稿'
+        status: item.isPublished ? "已推送" : "草稿",
       }));
     }
   } catch (e) {
@@ -146,7 +153,7 @@ const loadCourses = async () => {
 };
 
 const viewCourse = (course) => {
-  uni.showToast({ title: '详情开发中', icon: 'none' });
+  uni.showToast({ title: "详情开发中", icon: "none" });
 };
 
 const publishCourse = (course) => {
@@ -159,29 +166,29 @@ const closePushPopup = () => {
 };
 
 const confirmPush = async () => {
-  uni.showToast({ title: '推送已发送', icon: 'success' });
+  uni.showToast({ title: "推送已发送", icon: "success" });
   closePushPopup();
 };
 
 const editCourse = (course) => {
-  uni.showToast({ title: '编辑开发中', icon: 'none' });
+  uni.showToast({ title: "编辑开发中", icon: "none" });
 };
 
 const deleteCourse = (course) => {
   uni.showModal({
-    title: '提示',
-    content: '确定要删除该课程吗？',
+    title: "提示",
+    content: "确定要删除该课程吗？",
     success: (res) => {
       if (res.confirm) {
-        uni.showToast({ title: '已删除' });
+        uni.showToast({ title: "已删除" });
       }
-    }
+    },
   });
 };
 
 onMounted(() => {
   const userInfo = storage.getUserInfo();
-  isTeacher.value = userInfo?.role === 'teacher';
+  isTeacher.value = userInfo?.role === "teacher";
   loadCourses();
 });
 </script>
@@ -203,7 +210,9 @@ onMounted(() => {
     justify-content: center;
     gap: 12rpx;
     font-size: 28rpx;
-    &::after { border: none; }
+    &::after {
+      border: none;
+    }
   }
 }
 
@@ -216,7 +225,10 @@ onMounted(() => {
   align-items: center;
   gap: 16rpx;
   margin-bottom: 30rpx;
-  text { font-size: 24rpx; color: #003a8c; }
+  text {
+    font-size: 24rpx;
+    color: #003a8c;
+  }
 }
 
 .course-card {
@@ -233,13 +245,23 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1rpx solid #f1f5f9;
-  .title { font-size: 32rpx; font-weight: bold; color: #1e293b; }
+  .title {
+    font-size: 32rpx;
+    font-weight: bold;
+    color: #1e293b;
+  }
   .status-tag {
     font-size: 22rpx;
     padding: 4rpx 16rpx;
     border-radius: 20rpx;
-    &.published { background: #ecfdf5; color: #10b981; }
-    &.draft { background: #f1f5f9; color: #64748b; }
+    &.published {
+      background: #ecfdf5;
+      color: #10b981;
+    }
+    &.draft {
+      background: #f1f5f9;
+      color: #64748b;
+    }
   }
 }
 
@@ -262,7 +284,10 @@ onMounted(() => {
     display: flex;
     align-items: center;
     gap: 8rpx;
-    text { font-size: 24rpx; color: #94a3b8; }
+    text {
+      font-size: 24rpx;
+      color: #94a3b8;
+    }
   }
 }
 
@@ -271,7 +296,10 @@ onMounted(() => {
   justify-content: space-between;
   padding-top: 20rpx;
   border-top: 1rpx solid #f1f5f9;
-  text { font-size: 24rpx; color: #64748b; }
+  text {
+    font-size: 24rpx;
+    color: #64748b;
+  }
 }
 
 .card-footer {
@@ -281,16 +309,26 @@ onMounted(() => {
   justify-content: flex-end;
   gap: 20rpx;
   align-items: center;
-  
+
   .footer-btn {
     font-size: 26rpx;
     color: #4facfe;
-    &.primary { color: #10b981; }
-    &.warning { color: #f59e0b; }
-    &.danger { color: #ef4444; }
+    &.primary {
+      color: #10b981;
+    }
+    &.warning {
+      color: #f59e0b;
+    }
+    &.danger {
+      color: #ef4444;
+    }
   }
-  
-  .status-label { font-size: 24rpx; color: #10b981; font-weight: 500; }
+
+  .status-label {
+    font-size: 24rpx;
+    color: #10b981;
+    font-weight: 500;
+  }
 }
 
 .popup-content {
@@ -314,8 +352,17 @@ onMounted(() => {
     justify-content: space-between;
     align-items: center;
   }
-  .label { font-size: 28rpx; color: #475569; margin-bottom: 12rpx; display: block; }
-  .value { font-size: 30rpx; color: #1e293b; font-weight: bold; }
+  .label {
+    font-size: 28rpx;
+    color: #475569;
+    margin-bottom: 12rpx;
+    display: block;
+  }
+  .value {
+    font-size: 30rpx;
+    color: #1e293b;
+    font-weight: bold;
+  }
 }
 
 .popup-footer {
@@ -330,9 +377,17 @@ onMounted(() => {
     display: flex;
     align-items: center;
     justify-content: center;
-    &::after { border: none; }
-    &.cancel { background: #f1f5f9; color: #64748b; }
-    &.confirm { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: #fff; }
+    &::after {
+      border: none;
+    }
+    &.cancel {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+    &.confirm {
+      background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      color: #fff;
+    }
   }
 }
 
@@ -344,6 +399,10 @@ onMounted(() => {
   gap: 20rpx;
   color: #94a3b8;
   font-size: 28rpx;
-  .empty-img { width: 240rpx; height: 240rpx; opacity: 0.5; }
+  .empty-img {
+    width: 240rpx;
+    height: 240rpx;
+    opacity: 0.5;
+  }
 }
 </style>
