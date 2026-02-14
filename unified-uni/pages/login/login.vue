@@ -93,13 +93,11 @@
             </view>
           </view>
 
-          <!-- 错误提示 -->
           <view v-if="errorMessage" class="error-banner animate-shake">
             <uni-icons type="info-filled" size="16" color="#ef4444"></uni-icons>
             <text class="error-msg">{{ errorMessage }}</text>
           </view>
 
-          <!-- 登录按钮 (添加 hover-class) -->
           <button @click="handleLogin" class="submit-btn" hover-class="submit-btn-active" :disabled="loading">
             <view v-if="loading" class="spinner"></view>
             <text>{{ loading ? "登录中..." : "立即登录" }}</text>
@@ -201,13 +199,11 @@ import { unifiedLogin, getUserInfo, generateCaptcha as fetchCaptcha, verifyCaptc
 import storage from "../../utils/storage";
 import { encryptPwd } from "@/utils/tool";
 
-// 定义formData对象记录账号密码
 const formData = ref({
   username: "",
   password: "",
 });
 
-// 角色类型到首页的映射
 const roleHomePages = {
   student: "/pages/student/home/home",
   parent: "/pages/parent/home/home",
@@ -353,7 +349,6 @@ const triggerAgreementShake = () => {
 const handleLogin = async () => {
   errorMessage.value = "";
 
-  // 验证是否同意协议
   if (!agreeToTerms.value) {
     errorMessage.value = "请先阅读并同意用户协议和隐私政策";
     triggerAgreementShake();
@@ -364,7 +359,7 @@ const handleLogin = async () => {
     return;
   }
 
-  // 检查是否需要验证码（登录失败3次以上）
+  // 登录失败3次以上进行验证
   if (loginAttempts.value >= 3) {
     showCaptcha.value = true;
     // 延迟执行，确保DOM已渲染
@@ -381,36 +376,34 @@ const handleLogin = async () => {
 // 执行登录请求
 const performLogin = async () => {
   loading.value = true;
-
   try {
-    const data = {
+    const payload = {
+      // 1. 拷贝表单数据，避免页面展示异常
       ...unref(formData),
     };
-    // 加密密码
-    data.password = encryptPwd(data.password);
+    // 2. 使用rsa公钥加密密码
+    payload.password = encryptPwd(payload.password);
 
-    // 1. 发送请求进行登录（不传roleType，由后端判断）
-    const response = await unifiedLogin(data);
+    // 3. 调用登录函数发送请求，携带表单数据
+    const { data } = await unifiedLogin(payload);
 
-    // 2. 登录成功，重置尝试次数
-    loginAttempts.value = 0;
+    // 3. 登录成功后保存token
+    saveAuth(data);
 
-    // 3. 请求成功后保存token等信息
-    saveAuth(response);
+    // 4. 得到角色名称
+    const role = data.userInfo.role;
 
-    // 4. 根据后端返回的角色类型跳转到对应页面
-    const roleType = response.data.userInfo.roleType;
-    const homePage = roleHomePages[roleType] || "/pages/student/home/home";
+    // 5. 根据角色名称得到对应首页
+    const homePage = roleHomePages[role];
+
+    // 6. 进行页面跳转
     goPage(homePage);
   } catch (error) {
     console.error("登录错误:", error);
-    errorMessage.value = error.response?.data?.message || "登录失败，请检查用户名和密码";
+    errorMessage.value = error.message || "登录失败，请检查用户名和密码";
     redirecting.value = false;
 
-    // 登录失败，增加尝试次数
     loginAttempts.value++;
-
-    // 提示用户还有几次机会
     if (loginAttempts.value >= 3) {
       errorMessage.value = "登录失败次数过多，需要进行安全验证";
     } else if (loginAttempts.value >= 2) {
@@ -418,6 +411,7 @@ const performLogin = async () => {
     }
   } finally {
     loading.value = false;
+    loginAttempts.value = 0;
   }
 };
 
@@ -452,8 +446,8 @@ const tip = () => {
   uni.vibrateShort(); // 添加轻微震动反馈
 };
 
-const saveAuth = (res) => {
-  const { token, userInfo } = res.data;
+const saveAuth = (data) => {
+  const { token, userInfo } = data;
   const isRemember = rememberMe.value;
 
   storage.setToken(token, isRemember);

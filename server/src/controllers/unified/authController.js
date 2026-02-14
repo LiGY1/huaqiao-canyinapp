@@ -141,6 +141,9 @@ async function verifyUserCredentials(username, password) {
   if (!user.isActive) {
     throw { isBusinessError: true, message: "账号已被禁用，请联系管理员", statusCode: 403 };
   }
+  if(user.role === "teacher") {
+    user.role = "school"
+  }
 
   return user;
 }
@@ -244,27 +247,27 @@ function validateLoginInput(username, password) {
  */
 exports.login = async (req, res) => {
   try {
+    // 1. 初始化key对象，传递私钥
     const key = new NodeRSA(privateKey);
     key.setOptions({ encryptionScheme: 'pkcs1' });
-    // 1. 结构出用户名、密码
+
+    // 2. 结构出用户名、密码
     let { username, password } = req.body;
+
+    // 3. 使用私钥解密密码
     password = key.decrypt(password, 'utf8');
 
-    // 2. 验证用户凭证（后端自动判断角色）
+    // 4. 验证用户账号密码
     const user = await verifyUserCredentials(username, password);
 
     // 3. 生成 Token
     const token = await generateToken(user._id);
 
-    // 4. 构建返回数据（包含角色类型）
+    // 4. 构建用户信息
     const userInfo = buildUserInfo(user, req);
 
-    // 5. 添加角色类型到返回数据，方便前端跳转
-    const roleType = getRoleType(user.role);
-    userInfo.roleType = roleType;
-
+    // 5. 返回token和用户信息
     success(res, { token, userInfo }, "登录成功");
-
     // --------------------------------------------------
   } catch (err) {
     console.error("[Unified-Login] 登录失败:", err);
