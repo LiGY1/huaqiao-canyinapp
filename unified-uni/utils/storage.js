@@ -73,7 +73,6 @@ class Storage {
     this.removeUserInfo();
     this.setRememberMe(false);
     this.removeSavedUsername();
-    this.removeSavedRoleType();
   }
 
   /**
@@ -133,29 +132,6 @@ class Storage {
    */
   removeSavedUsername() {
     uni.removeStorageSync(STORAGE_KEYS.SAVED_USERNAME);
-  }
-
-  /**
-   * 设置保存的角色类型
-   * @param {string} roleType - 角色类型
-   */
-  setSavedRoleType(roleType) {
-    uni.setStorageSync(STORAGE_KEYS.SAVED_ROLE_TYPE, roleType);
-  }
-
-  /**
-   * 获取保存的角色类型
-   * @returns {string|null}
-   */
-  getSavedRoleType() {
-    return uni.getStorageSync(STORAGE_KEYS.SAVED_ROLE_TYPE);
-  }
-
-  /**
-   * 移除保存的角色类型
-   */
-  removeSavedRoleType() {
-    uni.removeStorageSync(STORAGE_KEYS.SAVED_ROLE_TYPE);
   }
 }
 

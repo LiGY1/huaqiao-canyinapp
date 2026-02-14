@@ -14,6 +14,12 @@ export const roleTabbarConfig = {
   parent: {
     navItems: [
       { path: "pages/parent/home/home", label: "首页", icon: "home", isAI: false },
+      {
+        path: "pages/parent/meal-history/mealHistory",
+        label: "用餐记录",
+        icon: "list",
+        isAi: false
+      },
       { path: "pages/parent/ai-assistant/aiAssistant", label: "AI 智膳伙伴", icon: "chatbubble", isAI: false },
       { path: "pages/parent/profile/profile", label: "我的", icon: "person", isAI: false },
     ],

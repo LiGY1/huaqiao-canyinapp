@@ -1,6 +1,6 @@
 <template>
   <layout>
-    <view class="page-container">
+    <scroll-view class="page-container" :scroll-y="true">
       <!-- 欢迎卡片 -->
       <view class="welcome-card">
         <view class="welcome-header">
@@ -86,19 +86,43 @@
         </view>
       </view>
 
-      <!-- 快速操作 -->
-      <view class="quick-actions-card">
-        <text class="card-title">快速操作</text>
-        <view class="actions-grid">
-          <view
-            v-for="(action, index) in quickActions"
-            :key="index"
-            class="action-item"
-            :style="{ background: action.color }"
-            @click="handleAction(action)"
-          >
-            <uni-icons :type="action.icon" size="32" color="#fff"></uni-icons>
-            <text class="action-label">{{ action.label }}</text>
+      <!-- 今日营养摄入 -->
+      <view v-if="hasChildren" class="nutrition-card">
+        <view class="card-header">
+          <view class="title-left">
+            <uni-icons type="fire" size="20" color="#ef4444"></uni-icons>
+            <text class="card-title">今日营养摄入</text>
+          </view>
+          <view v-if="hasOverIntake" class="over-badge">{{ overIntakeCount }}项超标</view>
+        </view>
+
+        <view v-if="nutritionLoading" class="loading-box">
+          <uni-icons type="spinner-cycle" size="24" color="#94a3b8" class="spin"></uni-icons>
+          <text class="loading-txt">加载中...</text>
+        </view>
+
+        <view v-else class="nut-grid">
+          <view v-for="nut in nutrientList" :key="nut.key" class="nut-card" :style="{ background: nut.gradient }">
+            <view class="nut-header">
+              <text class="nut-name">{{ nut.label }}</text>
+              <view v-if="isOverIntake(nut.key)" class="warn-dot">超标!</view>
+            </view>
+            <view class="nut-main">
+              <text class="nut-val">{{ formatNumber(nutritionData[nut.key]) }}</text>
+              <text class="nut-unit">{{ nut.unit }}</text>
+            </view>
+            <view class="nut-goal">目标: {{ nutritionData[`target${capitalize(nut.key)}`] }}{{ nut.unit }}</view>
+            <view class="nut-prog">
+              <view
+                class="nut-prog-inner"
+                :style="{
+                  width: `${Math.min(
+                    100,
+                    getPercentage(nutritionData[nut.key], nutritionData[`target${capitalize(nut.key)}`])
+                  )}%`,
+                }"
+              ></view>
+            </view>
           </view>
         </view>
       </view>
@@ -169,7 +193,7 @@
           </view>
         </view>
       </uni-popup>
-    </view>
+    </scroll-view>
   </layout>
 </template>
 
@@ -177,7 +201,7 @@
 import { ref, computed, onMounted } from "vue";
 import layout from "@/components/layout.vue";
 import storage from "@/utils/storage";
-import { authApi, childApi } from "@/api/parent";
+import { authApi, childApi, nutritionApi } from "@/api/parent";
 
 // 状态
 const userInfo = ref(storage.getUserInfo() || {});
@@ -200,6 +224,34 @@ const childStatus = ref({
   nutritionScore: 0,
 });
 
+// 营养数据
+const nutritionLoading = ref(false);
+const nutritionData = ref({
+  calories: 0,
+  protein: 0,
+  fat: 0,
+  carbs: 0,
+  fiber: 0,
+  vitaminC: 0,
+  iron: 0,
+  targetCalories: 2000,
+  targetProtein: 75,
+  targetFat: 60,
+  targetCarbs: 250,
+  targetFiber: 25,
+  targetVitaminC: 100,
+  targetIron: 15,
+});
+
+const nutrientList = [
+  { key: "calories", label: "热量", unit: "千卡", gradient: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" },
+  { key: "protein", label: "蛋白质", unit: "g", gradient: "linear-gradient(135deg, #9c27b0 0%, #673ab7 100%)" },
+  { key: "fat", label: "脂肪", unit: "g", gradient: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" },
+  { key: "fiber", label: "膳食纤维", unit: "g", gradient: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" },
+  { key: "vitaminC", label: "维度C", unit: "mg", gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" },
+  { key: "iron", label: "铁", unit: "mg", gradient: "linear-gradient(135deg, #FF9800 0%, #FF5722 100%)" },
+];
+
 // 时间和天气
 const currentDate = ref("");
 const currentTime = ref("");
@@ -212,7 +264,7 @@ const quickActions = [
     label: "用餐记录",
     icon: "shop",
     color: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-    type: "navigateTo",
+    type: "switchTab",
   },
   {
     path: "/pages/parent/bind-child/bindChild",
@@ -251,6 +303,43 @@ const updateTime = () => {
   else if (hour >= 12 && hour < 14) greeting.value = "中午好，吃饭休息吧！";
   else if (hour >= 14 && hour < 18) greeting.value = "下午好，保持专注！";
   else greeting.value = "晚上好，早点休息！";
+};
+
+// 营养相关方法
+const formatNumber = (val, d = 1) => parseFloat(val || 0).toFixed(d);
+const capitalize = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+const getPercentage = (c, t) => (t ? Math.round((c / t) * 100) : 0);
+const isOverIntake = (k) => nutritionData.value[k] > nutritionData.value[`target${capitalize(k)}`];
+const hasOverIntake = computed(() => nutrientList.some((n) => isOverIntake(n.key)));
+const overIntakeCount = computed(() => nutrientList.filter((n) => isOverIntake(n.key)).length);
+
+const loadNutrition = async (id) => {
+  nutritionLoading.value = true;
+  try {
+    const res = await nutritionApi.getChildNutrition(id);
+    if (res.code === 200 && res.data) {
+      const d = res.data;
+      nutritionData.value = {
+        calories: d.intake?.calories || 0,
+        protein: d.intake?.protein || 0,
+        fat: d.intake?.fat || 0,
+        carbs: d.intake?.carbs || 0,
+        fiber: d.intake?.fiber || 0,
+        vitaminC: d.intake?.vitaminC || 0,
+        iron: d.intake?.iron || 0,
+        targetCalories: d.target?.calories || 2000,
+        targetProtein: d.target?.protein || 75,
+        targetFat: d.target?.fat || 60,
+        targetCarbs: d.target?.carbs || 250,
+        targetFiber: d.target?.fiber || 25,
+        targetVitaminC: d.target?.vitaminC || 100,
+        targetIron: d.target?.iron || 15,
+      };
+    }
+  } catch (e) {
+  } finally {
+    nutritionLoading.value = false;
+  }
 };
 
 const fetchChildNutrition = async () => {
@@ -295,6 +384,9 @@ const fetchChildNutrition = async () => {
         });
         childStatus.value.mealsCompleted = mealTypes.size;
       }
+
+      // 加载营养数据
+      loadNutrition(childId);
     }
   } catch (error) {
     console.error("获取营养数据失败:", error);
@@ -474,8 +566,15 @@ onMounted(() => {
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 20rpx;
   margin-bottom: 24rpx;
+}
+
+.stats-grid .stat-item {
+  margin-right: 20rpx;
+}
+
+.stats-grid .stat-item:last-child {
+  margin-right: 0;
 }
 
 .stat-item {
@@ -507,12 +606,26 @@ onMounted(() => {
 .report-actions {
   display: flex;
   flex-direction: column;
-  gap: 16rpx;
+}
+
+.report-actions > * {
+  margin-bottom: 16rpx;
+}
+
+.report-actions > *:last-child {
+  margin-bottom: 0;
 }
 
 .action-row {
   display: flex;
-  gap: 16rpx;
+}
+
+.action-row > * {
+  margin-right: 16rpx;
+}
+
+.action-row > *:last-child {
+  margin-right: 0;
 }
 
 .report-btn {
@@ -520,12 +633,13 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8rpx;
-  height: 70rpx;
-  border-radius: 35rpx;
-  font-size: 24rpx;
+  height: 80rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  font-weight: 600;
   color: #fff;
   border: none;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.15);
 
   &.weekly {
     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
@@ -535,22 +649,46 @@ onMounted(() => {
   }
 
   &:active {
-    opacity: 0.9;
+    opacity: 0.85;
+    transform: scale(0.98);
   }
+
+  &[disabled] {
+    opacity: 0.6;
+  }
+}
+
+.report-btn text {
+  color: #fff;
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.1);
+}
+
+.report-btn uni-icons,
+.report-btn .loading-icon {
+  margin-right: 8rpx;
 }
 
 .history-btn {
   width: 100%;
-  height: 70rpx;
+  height: 80rpx;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8rpx;
   background-color: #f3f4f6;
-  border-radius: 35rpx;
-  font-size: 24rpx;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+  font-weight: 500;
   color: #374151;
   border: 1rpx solid #e5e7eb;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.05);
+
+  &:active {
+    background-color: #e5e7eb;
+  }
+}
+
+.history-btn uni-icons {
+  margin-right: 8rpx;
 }
 
 .no-child-card {
@@ -566,7 +704,10 @@ onMounted(() => {
 .warning-info {
   display: flex;
   align-items: flex-start;
-  gap: 16rpx;
+}
+
+.warning-info uni-icons {
+  margin-right: 16rpx;
 }
 
 .warning-text-group {
@@ -590,6 +731,135 @@ onMounted(() => {
   margin: 0;
 }
 
+.nutrition-card {
+  background: #ffffff;
+  border-radius: 20rpx;
+  padding: 30rpx;
+  margin-bottom: 30rpx;
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30rpx;
+}
+
+.title-left {
+  display: flex;
+  align-items: center;
+}
+
+.title-left uni-icons {
+  margin-right: 12rpx;
+}
+
+.over-badge {
+  background: #fef2f2;
+  color: #ef4444;
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.loading-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60rpx 0;
+}
+
+.loading-txt {
+  font-size: 24rpx;
+  color: #94a3b8;
+  margin-top: 16rpx;
+}
+
+.nut-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.nut-grid .nut-card {
+  margin-right: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.nut-grid .nut-card:nth-child(2n) {
+  margin-right: 0;
+}
+
+.nut-card {
+  padding: 24rpx;
+  border-radius: 20rpx;
+  color: #fff;
+  position: relative;
+}
+
+.nut-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.nut-name {
+  font-size: 22rpx;
+  opacity: 0.9;
+}
+
+.warn-dot {
+  width: 60rpx;
+  height: 40rpx;
+  background: #ef4444;
+  border-radius: 15rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18rpx;
+  font-weight: bold;
+}
+
+.nut-main {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 8rpx;
+}
+
+.nut-main .nut-unit {
+  margin-left: 4rpx;
+}
+
+.nut-val {
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+.nut-unit {
+  font-size: 18rpx;
+  opacity: 0.8;
+}
+
+.nut-goal {
+  font-size: 18rpx;
+  opacity: 0.7;
+}
+
+.nut-prog {
+  height: 6rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3rpx;
+  margin-top: 12rpx;
+  overflow: hidden;
+}
+
+.nut-prog-inner {
+  height: 100%;
+  background: #fff;
+}
+
 .quick-actions-card {
   background: #ffffff;
   border-radius: 20rpx;
@@ -601,14 +871,21 @@ onMounted(() => {
   font-size: 32rpx;
   font-weight: bold;
   color: #1f2937;
-  margin-bottom: 30rpx;
   display: block;
 }
 
 .actions-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 20rpx;
+}
+
+.actions-grid .action-item {
+  margin-right: 20rpx;
+  margin-bottom: 20rpx;
+}
+
+.actions-grid .action-item:nth-child(2n) {
+  margin-right: 0;
 }
 
 .action-item {
@@ -618,11 +895,14 @@ onMounted(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12rpx;
 
   &:active {
     transform: scale(0.98);
   }
+}
+
+.action-item uni-icons {
+  margin-bottom: 12rpx;
 }
 
 .action-label {
@@ -662,8 +942,15 @@ onMounted(() => {
 .nutrition-mini-cards {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10rpx;
   margin-bottom: 30rpx;
+}
+
+.nutrition-mini-cards .mini-card {
+  margin-right: 10rpx;
+}
+
+.nutrition-mini-cards .mini-card:nth-child(4n) {
+  margin-right: 0;
 }
 
 .mini-card {
@@ -710,13 +997,26 @@ onMounted(() => {
 .suggestion-list {
   display: flex;
   flex-direction: column;
-  gap: 12rpx;
+}
+
+.highlight-list > *,
+.suggestion-list > * {
+  margin-bottom: 12rpx;
+}
+
+.highlight-list > *:last-child,
+.suggestion-list > *:last-child {
+  margin-bottom: 0;
 }
 
 .highlight-item,
 .suggestion-item {
   display: flex;
-  gap: 12rpx;
+}
+
+.highlight-item .dot,
+.suggestion-item .bullet {
+  margin-right: 12rpx;
 }
 
 .dot {
@@ -741,10 +1041,17 @@ onMounted(() => {
 
 .dialog-footer {
   display: flex;
-  gap: 16rpx;
   margin-top: 30rpx;
   padding-top: 20rpx;
   border-top: 1rpx solid #f1f5f9;
+}
+
+.dialog-footer .footer-btn {
+  margin-right: 16rpx;
+}
+
+.dialog-footer .footer-btn:last-child {
+  margin-right: 0;
 }
 
 .footer-btn {
@@ -783,4 +1090,9 @@ onMounted(() => {
     transform: rotate(360deg);
   }
 }
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
 </style>

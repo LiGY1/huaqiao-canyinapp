@@ -84,46 +84,6 @@
           </view>
         </view>
 
-        <!-- 今日营养摄入 -->
-        <view class="nutrition-section mt-4">
-          <view class="group-title justify-between">
-            <view class="title-left">
-              <uni-icons type="fire" size="16" color="#ef4444"></uni-icons>
-              <text class="title-txt">今日营养摄入</text>
-            </view>
-            <view v-if="hasOverIntake" class="over-badge">{{ overIntakeCount }}项超标</view>
-          </view>
-
-          <view v-if="nutritionLoading" class="loading-box">
-            <uni-icons type="spinner-cycle" size="24" color="#94a3b8" class="spin"></uni-icons>
-            <text class="loading-txt">加载中...</text>
-          </view>
-
-          <view v-else class="nut-grid">
-            <view v-for="nut in nutrientList" :key="nut.key" class="nut-card" :style="{ background: nut.gradient }">
-              <view class="nut-header">
-                <text class="nut-name">{{ nut.label }}</text>
-                <view v-if="isOverIntake(nut.key)" class="warn-dot">超标!</view>
-              </view>
-              <view class="nut-main">
-                <text class="nut-val">{{ formatNumber(nutritionData[nut.key]) }}</text>
-                <text class="nut-unit">{{ nut.unit }}</text>
-              </view>
-              <view class="nut-goal">目标: {{ nutritionData[`target${capitalize(nut.key)}`] }}{{ nut.unit }}</view>
-              <view class="nut-prog">
-                <view
-                  class="nut-prog-inner"
-                  :style="{
-                    width: `${Math.min(
-                      100,
-                      getPercentage(nutritionData[nut.key], nutritionData[`target${capitalize(nut.key)}`])
-                    )}%`,
-                  }"
-                ></view>
-              </view>
-            </view>
-          </view>
-        </view>
       </view>
 
       <!-- 未绑定学生 -->

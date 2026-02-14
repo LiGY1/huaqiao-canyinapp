@@ -31,3 +31,24 @@ export const getPortalConfig = () => {
 		method: 'GET'
 	});
 };
+
+/**
+ * 生成验证码
+ */
+export const generateCaptcha = () => {
+	return request({
+		url: '/unified/captcha/generate',
+		method: 'GET'
+	});
+};
+
+/**
+ * 验证验证码
+ */
+export const verifyCaptcha = (data) => {
+	return request({
+		url: '/unified/captcha/verify',
+		method: 'POST',
+		data
+	});
+};
