@@ -1,0 +1,6 @@
+食堂：canteen_admin           admin123
+家长：parent20250001			parent123
+学生：student20250001			student123
+老师：teacher001					teacher123
+桂教通：https://gjtsmart.yxd.ep.caih.com/chat/AKBn3ylVVUUtBoEJ
+腾讯云：https://huaqiao.shenyic.cn/

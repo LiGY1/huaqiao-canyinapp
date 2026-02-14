@@ -57,7 +57,7 @@ async function callDifyAPI(prompt) {
     };
   } catch (err) {
     console.error(chalk.red('Dify API 调用失败:'), err.message);
-    
+
     // 详细错误诊断
     if (err.code === 'ECONNREFUSED') {
       console.error(chalk.red('  原因: 连接被拒绝 - Dify 服务未运行'));
@@ -68,10 +68,10 @@ async function callDifyAPI(prompt) {
     } else if (err.response) {
       console.error(chalk.red('  HTTP状态:'), err.response.status);
       console.error(chalk.red('  错误详情:'), JSON.stringify(err.response.data, null, 2));
-      
+
       // 特殊处理 SiliconFlow rerank 错误
-      if (err.response.data?.message?.includes('siliconflow') && 
-          err.response.data?.message?.includes('rerank')) {
+      if (err.response.data?.message?.includes('siliconflow') &&
+        err.response.data?.message?.includes('rerank')) {
         console.error(chalk.yellow('  ⚠️  检测到 SiliconFlow rerank 插件错误'));
         console.error(chalk.yellow('  建议: 在 Dify Workflow 中禁用或修复 rerank 节点'));
         console.error(chalk.yellow('  或检查 SiliconFlow API Key 配置'));
@@ -186,12 +186,18 @@ exports.getStudentList = async (req, res) => {
     }
 
     const total = await User.countDocuments(filter);
-    const students = await User.find(filter)
+    let students = await User.find(filter)
       .select('-password')
       .sort({ createdAt: -1 })
       .limit(parseInt(pageSize))
-      .skip((parseInt(page) - 1) * parseInt(pageSize));
+      .skip((parseInt(page) - 1) * parseInt(pageSize)).lean();
 
+    students = students.map(stu => {
+      return {
+        ...stu,
+        name: stu.name[0] + new Array(stu.name.length - 1).fill('*').join('')
+      }
+    })
     paginated(res, students, page, pageSize, total);
   } catch (err) {
     console.error(err);
@@ -234,13 +240,13 @@ exports.getHealthData = async (req, res) => {
       const height = latestExam?.height || student.height || 0;
       const weight = latestExam?.weight || student.weight || 0;
       const bmi = latestExam?.bmi || 0;
-      
+
       // 使用数据库中已保存的营养评分（累积数据，不会随时间变化）
       const nutritionScore = latestExam?.nutritionScore || 0;
-      
+
       // 使用数据库中已保存的健康状态
       const dbHealthStatus = latestExam?.healthStatus || 'fair';
-      
+
       // 映射数据库健康状态到前端显示格式
       // 对于模拟数据，只要营养评分 >= 65（fair/good/excellent）都显示为健康
       let mappedHealthStatus = 'healthy';
@@ -506,15 +512,15 @@ exports.generateHealthReport = async (req, res) => {
       await report.save();
 
       console.error('Dify API 调用失败:', difyResult.error);
-      
+
       // 返回更友好的错误信息
       let errorMessage = 'AI报告生成失败';
       let statusCode = 500;
-      
+
       if (difyResult.httpStatus === 400) {
         // 特殊处理 400 错误
-        if (difyResult.errorDetails?.message?.includes('siliconflow') && 
-            difyResult.errorDetails?.message?.includes('rerank')) {
+        if (difyResult.errorDetails?.message?.includes('siliconflow') &&
+          difyResult.errorDetails?.message?.includes('rerank')) {
           errorMessage = 'AI 服务配置错误（SiliconFlow rerank），请联系管理员检查 Dify Workflow 配置';
         } else {
           errorMessage = 'AI 服务请求参数错误，请联系管理员';
@@ -527,7 +533,7 @@ exports.generateHealthReport = async (req, res) => {
         errorMessage = 'AI 服务认证失败，请联系管理员检查 API Key';
         statusCode = 503;
       }
-      
+
       error(res, errorMessage, statusCode);
     }
   } catch (err) {
@@ -599,7 +605,7 @@ exports.getHealthReportById = async (req, res) => {
     }
 
     if (currentUser.role === USER_ROLES.TEACHER &&
-        report.generatedBy._id.toString() !== currentUser._id.toString()) {
+      report.generatedBy._id.toString() !== currentUser._id.toString()) {
       return error(res, '没有权限查看此报告', 403);
     }
 
@@ -717,12 +723,12 @@ exports.streamChat = async (req, res) => {
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no');  // Nginx 不缓冲
     res.setHeader('Transfer-Encoding', 'chunked');  // 分块传输
-    
+
     // 立即发送响应头
     res.flushHeaders();
 
     let response;
-    
+
     // 如果 conversation_id 为空，直接发送请求，不进行重试
     if (!conversation_id || conversation_id.trim() === '') {
       console.log(chalk.cyan('[学校AI助手] 开始新对话'));
@@ -771,7 +777,7 @@ exports.streamChat = async (req, res) => {
         // 如果是 404 且有 conversation_id，说明对话不存在，重试不带 conversation_id
         if (firstError.response?.status === 404) {
           console.log(chalk.yellow('[学校AI助手] 对话不存在(404)，开始新对话'));
-          
+
           // 第二次尝试：不带 conversation_id，开始新对话
           response = await axios.post(
             DIFY_CONFIG.apiUrl,
@@ -804,13 +810,13 @@ exports.streamChat = async (req, res) => {
     // 将 Dify 的流式响应转发给客户端
     let chunkCount = 0;
     let totalBytes = 0;
-    
+
     response.data.on('data', (chunk) => {
       chunkCount++;
       totalBytes += chunk.length;
       const chunkStr = chunk.toString('utf-8');
       console.log(chalk.cyan(`[学校AI助手] 收到数据块 #${chunkCount} (${chunk.length} bytes) - 立即转发`));
-      
+
       // 如果包含error事件，显示完整内容
       if (chunkStr.includes('"event": "error"') || chunkStr.includes('"event":"error"')) {
         console.log(chalk.red('⚠️ 检测到错误事件，完整内容：'));
@@ -818,10 +824,10 @@ exports.streamChat = async (req, res) => {
       } else {
         console.log(chalk.gray(chunkStr.substring(0, 200)));
       }
-      
+
       // 立即写入并刷新缓冲区
       res.write(chunk);
-      
+
       // 尝试立即刷新（如果可用）
       if (typeof res.flush === 'function') {
         res.flush();

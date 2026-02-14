@@ -198,6 +198,17 @@ const roles = [
 ];
 const roleIndex = ref(0);
 
+const goPage = (url) => {
+  uni.switchTab({
+    url: url,
+    fail: () => {
+      uni.redirectTo({
+        url: url,
+      });
+    },
+  });
+};
+
 // 登录处理
 const handleLogin = async () => {
   errorMessage.value = "";
@@ -216,9 +227,7 @@ const handleLogin = async () => {
 
     // 3. 登录成功，跳转到对应页面
     const homePage = roles[roleIndex.value].homePage;
-    uni.switchTab({
-      url: homePage,
-    });
+    goPage(homePage);
     // ------------------
   } catch (error) {
     console.error("登录错误:", error);
