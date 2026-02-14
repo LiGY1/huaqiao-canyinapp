@@ -281,7 +281,13 @@ exports.getHealthData = async (req, res) => {
       };
     }));
 
-    success(res, healthData);
+    // 根据 healthStatus 参数过滤结果
+    let filteredHealthData = healthData;
+    if (healthStatus) {
+      filteredHealthData = healthData.filter(item => item.healthStatus === healthStatus);
+    }
+
+    success(res, filteredHealthData);
   } catch (err) {
     console.error(err);
     error(res, '获取健康数据失败', 500);
