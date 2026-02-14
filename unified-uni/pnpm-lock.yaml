@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      jsencrypt:
+        specifier: ^3.5.4
+        version: 3.5.4
       mp-html:
         specifier: ^2.5.2
         version: 2.5.2
@@ -798,6 +801,9 @@ packages:
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
+
+  jsencrypt@3.5.4:
+    resolution: {integrity: sha512-kNjfYEMNASxrDGsmcSQh/rUTmcoRfSUkxnAz+MMywM8jtGu+fFEZ3nJjHM58zscVnwR0fYmG9sGkTDjqUdpiwA==}
 
   jsesc@3.1.0:
     resolution: {integrity: sha512-/sM3dO2FOzXjKQhJuo0Q173wf2KOo8t4I8vHy6lF9poUp7bKT0/NHE8fPX23PwfhnykfqnC2xRxOnVw5XuGIaA==}
@@ -1838,6 +1844,8 @@ snapshots:
       hasown: 2.0.2
 
   js-tokens@4.0.0: {}
+
+  jsencrypt@3.5.4: {}
 
   jsesc@3.1.0: {}
 

@@ -11,6 +11,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.17.1",
   "dependencies": {
+    "jsencrypt": "^3.5.4",
     "mp-html": "^2.5.2"
   },
   "devDependencies": {

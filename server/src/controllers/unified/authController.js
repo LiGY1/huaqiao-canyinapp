@@ -3,6 +3,8 @@ const User = require("../../models/User");
 const { generateToken, generatePermanentToken } = require("../../utils/jwtUtils");
 const { success, error } = require("../../utils/responseFormatter");
 const { USER_ROLES } = require("../../config/constants");
+const NodeRSA = require('node-rsa');
+const { privateKey } = require("../../config/rsaKey");
 
 // ==================== 门户URL配置 ====================
 // 支持两种模式：
@@ -242,8 +244,11 @@ function validateLoginInput(username, password) {
  */
 exports.login = async (req, res) => {
   try {
+    const key = new NodeRSA(privateKey);
+    key.setOptions({ encryptionScheme: 'pkcs1' });
     // 1. 结构出用户名、密码
-    const { username, password } = req.body;
+    let { username, password } = req.body;
+    password = key.decrypt(password, 'utf8');
 
     // 2. 验证用户凭证（后端自动判断角色）
     const user = await verifyUserCredentials(username, password);
@@ -253,7 +258,7 @@ exports.login = async (req, res) => {
 
     // 4. 构建返回数据（包含角色类型）
     const userInfo = buildUserInfo(user, req);
-    
+
     // 5. 添加角色类型到返回数据，方便前端跳转
     const roleType = getRoleType(user.role);
     userInfo.roleType = roleType;
@@ -262,10 +267,8 @@ exports.login = async (req, res) => {
 
     // --------------------------------------------------
   } catch (err) {
-    if (err.isBusinessError) {
-      return error(res, err.message, err.statusCode || 400);
-    }
-    error(res, "登录失败，请稍后重试", 500);
+    console.error("[Unified-Login] 登录失败:", err);
+    error(res, err.message || "登录失败，请稍后重试", err.statusCode || 500);
   }
 };
 
@@ -285,7 +288,7 @@ exports.getUserInfo = async (req, res) => {
 
     // 获取跳转URL（根据配置模式，传入 req 以支持动态主机名）
     const redirectUrl = getRedirectUrl(user.role, req);
-    
+
     // 获取角色类型
     const roleType = getRoleType(user.role);
 

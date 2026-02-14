@@ -126,8 +126,8 @@
               <view class="slider-container">
                 <view class="slider-track">
                   <view class="slider-fill" :style="{ width: sliderOffset + 'px' }"></view>
-                  <view 
-                    class="slider-btn" 
+                  <view
+                    class="slider-btn"
                     :style="{ left: sliderOffset + 'px' }"
                     @touchstart="onSliderStart"
                     @touchmove="onSliderMove"
@@ -199,6 +199,7 @@
 import { ref, computed, onMounted, unref } from "vue";
 import { unifiedLogin, getUserInfo, generateCaptcha as fetchCaptcha, verifyCaptcha } from "@/api/auth";
 import storage from "../../utils/storage";
+import { encryptPwd } from "@/utils/tool";
 
 // 定义formData对象记录账号密码
 const formData = ref({
@@ -248,15 +249,19 @@ const sliderProgress = computed(() => {
 const generateCaptchaData = () => {
   sliderOffset.value = 0;
   sliderText.value = "向右滑动验证";
-  
+
   // 动态获取滑块轨道宽度
-  uni.createSelectorQuery().select('.slider-track').boundingClientRect(data => {
-    if (data && data.width) {
-      // 轨道宽度减去滑块按钮宽度（80rpx转px）
-      const sliderBtnWidth = uni.upx2px(80);
-      maxSliderOffset.value = data.width - sliderBtnWidth;
-    }
-  }).exec();
+  uni
+    .createSelectorQuery()
+    .select(".slider-track")
+    .boundingClientRect((data) => {
+      if (data && data.width) {
+        // 轨道宽度减去滑块按钮宽度（80rpx转px）
+        const sliderBtnWidth = uni.upx2px(80);
+        maxSliderOffset.value = data.width - sliderBtnWidth;
+      }
+    })
+    .exec();
 };
 
 // 滑块操作
@@ -270,33 +275,33 @@ const onSliderStart = (e) => {
 
 const onSliderMove = (e) => {
   if (!isSliding.value) return;
-  
+
   // 阻止默认行为和事件冒泡
   e.preventDefault();
   e.stopPropagation();
-  
+
   // 节流：限制更新频率为每16ms一次（约60fps）
   const now = Date.now();
   if (now - lastUpdateTime.value < 16) return;
   lastUpdateTime.value = now;
-  
+
   const currentX = e.touches[0].clientX;
   let offset = currentX - startX.value;
-  
+
   // 限制滑动范围 0-maxSliderOffset
   if (offset < 0) offset = 0;
   if (offset > maxSliderOffset.value) offset = maxSliderOffset.value;
-  
+
   sliderOffset.value = offset;
 };
 
 const onSliderEnd = () => {
   if (!isSliding.value) return;
   isSliding.value = false;
-  
+
   // 验证滑块位置（需要滑到90%以上）
   const progress = (sliderOffset.value / maxSliderOffset.value) * 100;
-  
+
   if (progress >= 90) {
     sliderText.value = "验证成功";
     setTimeout(() => {
@@ -323,10 +328,11 @@ const closeCaptcha = () => {
 // 显示协议
 const showAgreement = (type) => {
   const title = type === "user" ? "用户协议" : "隐私政策";
-  const content = type === "user" 
-    ? "这里是用户协议的内容。实际项目中应该显示完整的用户协议。"
-    : "这里是隐私政策的内容。实际项目中应该显示完整的隐私政策。";
-  
+  const content =
+    type === "user"
+      ? "这里是用户协议的内容。实际项目中应该显示完整的用户协议。"
+      : "这里是隐私政策的内容。实际项目中应该显示完整的隐私政策。";
+
   uni.showModal({
     title: title,
     content: content,
@@ -346,18 +352,18 @@ const triggerAgreementShake = () => {
 // 登录处理
 const handleLogin = async () => {
   errorMessage.value = "";
-  
+
   // 验证是否同意协议
   if (!agreeToTerms.value) {
     errorMessage.value = "请先阅读并同意用户协议和隐私政策";
     triggerAgreementShake();
     return;
   }
-  
+
   if (!validate()) {
     return;
   }
-  
+
   // 检查是否需要验证码（登录失败3次以上）
   if (loginAttempts.value >= 3) {
     showCaptcha.value = true;
@@ -367,7 +373,7 @@ const handleLogin = async () => {
     }, 100);
     return;
   }
-  
+
   // 直接登录
   await performLogin();
 };
@@ -377,8 +383,14 @@ const performLogin = async () => {
   loading.value = true;
 
   try {
+    const data = {
+      ...unref(formData),
+    };
+    // 加密密码
+    data.password = encryptPwd(data.password);
+
     // 1. 发送请求进行登录（不传roleType，由后端判断）
-    const response = await unifiedLogin(unref(formData));
+    const response = await unifiedLogin(data);
 
     // 2. 登录成功，重置尝试次数
     loginAttempts.value = 0;
@@ -394,10 +406,10 @@ const performLogin = async () => {
     console.error("登录错误:", error);
     errorMessage.value = error.response?.data?.message || "登录失败，请检查用户名和密码";
     redirecting.value = false;
-    
+
     // 登录失败，增加尝试次数
     loginAttempts.value++;
-    
+
     // 提示用户还有几次机会
     if (loginAttempts.value >= 3) {
       errorMessage.value = "登录失败次数过多，需要进行安全验证";
