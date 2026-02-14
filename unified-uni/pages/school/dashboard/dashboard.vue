@@ -18,7 +18,11 @@
         />
 
         <!-- 营养趋势图表 -->
-        <NutritionTrend ref="nutritionTrendComp" :hasNoMealData="hasNoMealData || !selectedStudentId" />
+        <NutritionTrend
+          :studentNutritionData="studentNutritionData"
+          ref="nutritionTrendComp"
+          :hasNoMealData="hasNoMealData || !selectedStudentId"
+        />
 
         <TodayOverview ref="todayMealsComp" :todayStats="todayStats" />
 
@@ -39,7 +43,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, nextTick } from "vue";
+import { ref, onMounted, computed, nextTick, unref } from "vue";
 import layout from "@/components/layout.vue";
 import storage from "@/utils/storage";
 import { statisticsApi, studentApi } from "@/api/school";
@@ -107,7 +111,7 @@ const weekDateRange = computed(() => {
 const hasNoMealData = computed(() => {
   if (!studentNutritionData.value || !studentNutritionData.value.weekData) return true;
   return !studentNutritionData.value.weekData.some(
-    (day) => day.breakfast.hasOrder || day.lunch.hasOrder || day.dinner.hasOrder
+    (day) => day.breakfast.hasOrder || day.lunch.hasOrder || day.dinner.hasOrder,
   );
 });
 
@@ -159,7 +163,7 @@ const loadStudentNutritionData = async () => {
     if (res && res.data) {
       studentNutritionData.value = res.data;
       await nextTick();
-      if (!hasNoMealData.value) initNutritionTrendChart();
+      // initNutritionTrendChart();
     }
   } catch (e) {
     console.error(e);
@@ -202,11 +206,12 @@ const updateLastRefreshTime = () => {
   lastUpdateTime.value = new Date().toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" });
 };
 
-// 图量初始化逻辑 (简化适配 l-echart)
 const initNutritionTrendChart = async () => {
   const comp = nutritionTrendComp.value;
   const chartComponentRef = comp && comp.chartRef;
-  if (!chartComponentRef || !chartComponentRef.value) return;
+  if (!chartComponentRef || !chartComponentRef.value) {
+    return;
+  }
   const chart = await chartComponentRef.value.init(echarts);
   const weekData = studentNutritionData.value.weekData || [];
   const days = weekData.map((d) => d.dayName);

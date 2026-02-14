@@ -9,8 +9,7 @@ export const STORAGE_KEYS = {
   USER_INFO: 'userInfo',
   THEME: 'theme',
   REMEMBER_ME: 'remember_me',
-  SAVED_USERNAME: 'saved_username',
-  SAVED_ROLE_TYPE: 'saved_role_type'
+  SAVED_USERNAME: 'saved_username'
 }
 
 // 角色类型

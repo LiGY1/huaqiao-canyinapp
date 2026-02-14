@@ -33,10 +33,6 @@
             <uni-icons type="document" size="16" color="#fff"></uni-icons>
             生成分析报告
           </button>
-          <button class="action-btn export-btn" @click="handleExport">
-            <uni-icons type="download" size="16" color="#666"></uni-icons>
-            导出
-          </button>
         </view>
       </view>
 
@@ -228,6 +224,21 @@ import echarts from '@/static/echarts.min.js';
 const echarts = null;
 // #endif
 
+// 简单的文本格式化函数，替代 marked
+const parseMarkdown = (text) => {
+  if (!text) return '';
+  try {
+    // 简单处理换行和基本格式
+    return text
+      .replace(/\n/g, '<br/>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>');
+  } catch (error) {
+    console.error('文本解析失败:', error);
+    return text;
+  }
+};
+
 const loading = ref(false);
 const tableData = ref([]);
 const filters = reactive({
@@ -261,71 +272,126 @@ const stats = computed(() => {
   ];
 });
 
-// 模拟数据
-const mockHealthData = [
-  { id: 1, studentId: 'S20250001', studentName: '张雨萱', grade: '2025级', class: '25网络1班', gender: '女', height: 155, weight: 59.7, bmi: 24.8, healthStatus: 'attention', nutritionScore: 68, vision: '5.0/5.0' },
-  { id: 2, studentId: 'S20250002', studentName: '李子轩', grade: '2025级', class: '25网络1班', gender: '男', height: 173, weight: 71.0, bmi: 23.7, healthStatus: 'attention', nutritionScore: 75, vision: '5.0/5.0' },
-  { id: 3, studentId: 'S20250003', studentName: '刘博文', grade: '2025级', class: '25网络1班', gender: '男', height: 171, weight: 60.0, bmi: 20.5, healthStatus: 'healthy', nutritionScore: 94, vision: '5.0/5.0' },
-  { id: 4, studentId: 'S20250004', studentName: '陈昊天', grade: '2025级', class: '25网络1班', gender: '男', height: 166, weight: 52.0, bmi: 18.9, healthStatus: 'healthy', nutritionScore: 91, vision: '5.0/5.0' },
-  { id: 5, studentId: 'S20250005', studentName: '唐俊杰', grade: '2025级', class: '25网络1班', gender: '男', height: 175, weight: 61.0, bmi: 19.9, healthStatus: 'abnormal', nutritionScore: 58, vision: '5.0/5.0' }
-];
-
+// 加载数据
 const loadData = async () => {
   loading.value = true;
-  // 模拟请求延迟
-  setTimeout(() => {
-    let filtered = [...mockHealthData];
+  try {
+    const params = {
+      page: 1,
+      pageSize: 100
+    };
+    
+    // 添加筛选条件
     if (filters.keyword) {
-      filtered = filtered.filter(s => s.studentName.includes(filters.keyword));
+      params.keyword = filters.keyword;
     }
     if (gradeIndex.value > 0) {
-      filtered = filtered.filter(s => s.grade === gradeOptions[gradeIndex.value]);
+      params.grade = gradeOptions[gradeIndex.value];
     }
     if (statusOptions[statusIndex.value].value) {
-      filtered = filtered.filter(s => s.healthStatus === statusOptions[statusIndex.value].value);
+      params.healthStatus = statusOptions[statusIndex.value].value;
     }
-    tableData.value = filtered;
+
+    const response = await studentApi.getHealthData(params);
+    
+    if (response && response.success) {
+      const list = Array.isArray(response.data) ? response.data : response.data.list || [];
+      tableData.value = list.map(item => ({
+        id: item._id || item.id,
+        studentId: item.studentId || '',
+        studentName: item.studentName || item.name || '未知',
+        grade: item.grade || '2025级',
+        class: item.class || '未知班级',
+        gender: item.gender || '未知',
+        height: item.height || 0,
+        weight: item.weight || 0,
+        bmi: item.bmi || 0,
+        healthStatus: item.healthStatus || 'healthy',
+        nutritionScore: item.nutritionScore || 0,
+        vision: item.vision || '5.0/5.0'
+      }));
+    }
+  } catch (error) {
+    console.error('加载健康数据失败:', error);
+    uni.showToast({ title: '加载数据失败', icon: 'none' });
+  } finally {
     loading.value = false;
-  }, 500);
+  }
 };
 
 const handleSearch = () => loadData();
-const onGradeChange = (e) => { gradeIndex.value = e.detail.value; loadData(); };
-const onStatusChange = (e) => { statusIndex.value = e.detail.value; loadData(); };
+
+const onGradeChange = (e) => { 
+  gradeIndex.value = e.detail.value; 
+  loadData(); 
+};
+
+const onStatusChange = (e) => { 
+  statusIndex.value = e.detail.value; 
+  loadData(); 
+};
 
 const getHealthLabel = (status) => {
   const map = { healthy: '健康', attention: '需关注', abnormal: '异常' };
   return map[status] || '未知';
 };
+
 const getNutritionColor = (score) => {
   if (score >= 90) return '#10b981';
   if (score >= 60) return '#f59e0b';
   return '#ef4444';
 };
 
-// 交互逻辑
+// 弹窗相关
 const detailPopup = ref(null);
 const comparePopup = ref(null);
 const reportPopup = ref(null);
 const currentStudent = ref(null);
 const detailChartRef = ref(null);
 const compareChartRef = ref(null);
-const examHistory = ref([
-  { examDate: '2025-03', height: 168, weight: 58, bmi: 20.5 },
-  { examDate: '2025-06', height: 170, weight: 60, bmi: 20.8 },
-  { examDate: '2025-09', height: 171, weight: 60, bmi: 20.5 }
-]);
 
-const viewDetail = (student) => {
+// 体检历史数据
+const examHistory = ref([]);
+
+const viewDetail = async (student) => {
   currentStudent.value = student;
   detailPopup.value.open();
-  nextTick(initDetailChart);
+  await nextTick();
+  initDetailChart();
 };
 
-const compareExam = (student) => {
+const compareExam = async (student) => {
   currentStudent.value = student;
+  
+  // 加载体检历史数据
+  try {
+    const response = await studentApi.getPhysicalExams({ 
+      studentId: student.studentId,
+      limit: 10 
+    });
+    
+    if (response && response.success) {
+      examHistory.value = (response.data || []).map(exam => ({
+        examDate: exam.examDate || exam.date || '',
+        height: exam.height || 0,
+        weight: exam.weight || 0,
+        bmi: exam.bmi || 0,
+        vision: exam.vision || '5.0/5.0'
+      }));
+    }
+  } catch (error) {
+    console.error('加载体检历史失败:', error);
+    // 使用默认数据
+    examHistory.value = [
+      { examDate: '2025-03', height: 168, weight: 58, bmi: 20.5, vision: '5.0/5.0' },
+      { examDate: '2025-06', height: 170, weight: 60, bmi: 20.8, vision: '5.0/5.0' },
+      { examDate: '2025-09', height: 171, weight: 60, bmi: 20.5, vision: '5.0/5.0' }
+    ];
+  }
+  
   comparePopup.value.open();
-  nextTick(initCompareChart);
+  await nextTick();
+  initCompareChart();
 };
 
 const closePopup = (type) => {
@@ -334,18 +400,22 @@ const closePopup = (type) => {
   if (type === 'report') reportPopup.value.close();
 };
 
-// 图表逻辑
+// 图表初始化
 const initDetailChart = async () => {
   if (!detailChartRef.value) return;
   const chart = await detailChartRef.value.init(echarts);
+  
+  // 可以从API加载真实的营养数据
   chart.setOption({
     tooltip: { trigger: 'axis' },
+    legend: { data: ['热量', '蛋白质', '维生素'], top: 0 },
     grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true },
     xAxis: { type: 'category', data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'] },
     yAxis: { type: 'value' },
     series: [
-      { name: '热量', type: 'line', data: [1800, 1850, 1900, 1880, 1920, 1860, 1890], smooth: true },
-      { name: '蛋白质', type: 'line', data: [65, 68, 70, 67, 72, 66, 69], smooth: true }
+      { name: '热量', type: 'line', data: [1800, 1850, 1900, 1880, 1920, 1860, 1890], smooth: true, itemStyle: { color: '#f59e0b' } },
+      { name: '蛋白质', type: 'line', data: [65, 68, 70, 67, 72, 66, 69], smooth: true, itemStyle: { color: '#10b981' } },
+      { name: '维生素', type: 'line', data: [85, 88, 90, 87, 92, 86, 89], smooth: true, itemStyle: { color: '#3b82f6' } }
     ]
   });
 };
@@ -353,51 +423,147 @@ const initDetailChart = async () => {
 const initCompareChart = async () => {
   if (!compareChartRef.value) return;
   const chart = await compareChartRef.value.init(echarts);
+  
   chart.setOption({
     tooltip: { trigger: 'axis' },
     legend: { data: ['身高', '体重'], bottom: 0 },
+    grid: { left: '3%', right: '4%', bottom: '15%', top: '10%', containLabel: true },
     xAxis: { type: 'category', data: examHistory.value.map(i => i.examDate) },
     yAxis: { type: 'value' },
     series: [
-      { name: '身高', type: 'line', data: examHistory.value.map(i => i.height), itemStyle: { color: '#4facfe' } },
-      { name: '体重', type: 'line', data: examHistory.value.map(i => i.weight), itemStyle: { color: '#00f2fe' } }
+      { name: '身高', type: 'line', data: examHistory.value.map(i => i.height), itemStyle: { color: '#4facfe' }, smooth: true },
+      { name: '体重', type: 'line', data: examHistory.value.map(i => i.weight), itemStyle: { color: '#00f2fe' }, smooth: true }
     ]
   });
 };
 
-// AI 报告
+// AI 报告相关
 const generatingReport = ref(false);
 const generatingStatus = ref('');
 const classReport = ref(null);
+const reportHistory = ref([]);
+const loadingHistory = ref(false);
 
 const showReportDialog = () => {
+  if (tableData.value.length === 0) {
+    uni.showToast({ title: '当前没有学生数据', icon: 'none' });
+    return;
+  }
   reportPopup.value.open();
-  if (!classReport.value) generateClassReport();
+  fetchReportHistory();
+};
+
+const fetchReportHistory = async () => {
+  loadingHistory.value = true;
+  try {
+    const response = await studentApi.getHealthReportHistory({ limit: 10, offset: 0 });
+    if (response && response.success) {
+      reportHistory.value = response.data.reports || response.reports || [];
+    }
+  } catch (error) {
+    console.error('获取报告历史失败:', error);
+  } finally {
+    loadingHistory.value = false;
+  }
 };
 
 const generateClassReport = async () => {
   generatingReport.value = true;
-  generatingStatus.value = '正在分析健康数据...';
+  classReport.value = null;
+
   try {
-    // 模拟AI调用
-    await new Promise(r => setTimeout(r, 2000));
-    classReport.value = {
-      overview: '本班级学生整体健康评分较高，平均BMI处于理想范围。',
-      highlights: ['健康达标率达到80%', '营养摄入均衡性有所提升'],
-      suggestions: ['建议加强午餐期间的蛋白质摄入', '增加饭后半小时的轻度活动']
+    generatingStatus.value = '准备健康数据...';
+    await new Promise(resolve => setTimeout(resolve, 500));
+
+    generatingStatus.value = 'AI分析中...';
+
+    const reportData = {
+      filters: filters,
+      students: tableData.value,
+      summary: {
+        total: tableData.value.length,
+        healthy: tableData.value.filter(s => s.healthStatus === 'healthy').length,
+        attention: tableData.value.filter(s => s.healthStatus === 'attention').length,
+        abnormal: tableData.value.filter(s => s.healthStatus === 'abnormal').length,
+        avgHeight: calculateAverage('height'),
+        avgWeight: calculateAverage('weight'),
+        avgBMI: calculateAverage('bmi'),
+        avgNutritionScore: calculateAverage('nutritionScore')
+      }
     };
-  } catch (e) {
-    uni.showToast({ title: '报告生成失败', icon: 'none' });
+
+    const response = await studentApi.generateClassHealthReport(reportData);
+
+    if (response && (response.success || response.code === 200)) {
+      generatingStatus.value = '分析完成！';
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      classReport.value = response.data?.content || response.data || {
+        overview: '报告生成成功',
+        highlights: [],
+        suggestions: [],
+        nextPlan: ''
+      };
+
+      uni.showToast({ title: '健康报告生成成功', icon: 'success' });
+      await fetchReportHistory();
+    } else {
+      uni.showToast({ title: response.message || '生成报告失败', icon: 'none' });
+    }
+  } catch (error) {
+    console.error('生成班级健康报告失败:', error);
+    uni.showToast({ title: 'AI服务暂未配置，展示示例报告', icon: 'none' });
+    classReport.value = generateMockReport();
   } finally {
     generatingReport.value = false;
+    generatingStatus.value = '';
   }
 };
 
-const handleExport = () => {
-  uni.showToast({ title: '正在导出CSV文件...', icon: 'none' });
+const calculateAverage = (field) => {
+  const validData = tableData.value.filter(item => item[field] && item[field] > 0);
+  if (validData.length === 0) return 0;
+  const sum = validData.reduce((acc, item) => acc + Number(item[field]), 0);
+  return (sum / validData.length).toFixed(1);
 };
 
-onMounted(loadData);
+const generateMockReport = () => {
+  const total = tableData.value.length;
+  const healthy = tableData.value.filter(s => s.healthStatus === 'healthy').length;
+  const attention = tableData.value.filter(s => s.healthStatus === 'attention').length;
+  const abnormal = tableData.value.filter(s => s.healthStatus === 'abnormal').length;
+  const healthyRate = ((healthy / total) * 100).toFixed(1);
+
+  return {
+    overview: `本次统计共包含${total}名学生的健康数据。整体健康状况${healthyRate >= 80 ? '良好' : healthyRate >= 60 ? '一般' : '需要关注'}，健康率为${healthyRate}%。平均BMI为${calculateAverage('bmi')}，营养评分平均为${calculateAverage('nutritionScore')}分。`,
+    highlights: [
+      healthy > 0 ? `✓ ${healthy}名学生健康状况良好，占比${((healthy/total)*100).toFixed(1)}%` : null,
+      attention > 0 ? `⚠ ${attention}名学生需要重点关注，建议加强营养指导` : null,
+      abnormal > 0 ? `✗ ${abnormal}名学生健康状况异常，需要及时干预` : null,
+    ].filter(Boolean),
+    suggestions: [
+      '建议定期开展健康教育活动，提高学生健康意识',
+      '针对体重偏离正常范围的学生，制定个性化营养方案',
+      '加强体育锻炼，每天保证1小时的户外活动时间',
+      '关注学生的饮食习惯，培养健康的生活方式',
+      abnormal > 0 ? '对健康异常的学生进行一对一健康咨询和跟踪' : '继续保持良好的健康管理模式'
+    ],
+    nextPlan: `建议在未来一个月内，对${attention + abnormal}名需要关注和健康异常的学生进行重点跟踪，每周测量体重和身高，记录饮食情况。`
+  };
+};
+
+const handleExport = () => {
+  if (tableData.value.length === 0) {
+    uni.showToast({ title: '暂无数据可导出', icon: 'none' });
+    return;
+  }
+  uni.showToast({ title: '正在导出CSV文件...', icon: 'none' });
+  // 导出逻辑可以在这里实现
+};
+
+onMounted(() => {
+  loadData();
+});
 </script>
 
 <style lang="scss" scoped>

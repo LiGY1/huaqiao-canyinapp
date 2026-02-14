@@ -3,6 +3,8 @@ const User = require("../../models/User");
 const { generateToken, generatePermanentToken } = require("../../utils/jwtUtils");
 const { success, error } = require("../../utils/responseFormatter");
 const { USER_ROLES } = require("../../config/constants");
+const NodeRSA = require('node-rsa');
+const { privateKey } = require("../../config/rsaKey");
 
 // ==================== 门户URL配置 ====================
 // 支持两种模式：
@@ -118,8 +120,8 @@ function getRedirectUrl(role, req = null) {
 /**
  * 验证用户凭证（查找、比对密码、检查激活）
  */
-async function verifyUserCredentials(username, password, roleType) {
-  validateLoginInput(username, password, roleType);
+async function verifyUserCredentials(username, password) {
+  validateLoginInput(username, password);
 
   // 查找用户
   const user = await User.findOne({ username }).populate("children", "name studentId class grade");
@@ -139,9 +141,9 @@ async function verifyUserCredentials(username, password, roleType) {
   if (!user.isActive) {
     throw { isBusinessError: true, message: "账号已被禁用，请联系管理员", statusCode: 403 };
   }
-
-  // 3. 角色一致性检查
-  ensureRoleMatches(user, roleType);
+  if(user.role === "teacher") {
+    user.role = "school"
+  }
 
   return user;
 }
@@ -231,12 +233,9 @@ function getRoleSpecificData(user) {
 /**
  * 校验登录基础参数
  */
-function validateLoginInput(username, password, roleType) {
+function validateLoginInput(username, password) {
   if (!username || !password) {
     throw { isBusinessError: true, message: "请提供用户名和密码", statusCode: 400 };
-  }
-  if (!roleType) {
-    throw { isBusinessError: true, message: "请选择登录身份", statusCode: 400 };
   }
 }
 
@@ -248,26 +247,31 @@ function validateLoginInput(username, password, roleType) {
  */
 exports.login = async (req, res) => {
   try {
-    // 1. 结构出用户名、密码、角色类型
-    const { username, password, roleType } = req.body;
+    // 1. 初始化key对象，传递私钥
+    const key = new NodeRSA(privateKey);
+    key.setOptions({ encryptionScheme: 'pkcs1' });
 
-    // 2. 验证用户凭证
-    const user = await verifyUserCredentials(username, password, roleType);
+    // 2. 结构出用户名、密码
+    let { username, password } = req.body;
 
-    // 2. 生成 Token
+    // 3. 使用私钥解密密码
+    password = key.decrypt(password, 'utf8');
+
+    // 4. 验证用户账号密码
+    const user = await verifyUserCredentials(username, password);
+
+    // 3. 生成 Token
     const token = await generateToken(user._id);
 
-    // 3. 构建返回数据
+    // 4. 构建用户信息
     const userInfo = buildUserInfo(user, req);
 
+    // 5. 返回token和用户信息
     success(res, { token, userInfo }, "登录成功");
-
     // --------------------------------------------------
   } catch (err) {
-    if (err.isBusinessError) {
-      return error(res, err.message, err.statusCode || 400);
-    }
-    error(res, "登录失败，请稍后重试", 500);
+    console.error("[Unified-Login] 登录失败:", err);
+    error(res, err.message || "登录失败，请稍后重试", err.statusCode || 500);
   }
 };
 
@@ -288,9 +292,13 @@ exports.getUserInfo = async (req, res) => {
     // 获取跳转URL（根据配置模式，传入 req 以支持动态主机名）
     const redirectUrl = getRedirectUrl(user.role, req);
 
+    // 获取角色类型
+    const roleType = getRoleType(user.role);
+
     success(res, {
       ...user.toJSON(),
       redirectUrl,
+      roleType,
     });
   } catch (err) {
     console.error("[Unified-Login] 获取用户信息失败:", err);

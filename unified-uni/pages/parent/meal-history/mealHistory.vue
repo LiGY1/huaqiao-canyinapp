@@ -1,6 +1,6 @@
 <template>
   <layout>
-    <view class="page-container">
+    <scroll-view :scroll-y="true" class="page-container">
       <!-- 统计数据 -->
       <view class="stats-grid">
         <view class="stat-card">
@@ -43,7 +43,7 @@
             <l-echart ref="mealTypeChartRef" @finished="initMealTypeChart"></l-echart>
           </view>
         </view>
-        
+
         <view class="chart-card mt-4">
           <view class="chart-header">
             <uni-icons type="pie" size="18" color="#8b5cf6"></uni-icons>
@@ -74,7 +74,9 @@
 
             <view class="location-info">
               <uni-icons type="location" size="14" color="#94a3b8"></uni-icons>
-              <text class="location-text">{{ record.campus }} - {{ record.canteen }} - {{ record.floor }}楼{{ record.window }}号窗口</text>
+              <text class="location-text"
+                >{{ record.campus }} - {{ record.canteen }} - {{ record.floor }}楼{{ record.window }}号窗口</text
+              >
             </view>
 
             <view class="dishes-list">
@@ -111,18 +113,18 @@
           </view>
         </view>
       </view>
-    </view>
+    </scroll-view>
   </layout>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, nextTick } from 'vue';
-import layout from '@/components/layout.vue';
-import { consumptionApi } from '@/api/parent';
-import storage from '@/utils/storage';
+import { ref, reactive, onMounted, nextTick } from "vue";
+import layout from "@/components/layout.vue";
+import { consumptionApi } from "@/api/parent";
+import storage from "@/utils/storage";
 
 // #ifdef MP
-import * as echarts from '@/static/echarts.min.js';
+import * as echarts from "@/static/echarts.min.js";
 // #endif
 // #ifndef MP
 const echarts = null;
@@ -131,8 +133,8 @@ const echarts = null;
 const mealRecords = ref([]);
 const statistics = reactive({
   totalMeals: 0,
-  totalSpent: '0.00',
-  avgSpent: '0.00'
+  totalSpent: "0.00",
+  avgSpent: "0.00",
 });
 
 const mealTypeChartRef = ref(null);
@@ -143,23 +145,23 @@ let nutritionChartInstance = null;
 const mealTypeStats = ref({
   breakfast: 0,
   lunch: 0,
-  dinner: 0
+  dinner: 0,
 });
 
 const nutritionStats = ref({
   protein: 0,
   fat: 0,
-  carbs: 0
+  carbs: 0,
 });
 
 const getMealTypeClass = (type) => {
   const map = {
-    '早餐': 'bg-amber',
-    '午餐': 'bg-green',
-    '晚餐': 'bg-blue',
-    '夜宵': 'bg-purple'
+    早餐: "bg-amber",
+    午餐: "bg-green",
+    晚餐: "bg-blue",
+    夜宵: "bg-purple",
   };
-  return map[type] || 'bg-blue';
+  return map[type] || "bg-blue";
 };
 
 const fetchMealRecords = async () => {
@@ -171,27 +173,27 @@ const fetchMealRecords = async () => {
     const res = await consumptionApi.getMealHistory(childId, { page: 1, pageSize: 50 });
     if (res.code === 200) {
       const list = res.data.list || [];
-      mealRecords.value = list.map(order => {
+      mealRecords.value = list.map((order) => {
         const d = new Date(order.orderDate);
-        const mealTypeMap = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '夜宵' };
+        const mealTypeMap = { breakfast: "早餐", lunch: "午餐", dinner: "晚餐", snack: "夜宵" };
         return {
           id: order._id,
-          mealType: mealTypeMap[order.mealType] || '用餐',
-          date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`,
-          time: `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`,
+          mealType: mealTypeMap[order.mealType] || "用餐",
+          date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+          time: `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`,
           totalPrice: order.totalAmount || 0,
-          campus: order.location?.campus || '主校区',
-          canteen: order.location?.canteen || '第一食堂',
-          floor: order.location?.floor || '1',
-          window: order.location?.window || '1',
-          dishes: (order.items || []).map(it => ({
+          campus: order.location?.campus || "主校区",
+          canteen: order.location?.canteen || "第一食堂",
+          floor: order.location?.floor || "1",
+          window: order.location?.window || "1",
+          dishes: (order.items || []).map((it) => ({
             id: it.dish?._id || it.dish,
-            name: it.dish?.name || it.dishName || '菜品',
+            name: it.dish?.name || it.dishName || "菜品",
             quantity: it.quantity || 1,
             price: it.price || 0,
-            isHealthy: it.nutrition?.fiber >= 5
+            isHealthy: it.nutrition?.fiber >= 5,
           })),
-          nutrition: order.totalNutrition
+          nutrition: order.totalNutrition,
         };
       });
       calculateStats();
@@ -206,15 +208,15 @@ const calculateStats = () => {
   const total = mealRecords.value.reduce((s, r) => s + r.totalPrice, 0);
   statistics.totalMeals = count;
   statistics.totalSpent = total.toFixed(2);
-  statistics.avgSpent = count > 0 ? (total / count).toFixed(2) : '0.00';
+  statistics.avgSpent = count > 0 ? (total / count).toFixed(2) : "0.00";
 
   const typeStats = { breakfast: 0, lunch: 0, dinner: 0 };
   const nutStats = { protein: 0, fat: 0, carbs: 0 };
 
-  mealRecords.value.forEach(r => {
-    if (r.mealType === '早餐') typeStats.breakfast += r.nutrition?.calories || 0;
-    if (r.mealType === '午餐') typeStats.lunch += r.nutrition?.calories || 0;
-    if (r.mealType === '晚餐') typeStats.dinner += r.nutrition?.calories || 0;
+  mealRecords.value.forEach((r) => {
+    if (r.mealType === "早餐") typeStats.breakfast += r.nutrition?.calories || 0;
+    if (r.mealType === "午餐") typeStats.lunch += r.nutrition?.calories || 0;
+    if (r.mealType === "晚餐") typeStats.dinner += r.nutrition?.calories || 0;
 
     if (r.nutrition) {
       nutStats.protein += r.nutrition.protein || 0;
@@ -225,7 +227,7 @@ const calculateStats = () => {
 
   mealTypeStats.value = typeStats;
   nutritionStats.value = nutStats;
-  
+
   nextTick(() => {
     updateCharts();
   });
@@ -246,35 +248,39 @@ const initNutritionChart = async () => {
 const updateCharts = () => {
   if (mealChartInstance) {
     const data = [
-      { value: mealTypeStats.value.breakfast, name: '早餐', itemStyle: { color: '#f59e0b' } },
-      { value: mealTypeStats.value.lunch, name: '午餐', itemStyle: { color: '#10b981' } },
-      { value: mealTypeStats.value.dinner, name: '晚餐', itemStyle: { color: '#3b82f6' } }
-    ].filter(i => i.value > 0);
+      { value: mealTypeStats.value.breakfast, name: "早餐", itemStyle: { color: "#f59e0b" } },
+      { value: mealTypeStats.value.lunch, name: "午餐", itemStyle: { color: "#10b981" } },
+      { value: mealTypeStats.value.dinner, name: "晚餐", itemStyle: { color: "#3b82f6" } },
+    ].filter((i) => i.value > 0);
 
     mealChartInstance.setOption({
-      series: [{
-        type: 'pie',
-        radius: ['40%', '70%'],
-        data: data,
-        label: { show: true, position: 'outside', formatter: '{b}\n{d}%' }
-      }]
+      series: [
+        {
+          type: "pie",
+          radius: ["40%", "70%"],
+          data: data,
+          label: { show: true, position: "outside", formatter: "{b}\n{d}%" },
+        },
+      ],
     });
   }
 
   if (nutritionChartInstance) {
     const data = [
-      { value: nutritionStats.value.protein, name: '蛋白质', itemStyle: { color: '#ef4444' } },
-      { value: nutritionStats.value.fat, name: '脂肪', itemStyle: { color: '#f59e0b' } },
-      { value: nutritionStats.value.carbs, name: '碳水', itemStyle: { color: '#8b5cf6' } }
-    ].filter(i => i.value > 0);
+      { value: nutritionStats.value.protein, name: "蛋白质", itemStyle: { color: "#ef4444" } },
+      { value: nutritionStats.value.fat, name: "脂肪", itemStyle: { color: "#f59e0b" } },
+      { value: nutritionStats.value.carbs, name: "碳水", itemStyle: { color: "#8b5cf6" } },
+    ].filter((i) => i.value > 0);
 
     nutritionChartInstance.setOption({
-      series: [{
-        type: 'pie',
-        radius: ['40%', '70%'],
-        data: data,
-        label: { show: true, position: 'outside', formatter: '{b}\n{d}%' }
-      }]
+      series: [
+        {
+          type: "pie",
+          radius: ["40%", "70%"],
+          data: data,
+          label: { show: true, position: "outside", formatter: "{b}\n{d}%" },
+        },
+      ],
     });
   }
 };
@@ -288,7 +294,7 @@ onMounted(() => {
 .page-container {
   padding: 30rpx;
   background-color: #f8fafc;
-  min-height: 100vh;
+  height: 100%;
 }
 
 .stats-grid {
@@ -304,7 +310,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
 }
 
 .stat-icon {
@@ -317,10 +323,18 @@ onMounted(() => {
   margin-bottom: 12rpx;
 }
 
-.bg-blue { background-color: #3b82f6; }
-.bg-green { background-color: #10b981; }
-.bg-purple { background-color: #8b5cf6; }
-.bg-amber { background-color: #f59e0b; }
+.bg-blue {
+  background-color: #3b82f6;
+}
+.bg-green {
+  background-color: #10b981;
+}
+.bg-purple {
+  background-color: #8b5cf6;
+}
+.bg-amber {
+  background-color: #f59e0b;
+}
 
 .stat-value {
   font-size: 32rpx;
@@ -338,7 +352,7 @@ onMounted(() => {
   background: #fff;
   border-radius: 24rpx;
   padding: 30rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
 }
 
 .chart-header {
@@ -363,7 +377,7 @@ onMounted(() => {
   border-radius: 24rpx;
   padding: 30rpx;
   margin-bottom: 24rpx;
-  box-shadow: 0 4rpx 12rpx rgba(0,0,0,0.05);
+  box-shadow: 0 4rpx 12rpx rgba(0, 0, 0, 0.05);
 }
 
 .meal-header {
@@ -490,5 +504,7 @@ onMounted(() => {
   margin-top: 20rpx;
 }
 
-.mt-4 { margin-top: 30rpx; }
+.mt-4 {
+  margin-top: 30rpx;
+}
 </style>

@@ -17,21 +17,6 @@
 
         <!-- 登录卡片 -->
         <view class="login-card">
-          <!-- 身份选择 (胶囊样式) -->
-          <view class="role-selector">
-            <picker @change="onRoleChange" :value="roleIndex" :range="roles" range-key="label" :disabled="loading">
-              <view class="role-trigger" :class="{ 'has-value': roleIndex >= 0 }">
-                <view class="role-left">
-                  <view class="icon-circle">
-                    <uni-icons type="staff-filled" size="20" color="#4f46e5"></uni-icons>
-                  </view>
-                  <text class="role-text">{{ roleIndex >= 0 ? roles[roleIndex].label : "请选择登录身份" }}</text>
-                </view>
-                <uni-icons type="right" size="16" color="#9ca3af"></uni-icons>
-              </view>
-            </picker>
-          </view>
-
           <!-- 输入表单 -->
           <view class="form-group">
             <view class="input-item" :class="{ 'is-focus': focusField === 'username' }">
@@ -42,7 +27,6 @@
                 :color="focusField === 'username' ? '#4f46e5' : '#9ca3af'"
               ></uni-icons>
 
-              <!-- 2. 绑定用户名 -->
               <input
                 v-model="formData.username"
                 type="text"
@@ -63,7 +47,6 @@
                 :color="focusField === 'password' ? '#4f46e5' : '#9ca3af'"
               ></uni-icons>
 
-              <!-- 3. 绑定密码 -->
               <input
                 v-model="formData.password"
                 :type="showPassword ? 'text' : 'password'"
@@ -95,17 +78,66 @@
             <text class="forgot-btn" @click="handleForgetPassword">忘记密码?</text>
           </view>
 
-          <!-- 错误提示 -->
+          <!-- 用户协议勾选 -->
+          <view class="agreement-box" :class="{ 'shake-animation': agreementShake }">
+            <view class="agreement-checkbox" @click="agreeToTerms = !agreeToTerms">
+              <view class="custom-checkbox" :class="{ checked: agreeToTerms }">
+                <uni-icons v-if="agreeToTerms" type="checkmarkempty" size="12" color="#fff"></uni-icons>
+              </view>
+              <text class="agreement-text">
+                我已阅读并同意
+                <text class="link-text" @click.stop="showAgreement('user')">《用户协议》</text>
+                和
+                <text class="link-text" @click.stop="showAgreement('privacy')">《隐私政策》</text>
+              </text>
+            </view>
+          </view>
+
           <view v-if="errorMessage" class="error-banner animate-shake">
             <uni-icons type="info-filled" size="16" color="#ef4444"></uni-icons>
             <text class="error-msg">{{ errorMessage }}</text>
           </view>
 
-          <!-- 登录按钮 (添加 hover-class) -->
           <button @click="handleLogin" class="submit-btn" hover-class="submit-btn-active" :disabled="loading">
             <view v-if="loading" class="spinner"></view>
             <text>{{ loading ? "登录中..." : "立即登录" }}</text>
           </button>
+        </view>
+
+        <!-- 验证码弹窗 -->
+        <view v-if="showCaptcha" class="captcha-modal" @click="closeCaptcha">
+          <view class="captcha-content" @click.stop>
+            <view class="captcha-header">
+              <text class="captcha-title">安全验证</text>
+              <view class="captcha-close" @click="closeCaptcha">
+                <uni-icons type="closeempty" size="20" color="#666"></uni-icons>
+              </view>
+            </view>
+            <view class="captcha-body">
+              <text class="captcha-tip">请将滑块拖动到最右侧</text>
+              <view class="captcha-image-box">
+                <view class="captcha-progress-bar">
+                  <view class="progress-fill" :style="{ width: sliderProgress + '%' }"></view>
+                  <view class="progress-text">{{ sliderProgress }}%</view>
+                </view>
+              </view>
+              <view class="slider-container">
+                <view class="slider-track">
+                  <view class="slider-fill" :style="{ width: sliderOffset + 'px' }"></view>
+                  <view
+                    class="slider-btn"
+                    :style="{ left: sliderOffset + 'px' }"
+                    @touchstart="onSliderStart"
+                    @touchmove="onSliderMove"
+                    @touchend="onSliderEnd"
+                  >
+                    <uni-icons type="forward" size="20" color="#fff"></uni-icons>
+                  </view>
+                </view>
+                <text class="slider-text">{{ sliderText }}</text>
+              </view>
+            </view>
+          </view>
         </view>
 
         <view class="portal-section">
@@ -162,76 +194,225 @@
 </template>
 
 <script setup>
-import { ref, onMounted, unref } from "vue";
-import { unifiedLogin, getUserInfo } from "@/api/auth";
+import { ref, computed, onMounted, unref } from "vue";
+import { unifiedLogin, getUserInfo, generateCaptcha as fetchCaptcha, verifyCaptcha } from "@/api/auth";
 import storage from "../../utils/storage";
+import { encryptPwd } from "@/utils/tool";
 
-// -----1. 定义formData对象记录账号密码-------
 const formData = ref({
-  roleType: "student",
   username: "",
   password: "",
 });
-// -----------------
 
-const roles = [
-  {
-    value: "student",
-    label: "学生",
-    homePage: "/pages/student/home/home",
-  },
-  {
-    value: "parent",
-    label: "家长",
-    homePage: "/pages/parent/home/home",
-  },
-  {
-    value: "school",
-    label: "学校人员（教师/管理员）",
-    homePage: "/pages/school/dashboard/dashboard",
-  },
-  {
-    value: "canteen",
-    label: "食堂人员",
-    homePage: "/pages/canteen/dashboard",
-  },
-];
-const roleIndex = ref(0);
+const roleHomePages = {
+  student: "/pages/student/home/home",
+  parent: "/pages/parent/home/home",
+  school: "/pages/school/dashboard/dashboard",
+  canteen: "/pages/canteen/dashboard",
+};
+
+const goPage = (url) => {
+  uni.switchTab({
+    url: url,
+    fail: () => {
+      uni.redirectTo({
+        url: url,
+      });
+    },
+  });
+};
+
+// 用户协议相关
+const agreeToTerms = ref(false);
+const agreementShake = ref(false);
+
+// 验证码相关
+const showCaptcha = ref(false);
+const loginAttempts = ref(0); // 登录尝试次数
+const sliderOffset = ref(0);
+const sliderText = ref("向右滑动验证");
+const isSliding = ref(false);
+const startX = ref(0);
+const lastUpdateTime = ref(0); // 用于节流
+const maxSliderOffset = ref(240); // 最大滑动距离，动态计算
+
+// 计算滑动百分比（使用computed优化性能）
+const sliderProgress = computed(() => {
+  return Math.floor((sliderOffset.value / maxSliderOffset.value) * 100);
+});
+
+// 生成验证码数据
+const generateCaptchaData = () => {
+  sliderOffset.value = 0;
+  sliderText.value = "向右滑动验证";
+
+  // 动态获取滑块轨道宽度
+  uni
+    .createSelectorQuery()
+    .select(".slider-track")
+    .boundingClientRect((data) => {
+      if (data && data.width) {
+        // 轨道宽度减去滑块按钮宽度（80rpx转px）
+        const sliderBtnWidth = uni.upx2px(80);
+        maxSliderOffset.value = data.width - sliderBtnWidth;
+      }
+    })
+    .exec();
+};
+
+// 滑块操作
+const onSliderStart = (e) => {
+  isSliding.value = true;
+  startX.value = e.touches[0].clientX - sliderOffset.value;
+  lastUpdateTime.value = Date.now();
+  // 阻止默认行为，防止页面滚动
+  e.preventDefault();
+};
+
+const onSliderMove = (e) => {
+  if (!isSliding.value) return;
+
+  // 阻止默认行为和事件冒泡
+  e.preventDefault();
+  e.stopPropagation();
+
+  // 节流：限制更新频率为每16ms一次（约60fps）
+  const now = Date.now();
+  if (now - lastUpdateTime.value < 16) return;
+  lastUpdateTime.value = now;
+
+  const currentX = e.touches[0].clientX;
+  let offset = currentX - startX.value;
+
+  // 限制滑动范围 0-maxSliderOffset
+  if (offset < 0) offset = 0;
+  if (offset > maxSliderOffset.value) offset = maxSliderOffset.value;
+
+  sliderOffset.value = offset;
+};
+
+const onSliderEnd = () => {
+  if (!isSliding.value) return;
+  isSliding.value = false;
+
+  // 验证滑块位置（需要滑到90%以上）
+  const progress = (sliderOffset.value / maxSliderOffset.value) * 100;
+
+  if (progress >= 90) {
+    sliderText.value = "验证成功";
+    setTimeout(() => {
+      showCaptcha.value = false;
+      // 验证成功后执行登录
+      performLogin();
+    }, 500);
+  } else {
+    sliderText.value = "验证失败，请重试";
+    sliderOffset.value = 0;
+    setTimeout(() => {
+      sliderText.value = "向右滑动验证";
+      generateCaptchaData();
+    }, 1000);
+  }
+};
+
+const closeCaptcha = () => {
+  showCaptcha.value = false;
+  sliderOffset.value = 0;
+  sliderText.value = "向右滑动验证";
+};
+
+// 显示协议
+const showAgreement = (type) => {
+  const title = type === "user" ? "用户协议" : "隐私政策";
+  const content =
+    type === "user"
+      ? "这里是用户协议的内容。实际项目中应该显示完整的用户协议。"
+      : "这里是隐私政策的内容。实际项目中应该显示完整的隐私政策。";
+
+  uni.showModal({
+    title: title,
+    content: content,
+    showCancel: false,
+    confirmText: "我知道了",
+  });
+};
+
+// 触发协议抖动动画
+const triggerAgreementShake = () => {
+  agreementShake.value = true;
+  setTimeout(() => {
+    agreementShake.value = false;
+  }, 500);
+};
 
 // 登录处理
 const handleLogin = async () => {
   errorMessage.value = "";
+
+  if (!agreeToTerms.value) {
+    errorMessage.value = "请先阅读并同意用户协议和隐私政策";
+    triggerAgreementShake();
+    return;
+  }
+
   if (!validate()) {
     return;
   }
-  loading.value = true;
 
-  try {
-    // --------------
-    // 1. 发送请求进行登录
-    const response = await unifiedLogin(unref(formData));
-
-    // 2. 请求成功后保存token等信息
-    saveAuth(response);
-
-    // 3. 登录成功，跳转到对应页面
-    const homePage = roles[roleIndex.value].homePage;
-    uni.switchTab({
-      url: homePage,
-    });
-    // ------------------
-  } catch (error) {
-    console.error("登录错误:", error);
-    errorMessage.value = error.response?.data?.message || "登录失败，请检查用户名和密码";
-    redirecting.value = false;
-  } finally {
-    loading.value = false;
+  // 登录失败3次以上进行验证
+  if (loginAttempts.value >= 3) {
+    showCaptcha.value = true;
+    // 延迟执行，确保DOM已渲染
+    setTimeout(() => {
+      generateCaptchaData();
+    }, 100);
+    return;
   }
+
+  // 直接登录
+  await performLogin();
 };
 
-const onRoleChange = (e) => {
-  roleIndex.value = e.detail.value;
-  formData.value.roleType = roles[roleIndex.value].value;
+// 执行登录请求
+const performLogin = async () => {
+  loading.value = true;
+  try {
+    const payload = {
+      // 1. 拷贝表单数据，避免页面展示异常
+      ...unref(formData),
+    };
+    // 2. 使用rsa公钥加密密码
+    payload.password = encryptPwd(payload.password);
+
+    // 3. 调用登录函数发送请求，携带表单数据
+    const { data } = await unifiedLogin(payload);
+
+    // 3. 登录成功后保存token
+    saveAuth(data);
+
+    // 4. 得到角色名称
+    const role = data.userInfo.role;
+
+    // 5. 根据角色名称得到对应首页
+    const homePage = roleHomePages[role];
+
+    // 6. 进行页面跳转
+    goPage(homePage);
+  } catch (error) {
+    console.error("登录错误:", error);
+    errorMessage.value = error.message || "登录失败，请检查用户名和密码";
+    redirecting.value = false;
+
+    loginAttempts.value++;
+    if (loginAttempts.value >= 3) {
+      errorMessage.value = "登录失败次数过多，需要进行安全验证";
+    } else if (loginAttempts.value >= 2) {
+      errorMessage.value += `（还有${3 - loginAttempts.value}次机会后需验证）`;
+    }
+  } finally {
+    loading.value = false;
+    loginAttempts.value = 0;
+  }
 };
 
 // 获取系统状态栏高度
@@ -246,12 +427,6 @@ const errorMessage = ref("");
 const rememberMe = ref(true);
 
 const validate = () => {
-  // 验证是否选择了角色
-  if (!formData.value.roleType) {
-    errorMessage.value = "请选择登录身份";
-    return false;
-  }
-
   // 验证用户名和密码
   if (!formData.value.username || !formData.value.password) {
     errorMessage.value = "请输入用户名和密码";
@@ -271,8 +446,8 @@ const tip = () => {
   uni.vibrateShort(); // 添加轻微震动反馈
 };
 
-const saveAuth = (res) => {
-  const { token, userInfo } = res.data;
+const saveAuth = (data) => {
+  const { token, userInfo } = data;
   const isRemember = rememberMe.value;
 
   storage.setToken(token, isRemember);
@@ -280,12 +455,10 @@ const saveAuth = (res) => {
   storage.setRememberMe(isRemember);
 
   if (isRemember) {
-    const { username, roleType } = formData.value;
+    const { username } = formData.value;
     storage.setSavedUsername(username);
-    storage.setSavedRoleType(roleType);
   } else {
     storage.removeSavedUsername();
-    storage.removeSavedRoleType();
   }
 
   redirecting.value = true;
@@ -300,11 +473,6 @@ onMounted(async () => {
   if (savedRemember) {
     rememberMe.value = true;
     formData.value.username = storage.getSavedUsername() || "";
-    const savedRole = storage.getSavedRoleType();
-    if (savedRole) {
-      formData.value.roleType = savedRole;
-      roleIndex.value = roles.findIndex((r) => r.value === savedRole);
-    }
   }
 
   // 检查是否已登录，实现自动登录
@@ -322,8 +490,10 @@ onMounted(async () => {
       if (response.success) {
         const userData = response.data;
 
-        // 登录成功，跳转到对应页面
-        redirectToHome(userData);
+        // 根据角色类型跳转到对应页面
+        const roleType = userData.roleType;
+        const homePage = roleHomePages[roleType] || "/pages/student/home/home";
+        goPage(homePage);
       } else {
         // Token无效，清除并显示登录表单
         storage.clearAuth();

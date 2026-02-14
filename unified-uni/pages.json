@@ -106,7 +106,8 @@
     {
       "path": "pages/parent/meal-history/mealHistory",
       "style": {
-        "navigationBarTitleText": "饮食历史"
+        "navigationBarTitleText": "用餐记录",
+        "navigationBarBackButtonHidden": true
       }
     },
     {
@@ -236,6 +237,10 @@
       {
         "pagePath": "pages/parent/home/home",
         "text": "首页"
+      },
+      {
+        "pagePath": "pages/parent/meal-history/mealHistory",
+        "text": "用餐记录"
       },
       {
         "pagePath": "pages/parent/ai-assistant/aiAssistant",
