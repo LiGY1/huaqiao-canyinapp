@@ -141,7 +141,7 @@ async function verifyUserCredentials(username, password) {
   if (!user.isActive) {
     throw { isBusinessError: true, message: "账号已被禁用，请联系管理员", statusCode: 403 };
   }
-  if(user.role === "teacher") {
+  if (user.role === "teacher") {
     user.role = "school"
   }
 
@@ -187,6 +187,10 @@ function buildUserInfo(user, req) {
     avatar: user.avatar,
     tokenType: "standard",
   };
+
+  if (baseInfo.role === "parent") {
+    baseInfo.name = /家长/.test(baseInfo.name) ? baseInfo.name[0] + '**家长' : `${baseInfo.name[0]}**`;
+  }
 
   // 根据角色合并特有信息
   const roleSpecificInfo = getRoleSpecificData(user);

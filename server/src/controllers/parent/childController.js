@@ -25,9 +25,7 @@ exports.getChildNutrition = async (req, res) => {
     // 清除旧缓存
     try {
       await cache.del(cacheKey);
-      console.log('🗑️  已清除旧缓存');
     } catch (e) {
-      console.log('⚠️  清除缓存失败（忽略）:', e.message);
     }
 
     const parent = await User.findById(req.user._id);
@@ -60,18 +58,18 @@ exports.getChildNutrition = async (req, res) => {
 
     // 始终从订单中获取餐次信息（确保数据完整）
     const { ORDER_STATUS } = require('../../config/constants');
-    
+
     const todayStart = getStartOfDay(today);
     const todayEnd = getEndOfDay(today);
-    
+
     // 获取今天的本地日期字符串
     const todayLocal = new Date();
     const todayLocalStr = `${todayLocal.getFullYear()}-${String(todayLocal.getMonth() + 1).padStart(2, '0')}-${String(todayLocal.getDate()).padStart(2, '0')}`;
-    
+
     // 获取最近3天的订单（考虑时区问题）
     const threeDaysAgo = new Date(todayStart);
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 2);
-    
+
     const recentOrders = await Order.find({
       user: childId,
       $or: [
@@ -80,7 +78,7 @@ exports.getChildNutrition = async (req, res) => {
       ],
       status: { $in: [ORDER_STATUS.PAID, ORDER_STATUS.PREPARING, ORDER_STATUS.READY, ORDER_STATUS.COMPLETED] }
     }).sort({ orderDate: -1 });
-    
+
     // 过滤出今天的订单
     const getLocalDateStr = (date) => {
       if (!date) return null;
@@ -90,34 +88,24 @@ exports.getChildNutrition = async (req, res) => {
       const day = String(d.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     };
-    
+
     const todayOrders = recentOrders.filter(order => {
       if (!order.orderDate && !order.scheduledDate) return false;
       const orderDateLocalStr = getLocalDateStr(order.orderDate);
       const scheduledDateLocalStr = getLocalDateStr(order.scheduledDate);
       return orderDateLocalStr === todayLocalStr || scheduledDateLocalStr === todayLocalStr;
     });
-    
+
     const meals = todayOrders.map(order => ({
       order: order._id,
       mealType: order.mealType,
       time: order.orderDate || order.scheduledDate,
       items: order.items.map(item => item.dishName || item.dish?.name || '菜品')
     }));
-    
-    console.log('📦 家长端-从订单获取孩子餐次数据:', {
-      childId,
-      childName: child.name,
-      todayLocalStr,
-      recentOrdersCount: recentOrders.length,
-      todayOrdersCount: todayOrders.length,
-      mealsCount: meals.length,
-      mealTypes: meals.map(m => m.mealType)
-    });
 
     const result = {
       date: formatDate(today),
-      childName: child.name,
+      childName: child.name[0] + "**",
       childInfo: {
         age: child.age,
         height: child.height,

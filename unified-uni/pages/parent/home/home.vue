@@ -258,37 +258,6 @@ const currentTime = ref("");
 const weatherInfo = ref("晴朗 22°C");
 const greeting = ref("你好");
 
-const quickActions = [
-  {
-    path: "/pages/parent/meal-history/mealHistory",
-    label: "用餐记录",
-    icon: "shop",
-    color: "linear-gradient(135deg, #f093fb 0%, #f5576c 100%)",
-    type: "switchTab",
-  },
-  {
-    path: "/pages/parent/bind-child/bindChild",
-    label: "绑定学生",
-    icon: "link",
-    color: "linear-gradient(135deg, #fa709a 0%, #fee140 100%)",
-    type: "navigateTo",
-  },
-  {
-    path: "/pages/parent/ai-assistant/aiAssistant",
-    label: "营养咨询",
-    icon: "chatboxes",
-    color: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-    type: "switchTab",
-  },
-  {
-    path: "/pages/parent/profile/profile",
-    label: "孩子档案",
-    icon: "person",
-    color: "linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)",
-    type: "switchTab",
-  },
-];
-
 // 方法
 const updateTime = () => {
   const now = new Date();
@@ -437,21 +406,12 @@ const goToBindChild = () => {
   uni.navigateTo({ url: "/pages/parent/bind-child/bindChild" });
 };
 
-const handleAction = (action) => {
-  if (action.type === "switchTab") {
-    uni.switchTab({ url: action.path });
-  } else {
-    uni.navigateTo({ url: action.path });
-  }
-};
-
 const viewReportHistory = () => {
   closeReportDialog();
   goToReportHistory();
 };
 
 const downloadReport = () => {
-  // Uniapp H5/App/Mp handled differently, usually suggest saving as text or copy to clipboard
   if (!currentReport.value) return;
 
   let text = `报告: ${currentReport.value.childName}\n类型: ${currentReport.value.reportType}\n热量: ${currentReport.value.dataSummary.avgCalories}\n...`;

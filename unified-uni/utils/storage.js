@@ -36,10 +36,6 @@ class Storage {
    * @param {boolean} remember - 是否记住
    */
   setUserInfo(userInfo, remember = false) {
-    if (userInfo && userInfo.name) {
-      const name = userInfo.name;
-      userInfo.name = name.substring(0, 1) + new Array(name.length - 1).fill("*").join("");
-    }
     uni.setStorageSync(STORAGE_KEYS.USER_INFO, userInfo);
   }
 
