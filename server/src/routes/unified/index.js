@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
-const authController = require('../../controllers/unified/authController');
+const authService = require('../../services/unified/authController');
 const { protect } = require('../../middleware/auth');
 
-router.post('/login', authController.login);
-router.get('/userinfo', protect, authController.getUserInfo);
-router.get('/portal-config', authController.getPortalConfig);
+router.post('/login', authService.login);
+router.get('/userinfo', protect, authService.getUserInfo);
+router.get('/portal-config', authService.getPortalConfig);
 
 module.exports = router;

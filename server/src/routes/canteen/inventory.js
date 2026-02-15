@@ -1,16 +1,16 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../../middleware/auth');
-const inventoryController = require('../../controllers/canteen/inventoryController');
+const inventoryService = require('../../services/canteen/inventoryController');
 
 // 库存管理路由
-router.get('/statistics', protect, inventoryController.getStatistics);
-router.get('/:id/history', protect, inventoryController.getInventoryHistory);
-router.get('/', protect, inventoryController.getInventoryList);
-router.post('/', protect, inventoryController.addInventoryItem);
-router.put('/:id', protect, inventoryController.updateInventoryItem);
-router.delete('/:id', protect, inventoryController.deleteInventoryItem);
-router.post('/:id/stock-in', protect, inventoryController.stockIn);
-router.post('/:id/stock-out', protect, inventoryController.stockOut);
+router.get('/statistics', protect, inventoryService.getStatistics);
+router.get('/:id/history', protect, inventoryService.getInventoryHistory);
+router.get('/', protect, inventoryService.getInventoryList);
+router.post('/', protect, inventoryService.addInventoryItem);
+router.put('/:id', protect, inventoryService.updateInventoryItem);
+router.delete('/:id', protect, inventoryService.deleteInventoryItem);
+router.post('/:id/stock-in', protect, inventoryService.stockIn);
+router.post('/:id/stock-out', protect, inventoryService.stockOut);
 
 module.exports = router;

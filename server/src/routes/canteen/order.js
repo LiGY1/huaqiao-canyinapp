@@ -1,13 +1,13 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../../middleware/auth');
-const orderController = require('../../controllers/canteen/orderController');
+const orderService = require('../../services/canteen/orderController');
 
 // 订单管理路由
-router.get('/', protect, orderController.getOrderList);
-router.get('/statistics', protect, orderController.getOrderStatistics);
-router.post('/batch-update', protect, orderController.batchUpdateOrders);
-router.get('/:id', protect, orderController.getOrderDetail);
-router.patch('/:id/status', protect, orderController.updateOrderStatus);
+router.get('/', protect, orderService.getOrderList);
+router.get('/statistics', protect, orderService.getOrderStatistics);
+router.post('/batch-update', protect, orderService.batchUpdateOrders);
+router.get('/:id', protect, orderService.getOrderDetail);
+router.patch('/:id/status', protect, orderService.updateOrderStatus);
 
 module.exports = router;

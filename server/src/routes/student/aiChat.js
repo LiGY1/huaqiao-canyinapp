@@ -1,22 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../../middleware/auth');
-const nutritionController = require('../../controllers/student/nutritionController');
+const nutritionService = require('../../services/student/nutritionController');
 
 router.use(protect);
 
 // -------- ai聊天接口 --------
-router.post('/stream', nutritionController.streamChat);
+router.post('/stream', nutritionService.streamChat);
 // ---------------------
 
 
-router.post('/save', nutritionController.saveChatHistory);
-router.post('/save-batch', nutritionController.saveChatHistoryBatch);
-router.get('/history', nutritionController.getChatHistory);
-router.get('/conversations', nutritionController.getConversationList);
-router.delete('/clear-all', nutritionController.clearAllChatHistory);
-router.delete('/conversation/:conversationId', nutritionController.deleteConversation);
-router.delete('/:chatId', nutritionController.deleteChatHistory);
-router.put('/:chatId/favorite', nutritionController.toggleChatFavorite);
+router.post('/save', nutritionService.saveChatHistory);
+router.post('/save-batch', nutritionService.saveChatHistoryBatch);
+router.get('/history', nutritionService.getChatHistory);
+router.get('/conversations', nutritionService.getConversationList);
+router.delete('/clear-all', nutritionService.clearAllChatHistory);
+router.delete('/conversation/:conversationId', nutritionService.deleteConversation);
+router.delete('/:chatId', nutritionService.deleteChatHistory);
+router.put('/:chatId/favorite', nutritionService.toggleChatFavorite);
 
 module.exports = router;

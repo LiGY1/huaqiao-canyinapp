@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../../middleware/auth');
-const dashboardController = require('../../controllers/canteen/dashboardController');
+const dashboardService = require('../../services/canteen/dashboardController');
 
 // 仪表盘相关路由
-router.get('/sales', protect, dashboardController.getSalesData);
-router.get('/inventory', protect, dashboardController.getInventoryData);
-router.get('/production-suggestions', protect, dashboardController.getProductionSuggestions);
-router.get('/seasonal-recommendations', protect, dashboardController.getSeasonalRecommendations);
-router.get('/purchase-plan', protect, dashboardController.getPurchasePlan);
-router.get('/nutrition-analysis', protect, dashboardController.getNutritionAnalysis);
+router.get('/sales', protect, dashboardService.getSalesData);
+router.get('/inventory', protect, dashboardService.getInventoryData);
+router.get('/production-suggestions', protect, dashboardService.getProductionSuggestions);
+router.get('/seasonal-recommendations', protect, dashboardService.getSeasonalRecommendations);
+router.get('/purchase-plan', protect, dashboardService.getPurchasePlan);
+router.get('/nutrition-analysis', protect, dashboardService.getNutritionAnalysis);
 
 module.exports = router;

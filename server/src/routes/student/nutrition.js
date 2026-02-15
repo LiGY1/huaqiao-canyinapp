@@ -1,20 +1,20 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../../middleware/auth');
-const nutritionController = require('../../controllers/student/nutritionController');
+const nutritionService = require('../../services/student/nutritionController');
 
 router.use(protect);
 
 // 营养数据
-router.get('/weekly-report', nutritionController.getWeeklyReport);
-router.get('/today', nutritionController.getTodayNutrition);
-router.get('/getRecommend', nutritionController.getRecommend);
-router.get('/meal-status', nutritionController.getMealStatus);
-router.get('/monthly-report', nutritionController.getMonthlyReport);
+router.get('/weekly-report', nutritionService.getWeeklyReport);
+router.get('/today', nutritionService.getTodayNutrition);
+router.get('/getRecommend', nutritionService.getRecommend);
+router.get('/meal-status', nutritionService.getMealStatus);
+router.get('/monthly-report', nutritionService.getMonthlyReport);
 
 // AI 分析报告
-router.post('/ai-report', nutritionController.generateAIReport);
-router.get('/ai-reports', nutritionController.getAIReportHistory);
-router.get('/ai-reports/:reportId', nutritionController.getAIReportById);
+router.post('/ai-report', nutritionService.generateAIReport);
+router.get('/ai-reports', nutritionService.getAIReportHistory);
+router.get('/ai-reports/:reportId', nutritionService.getAIReportById);
 
 module.exports = router;

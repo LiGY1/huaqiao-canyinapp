@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../../middleware/auth');
-const statisticsController = require('../../controllers/school/statisticsController');
+const statisticsService = require('../../services/school/statisticsController');
 
 // 统计数据相关路由
-router.get('/dashboard', protect, statisticsController.getDashboardStats);
-router.get('/class/:classId', protect, statisticsController.getClassStats);
-router.get('/today-overview', protect, statisticsController.getTodayOverview);
-router.get('/weekly-comparison', protect, statisticsController.getWeeklyComparison);
-router.get('/teacher-classes', protect, statisticsController.getTeacherClasses);
-router.get('/student-weekly-nutrition', protect, statisticsController.getStudentWeeklyNutrition);
+router.get('/dashboard', protect, statisticsService.getDashboardStats);
+router.get('/class/:classId', protect, statisticsService.getClassStats);
+router.get('/today-overview', protect, statisticsService.getTodayOverview);
+router.get('/weekly-comparison', protect, statisticsService.getWeeklyComparison);
+router.get('/teacher-classes', protect, statisticsService.getTeacherClasses);
+router.get('/student-weekly-nutrition', protect, statisticsService.getStudentWeeklyNutrition);
 
 module.exports = router;
