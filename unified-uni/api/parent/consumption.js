@@ -1,36 +1,36 @@
 import request from '@/utils/request.js'
 
 export const consumptionApi = {
-    getMealHistory(childId, params) {
-        return request({
-            url: `/parent/child/${childId}/meal-history`,
-            method: 'GET',
-            params
-        })
-    },
+  getMealHistory(childId, data) {
+    return request({
+      url: `/parent/child/${childId}/meal-history`,
+      method: 'GET',
+      data
+    })
+  },
 
-    getStoreHistory(params) {
-        return request({
-            url: '/parent/store-history',
-            method: 'GET',
-            params
-        })
-    },
+  getStoreHistory(data) {
+    return request({
+      url: '/parent/store-history',
+      method: 'GET',
+      data
+    })
+  },
 
-    getConsumptionStats(params) {
-        return request({
-            url: '/parent/consumption-stats',
-            method: 'GET',
-            params
-        })
-    },
+  getConsumptionStats(data) {
+    return request({
+      url: '/parent/consumption-stats',
+      method: 'GET',
+      data
+    })
+  },
 
-    exportConsumption(params) {
-        return request({
-            url: '/parent/export-consumption',
-            method: 'GET',
-            params,
-            responseType: 'blob'
-        })
-    }
+  exportConsumption(data) {
+    return request({
+      url: '/parent/export-consumption',
+      method: 'GET',
+      data,
+      responseType: 'blob'
+    })
+  }
 }

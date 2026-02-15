@@ -5,10 +5,10 @@
 
 const express = require('express');
 const router = express.Router();
-const cache = require('../utils/cache');
-const preheater = require('../utils/cachePreheating');
-const deduplicator = require('../utils/requestDeduplicator');
-const compressionHelper = require('../utils/compressionHelper');
+const cache = require('../../utils/cache');
+const preheater = require('../../utils/cachePreheating');
+const deduplicator = require('../../utils/requestDeduplicator');
+const compressionHelper = require('../../utils/compressionHelper');
 
 /**
  * 路由测试接口
@@ -135,4 +135,3 @@ router.get('/health', (req, res) => {
 });
 
 module.exports = router;
-

@@ -87,10 +87,7 @@ exports.register = async (req, res) => {
 
 exports.getUserInfo = async (req, res) => {
   try {
-    console.log('获取家长用户信息，用户ID:', req.user?._id);
-
     if (!req.user || !req.user._id) {
-      console.error('req.user 不存在或没有_id');
       return error(res, '用户认证信息无效', 401);
     }
 
@@ -102,16 +99,17 @@ exports.getUserInfo = async (req, res) => {
       .select('-password');
 
     if (!user) {
-      console.error('未找到用户:', req.user._id);
       return error(res, '用户不存在', 404);
     }
 
-    console.log(chalk.green(`[家长] 获取用户信息: ${user.name} (孩子数: ${user.children?.length || 0})`));
+
+    user.name = /家长/.test(user.name) ? user.name[0] + '**家长' : `${user.name[0]}**`;
+    user.children.forEach(child => {
+      child.name = child.name[0] + '**';
+    });
     success(res, user);
   } catch (err) {
     console.error('获取用户信息失败:', err);
-    console.error('错误详情:', err.message);
-    console.error('错误堆栈:', err.stack);
     error(res, '获取用户信息失败', 500);
   }
 };

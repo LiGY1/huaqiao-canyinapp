@@ -1,49 +1,51 @@
 import request from '@/utils/request'
 
 export const childApi = {
-    getChildNutrition: (childId) => {
-        return request({
-            url: `/parent/child/${childId}/nutrition`,
-            method: 'GET'
-        })
-    },
+  getChildNutrition: (childId) => {
+    return request({
+      url: `/parent/child/${childId}/nutrition`,
+      method: 'GET'
+    })
+  },
 
-    getMealHistory: (childId, data) => {
-        return request({
-            url: `/parent/child/${childId}/meal-history`,
-            method: 'GET',
-            data
-        })
-    },
+  getMealHistory: (childId, data) => {
+    console.log(data);
 
-    getWeeklyReport: (childId) => {
-        return request({
-            url: `/parent/child/${childId}/weekly-report`,
-            method: 'GET'
-        })
-    },
+    return request({
+      url: `/parent/child/${childId}/meal-history`,
+      method: 'GET',
+      data
+    })
+  },
 
-    getPhysicalExams: (childId) => {
-        return request({
-            url: `/parent/child/${childId}/physical-exams`,
-            method: 'GET'
-        })
-    },
+  getWeeklyReport: (childId) => {
+    return request({
+      url: `/parent/child/${childId}/weekly-report`,
+      method: 'GET'
+    })
+  },
 
-    generateChildAIReport: (childId, data = {}) => {
-        return request({
-            url: `/parent/child/${childId}/ai-report`,
-            method: 'POST',
-            data,
-            timeout: 120000
-        })
-    },
+  getPhysicalExams: (childId) => {
+    return request({
+      url: `/parent/child/${childId}/physical-exams`,
+      method: 'GET'
+    })
+  },
 
-    getChildAIReports: (childId, data) => {
-        return request({
-            url: `/parent/child/${childId}/ai-reports`,
-            method: 'GET',
-            data
-        })
-    }
+  generateChildAIReport: (childId, data = {}) => {
+    return request({
+      url: `/parent/child/${childId}/ai-report`,
+      method: 'POST',
+      data,
+      timeout: 120000
+    })
+  },
+
+  getChildAIReports: (childId, data) => {
+    return request({
+      url: `/parent/child/${childId}/ai-reports`,
+      method: 'GET',
+      data
+    })
+  }
 }
