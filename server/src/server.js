@@ -35,6 +35,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(require("./middleware/cacheRule"));
 app.use(requestLogger);
 
+// 挂载路由
 for (const route of routes) {
   app.use(route.path, route.callback);
 }
@@ -50,9 +51,11 @@ app.use((req, res) => {
 app.use(errorHandler);
 const PORT = process.env.PORT || 8000;
 
-const server = app.listen(PORT, () => {
-  console.log(`[服务器] 后端服务已启动 | 端口: ${PORT}`);
-});
+const server = app.listen(PORT);
+
+server.on("listening", () => {
+  console.log(`服务器已启动 | 端口: ${PORT}`);
+})
 
 process.on("unhandledRejection", (err) => {
   console.error(chalk.red(`[错误] 未处理的Promise拒绝: ${err.message}`));
