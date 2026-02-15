@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
-const AuthToken = require('../models/AuthToken');
-const { protect } = require('../middleware/auth');
+const AuthToken = require('../../models/AuthToken');
+const { protect } = require('../../middleware/auth');
 
 /**
  * Token 管理路由
@@ -150,4 +150,3 @@ router.get('/history', protect, async (req, res) => {
 });
 
 module.exports = router;
-
