@@ -287,6 +287,13 @@ exports.getHealthData = async (req, res) => {
       filteredHealthData = healthData.filter(item => item.healthStatus === healthStatus);
     }
 
+
+    filteredHealthData = filteredHealthData.map(stu => {
+      return {
+        ...stu,
+        studentName: stu.studentName[0] + new Array(stu.studentName.length - 1).fill('*').join('')
+      }
+    })
     success(res, filteredHealthData);
   } catch (err) {
     console.error(err);

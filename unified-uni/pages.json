@@ -136,7 +136,7 @@
       }
     },
     {
-      "path": "pages/school/reports",
+      "path": "pages/school/reports/index",
       "style": {
         "navigationBarTitleText": "学生健康"
       }

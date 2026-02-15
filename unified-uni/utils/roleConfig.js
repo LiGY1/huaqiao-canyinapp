@@ -28,7 +28,7 @@ export const roleTabbarConfig = {
   school: {
     navItems: [
       { path: "pages/school/dashboard/dashboard", label: "监控大屏", icon: "home", isAI: false },
-      { path: "pages/school/reports", label: "学生健康", icon: "list", isAI: false },
+      { path: "pages/school/reports/index", label: "学生健康", icon: "list", isAI: false },
       { path: "pages/school/ai-assistant/aiAssistant", label: "AI助手", icon: "chatbubble", isAI: false },
       { path: "pages/school/education/education", label: "营养教育", icon: "paperplane", isAI: false },
       { path: "pages/school/profile/profile", label: "个人中心", icon: "gear", isAI: false },
@@ -38,7 +38,7 @@ export const roleTabbarConfig = {
   teacher: {
     navItems: [
       { path: "pages/school/dashboard/dashboard", label: "监控大屏", icon: "home", isAI: false },
-      { path: "pages/school/reports", label: "学生健康", icon: "list", isAI: false },
+      { path: "pages/school/reports/index", label: "学生健康", icon: "list", isAI: false },
       { path: "pages/school/ai-assistant/aiAssistant", label: "AI助手", icon: "chatbubble", isAI: false },
       { path: "pages/school/education/education", label: "营养教育", icon: "paperplane", isAI: false },
       { path: "pages/school/profile/profile", label: "个人中心", icon: "gear", isAI: false },
