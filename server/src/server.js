@@ -15,6 +15,7 @@ const unifiedRoutes = require("./routes/unified");
 const roleQueryRoutes = require("./routes/roleQuery");
 const monitoringRoutes = require("./routes/monitoring");
 const tokenManagementRoutes = require("./routes/tokenManagement");
+const routes = require("./routes");
 
 const app = express();
 
@@ -60,14 +61,9 @@ app.use((req, res, next) => {
 // 使用美化的请求日志中间件
 app.use(requestLogger);
 
-app.use("/api/unified", unifiedRoutes);
-app.use("/api/student", studentRoutes);
-app.use("/api/parent", parentRoutes);
-app.use("/api/school", schoolRoutes);
-app.use("/api/canteen", canteenRoutes);
-app.use("/api/role-query", roleQueryRoutes);
-app.use("/api/monitoring", monitoringRoutes);
-app.use("/api/token-management", tokenManagementRoutes);
+for (const route of routes) {
+  app.use(route.path, route.callback);
+}
 
 app.use((req, res) => {
   res.status(404).json({
