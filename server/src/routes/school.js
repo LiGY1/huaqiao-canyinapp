@@ -4,21 +4,6 @@ const { protect, authorize } = require('../middleware/auth');
 const { USER_ROLES } = require('../config/constants');
 const uploadEducation = require('../middleware/uploadEducation');
 
-// 路由测试接口
-router.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: '学校端路由正常',
-    module: 'school',
-    availableEndpoints: [
-      'POST /api/school/auth/login',
-      'GET /api/school/student/list',
-      'GET /api/school/statistics/dashboard',
-      '... 查看完整文档'
-    ]
-  });
-});
-
 const authController = require('../controllers/school/authController');
 const studentController = require('../controllers/school/studentController');
 const foodSafetyController = require('../controllers/school/foodSafetyController');

@@ -2,21 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
 
-// 路由测试接口
-router.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: '家长端路由正常',
-    module: 'parent',
-    availableEndpoints: [
-      'POST /api/parent/auth/login',
-      'GET /api/parent/child/:childId/nutrition',
-      'GET /api/parent/orders',
-      '... 查看完整文档'
-    ]
-  });
-});
-
 const authController = require('../controllers/parent/authController');
 const childController = require('../controllers/parent/childController');
 const orderController = require('../controllers/parent/orderController');

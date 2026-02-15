@@ -4,20 +4,6 @@ const { protect } = require('../middleware/auth');
 const upload = require('../middleware/upload');
 
 // 路由测试接口
-router.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: '食堂端路由正常',
-    module: 'canteen',
-    availableEndpoints: [
-      'POST /api/canteen/auth/login',
-      'GET /api/canteen/menu',
-      'GET /api/canteen/orders',
-      '... 查看完整文档'
-    ]
-  });
-});
-
 const authController = require('../controllers/canteen/authController');
 const dashboardController = require('../controllers/canteen/dashboardController');
 const menuController = require('../controllers/canteen/menuController');

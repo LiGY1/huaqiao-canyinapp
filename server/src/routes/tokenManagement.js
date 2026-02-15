@@ -9,23 +9,6 @@ const { protect } = require('../middleware/auth');
  */
 
 /**
- * 路由测试接口
- */
-router.get('/', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Token管理路由正常',
-    module: 'tokenManagement',
-    availableEndpoints: [
-      'GET /api/token-management/token',
-      'GET /api/token-management/current',
-      'POST /api/token-management/generate',
-      'GET /api/token-management/history'
-    ]
-  });
-});
-
-/**
  * 获取当前有效的 Token（仅返回 token 字符串，用于工作流）
  * GET /api/token-management/token
  * 无需认证，直接返回当前有效的 token 字符串
