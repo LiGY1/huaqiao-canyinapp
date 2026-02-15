@@ -43,7 +43,7 @@
             </view>
           </view>
 
-          <view class="report-actions">
+          <!-- <view class="report-actions">
             <view class="action-row">
               <button class="report-btn weekly" @click="handleGenerateReport('weekly')" :disabled="isGenerating">
                 <uni-icons
@@ -70,10 +70,8 @@
               <uni-icons type="list" size="16" color="#374151"></uni-icons>
               <text>查看历史报告</text>
             </button>
-          </view>
+          </view> -->
         </view>
-
-        <!-- 未绑定学生提示 -->
         <view v-else class="no-child-card">
           <view class="warning-info">
             <uni-icons type="warn" size="20" color="#f59e0b"></uni-icons>

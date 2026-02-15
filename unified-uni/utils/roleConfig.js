@@ -15,7 +15,7 @@ export const roleTabbarConfig = {
     navItems: [
       { path: "pages/parent/home/home", label: "首页", icon: "home", isAI: false },
       {
-        path: "pages/parent/meal-history/mealHistory",
+        path: "pages/parent/meal-history/index",
         label: "用餐记录",
         icon: "list",
         isAi: false

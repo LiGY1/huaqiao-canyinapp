@@ -148,15 +148,26 @@ exports.getMealHistory = async (req, res) => {
     }
 
     const filter = {
-      user: childId
+      user: childId,
+      status: { $in: ['paid', 'preparing', 'ready', 'completed'] }
     };
 
+    // 日期筛选
     if (startDate || endDate) {
       filter.orderDate = {};
-      if (startDate) filter.orderDate.$gte = new Date(startDate);
-      if (endDate) filter.orderDate.$lte = new Date(endDate);
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        filter.orderDate.$gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        filter.orderDate.$lte = end;
+      }
     }
 
+    // 获取总数和分页数据
     const total = await Order.countDocuments(filter);
     const orders = await Order.find(filter)
       .populate('items.dish', 'name category image')
@@ -164,9 +175,81 @@ exports.getMealHistory = async (req, res) => {
       .limit(parseInt(pageSize))
       .skip((parseInt(page) - 1) * parseInt(pageSize));
 
-    paginated(res, orders, page, pageSize, total);
+    // 计算统计数据（基于筛选条件的全部数据）
+    const allOrders = await Order.find(filter).select('totalAmount mealType totalNutrition');
+    
+    const statistics = {
+      totalMeals: allOrders.length,
+      totalSpent: 0,
+      avgSpent: 0
+    };
+
+    const mealTypeStats = {
+      breakfast: 0,
+      lunch: 0,
+      dinner: 0
+    };
+
+    const nutritionStats = {
+      protein: 0,
+      fat: 0,
+      carbs: 0
+    };
+
+    // 计算统计数据
+    allOrders.forEach(order => {
+      // 总消费
+      statistics.totalSpent += order.totalAmount || 0;
+
+      // 三餐热量统计
+      const calories = order.totalNutrition?.calories || 0;
+      if (order.mealType === 'breakfast') {
+        mealTypeStats.breakfast += calories;
+      } else if (order.mealType === 'lunch') {
+        mealTypeStats.lunch += calories;
+      } else if (order.mealType === 'dinner') {
+        mealTypeStats.dinner += calories;
+      }
+
+      // 营养素统计
+      if (order.totalNutrition) {
+        nutritionStats.protein += order.totalNutrition.protein || 0;
+        nutritionStats.fat += order.totalNutrition.fat || 0;
+        nutritionStats.carbs += order.totalNutrition.carbs || 0;
+      }
+    });
+
+    // 计算平均消费
+    statistics.avgSpent = statistics.totalMeals > 0 
+      ? (statistics.totalSpent / statistics.totalMeals).toFixed(2)
+      : '0.00';
+    statistics.totalSpent = statistics.totalSpent.toFixed(2);
+
+    // 营养素数据保留1位小数
+    nutritionStats.protein = Math.round(nutritionStats.protein * 10) / 10;
+    nutritionStats.fat = Math.round(nutritionStats.fat * 10) / 10;
+    nutritionStats.carbs = Math.round(nutritionStats.carbs * 10) / 10;
+
+    // 热量数据取整
+    mealTypeStats.breakfast = Math.round(mealTypeStats.breakfast);
+    mealTypeStats.lunch = Math.round(mealTypeStats.lunch);
+    mealTypeStats.dinner = Math.round(mealTypeStats.dinner);
+
+    res.json({
+      success: true,
+      code: 200,
+      data: {
+        list: orders,
+        total,
+        page: parseInt(page),
+        pageSize: parseInt(pageSize),
+        statistics,
+        mealTypeStats,
+        nutritionStats
+      }
+    });
   } catch (err) {
-    console.error(err);
+    console.error('获取用餐历史失败:', err);
     error(res, '获取用餐历史失败', 500);
   }
 };

@@ -104,7 +104,7 @@
       }
     },
     {
-      "path": "pages/parent/meal-history/mealHistory",
+      "path": "pages/parent/meal-history/index",
       "style": {
         "navigationBarTitleText": "用餐记录",
         "navigationBarBackButtonHidden": true
@@ -239,7 +239,7 @@
         "text": "首页"
       },
       {
-        "pagePath": "pages/parent/meal-history/mealHistory",
+        "pagePath": "pages/parent/meal-history/index",
         "text": "用餐记录"
       },
       {
