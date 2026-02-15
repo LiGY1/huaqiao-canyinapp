@@ -1,17 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../../middleware/auth');
-const chatController = require('../../controllers/parent/chatController');
+const chatService = require('../../services/parent/chatController');
 
 // AI聊天相关路由
-router.post('/save', protect, chatController.saveChatHistory);
-router.post('/save-batch', protect, chatController.saveChatHistoryBatch);
-router.get('/history', protect, chatController.getChatHistory);
-router.get('/conversations', protect, chatController.getConversationList);
-router.post('/stream', protect, chatController.streamChat);
-router.delete('/clear-all', protect, chatController.clearAllChatHistory);
-router.delete('/conversation/:conversationId', protect, chatController.deleteConversation);
-router.delete('/:chatId', protect, chatController.deleteChatHistory);
-router.put('/:chatId/favorite', protect, chatController.toggleChatFavorite);
+router.post('/save', protect, chatService.saveChatHistory);
+router.post('/save-batch', protect, chatService.saveChatHistoryBatch);
+router.get('/history', protect, chatService.getChatHistory);
+router.get('/conversations', protect, chatService.getConversationList);
+router.post('/stream', protect, chatService.streamChat);
+router.delete('/clear-all', protect, chatService.clearAllChatHistory);
+router.delete('/conversation/:conversationId', protect, chatService.deleteConversation);
+router.delete('/:chatId', protect, chatService.deleteChatHistory);
+router.put('/:chatId/favorite', protect, chatService.toggleChatFavorite);
 
 module.exports = router;

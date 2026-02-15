@@ -22,7 +22,7 @@ const connectDB = async () => {
     
     const conn = await mongoose.connect(process.env.MONGODB_URI, options);
 
-    console.log(chalk.green(`[数据库] MongoDB 已连接: ${conn.connection.name} @ ${conn.connection.host}`));
+    console.log(chalk.green(`数据库已连接: ${conn.connection.name} @ ${conn.connection.host}`));
     
     // 检查并显示 Redis 缓存连接状态
     try {

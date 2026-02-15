@@ -18,12 +18,12 @@ router.use('/statistics', statisticsRoutes);
 router.use('/upload', uploadRoutes);
 
 // 兼容旧路由 - ai-chat 路由挂载到 student 下
-const chatController = require('../../controllers/school/studentController');
+const chatService = require('../../services/school/studentController');
 const { protect } = require('../../middleware/auth');
 
-router.post('/ai-chat/save', protect, chatController.saveChatHistory);
-router.get('/ai-chat/history', protect, chatController.getChatHistory);
-router.post('/ai-chat/stream', protect, chatController.streamChat);
-router.delete('/ai-chat/clear-all', protect, chatController.clearAllChatHistory);
+router.post('/ai-chat/save', protect, chatService.saveChatHistory);
+router.get('/ai-chat/history', protect, chatService.getChatHistory);
+router.post('/ai-chat/stream', protect, chatService.streamChat);
+router.delete('/ai-chat/clear-all', protect, chatService.clearAllChatHistory);
 
 module.exports = router;

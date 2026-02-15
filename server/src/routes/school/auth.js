@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../../middleware/auth');
-const authController = require('../../controllers/school/authController');
+const authService = require('../../services/school/authController');
 
 // 认证相关路由
-router.post('/login', authController.login);
-router.get('/userinfo', protect, authController.getUserInfo);
-router.post('/change-password', protect, authController.changePassword);
-router.put('/profile', protect, authController.updateProfile);
+router.post('/login', authService.login);
+router.get('/userinfo', protect, authService.getUserInfo);
+router.post('/change-password', protect, authService.changePassword);
+router.put('/profile', protect, authService.updateProfile);
 
 module.exports = router;

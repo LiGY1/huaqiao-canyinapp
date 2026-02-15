@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../../middleware/auth');
-const authController = require('../../controllers/parent/authController');
+const authService = require('../../services/parent/authController');
 
 // 认证相关路由
-router.post('/login', authController.login);
-router.post('/register', authController.register);
-router.get('/info', protect, authController.getUserInfo);
-router.post('/bind-child', protect, authController.bindChild);
-router.get('/reminder-settings', protect, authController.getReminderSettings);
-router.put('/reminder-settings', protect, authController.updateReminderSettings);
+router.post('/login', authService.login);
+router.post('/register', authService.register);
+router.get('/info', protect, authService.getUserInfo);
+router.post('/bind-child', protect, authService.bindChild);
+router.get('/reminder-settings', protect, authService.getReminderSettings);
+router.put('/reminder-settings', protect, authService.updateReminderSettings);
 
 module.exports = router;

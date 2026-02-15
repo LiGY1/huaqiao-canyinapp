@@ -1,15 +1,15 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../../middleware/auth');
-const healthController = require('../../controllers/student/healthController');
+const healthService = require('../../services/student/healthController');
 
 router.use(protect);
 
 // 对应前缀 /health
-router.post('/', healthController.addHealthRecord);
-router.get('/', healthController.getHealthRecords);
-router.get('/today', healthController.getTodayHealth);
-router.get('/trends', healthController.getHealthTrends);
-router.get('/assessment', healthController.getHealthAssessment);
+router.post('/', healthService.addHealthRecord);
+router.get('/', healthService.getHealthRecords);
+router.get('/today', healthService.getTodayHealth);
+router.get('/trends', healthService.getHealthTrends);
+router.get('/assessment', healthService.getHealthAssessment);
 
 module.exports = router;

@@ -5,9 +5,7 @@ import { ERROR_MESSAGES, API_CODES } from "./constants";
 // 1. 定义基础配置
 // 注意：小程序和App必须使用完整的绝对路径，不能使用 /api 这种相对路径
 // 开发环境可以在这里切换，或者使用环境变量
-// export const BASE_URL = "http://192.168.5.254:8088/api";
-// export const BASE_URL = "http://120.76.52.145:8000/api";
-export const BASE_URL = "http://192.168.2.103:8080/api";
+export const BASE_URL = "http://localhost:8080/api";
 
 const TIMEOUT = 50000;
 
