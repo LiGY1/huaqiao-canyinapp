@@ -3,10 +3,7 @@ const USER_ROLES = {
   STUDENT: 'student',
   PARENT: 'parent',
   TEACHER: 'teacher',
-  PRINCIPAL: 'principal',
-  ADMIN: 'admin',
   CANTEEN_ADMIN: 'canteen_admin',
-  CANTEEN_STAFF: 'canteen_staff'
 };
 
 const ORDER_STATUS = {
@@ -28,7 +25,7 @@ const MEAL_TYPES = {
 const DISH_CATEGORIES = {
   MEAT: 'meat',
   VEGETABLE: 'vegetable',
-  MIXED: 'mixed',        // 混合菜（荤素搭配）
+  MIXED: 'mixed',
   STAPLE: 'staple',
   SOUP: 'soup',
   DESSERT: 'dessert',

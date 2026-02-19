@@ -17,6 +17,7 @@ const orderSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
+  // 菜品列表
   items: [{
     dish: {
       type: mongoose.Schema.Types.ObjectId,
@@ -35,6 +36,7 @@ const orderSchema = new mongoose.Schema({
       type: Number,
       required: true
     },
+    // 每个菜品记录的营养信息
     nutrition: {
       calories: Number,
       protein: Number,
@@ -52,6 +54,11 @@ const orderSchema = new mongoose.Schema({
       potassium: Number
     }
   }],
+  // 三餐分类
+  mealType: {
+    type: String,
+    enum: Object.values(MEAL_TYPES)
+  },
   totalAmount: {
     type: Number,
     required: true
@@ -61,10 +68,7 @@ const orderSchema = new mongoose.Schema({
     enum: Object.values(ORDER_STATUS),
     default: ORDER_STATUS.PENDING
   },
-  mealType: {
-    type: String,
-    enum: Object.values(MEAL_TYPES)
-  },
+
   orderDate: {
     type: Date,
     default: Date.now
@@ -116,7 +120,7 @@ const orderSchema = new mongoose.Schema({
   timestamps: true
 });
 
-orderSchema.pre('save', async function(next) {
+orderSchema.pre('save', async function (next) {
   if (this.isNew) {
     this.orderNumber = 'ORDER' + Date.now() + Math.floor(Math.random() * 1000);
   }
@@ -124,13 +128,13 @@ orderSchema.pre('save', async function(next) {
 });
 
 // 订单保存后清除相关缓存（仅单个订单操作，insertMany不会触发此hook）
-orderSchema.post('save', async function() {
+orderSchema.post('save', async function () {
   try {
     const logger = require('../utils/logger');
     // 清除所有角色查询缓存（因为订单变更会影响所有查询）
     const { invalidateAllRoleQueryCache } = require('../utils/roleQueryCache');
     const deletedCount = await invalidateAllRoleQueryCache();
-    
+
     logger.info('订单操作', `订单 ${this.orderNumber} 已保存`, `已清除 ${deletedCount} 个缓存键`);
   } catch (error) {
     // 缓存清除失败不应该影响订单保存
@@ -140,12 +144,12 @@ orderSchema.post('save', async function() {
 });
 
 // 订单删除后清除缓存
-orderSchema.post('deleteOne', { document: true, query: false }, async function() {
+orderSchema.post('deleteOne', { document: true, query: false }, async function () {
   try {
     const logger = require('../utils/logger');
     const { invalidateAllRoleQueryCache } = require('../utils/roleQueryCache');
     const deletedCount = await invalidateAllRoleQueryCache();
-    
+
     logger.info('订单操作', `订单 ${this.orderNumber} 已删除`, `已清除 ${deletedCount} 个缓存键`);
   } catch (error) {
     const logger = require('../utils/logger');
@@ -154,12 +158,12 @@ orderSchema.post('deleteOne', { document: true, query: false }, async function()
 });
 
 // 批量删除后清除缓存
-orderSchema.post('deleteMany', async function() {
+orderSchema.post('deleteMany', async function () {
   try {
     const logger = require('../utils/logger');
     const { invalidateAllRoleQueryCache } = require('../utils/roleQueryCache');
     const deletedCount = await invalidateAllRoleQueryCache();
-    
+
     logger.info('订单操作', '批量删除订单完成', `已清除 ${deletedCount} 个缓存键`);
   } catch (error) {
     const logger = require('../utils/logger');

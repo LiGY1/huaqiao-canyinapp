@@ -36,7 +36,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
-
+  children: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
   studentId: String,
   class: String,
   grade: String,
@@ -65,10 +68,7 @@ const userSchema = new mongoose.Schema({
     min: 0
   },
 
-  children: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
+
 
   schoolId: String,
   schoolName: String,
@@ -110,7 +110,7 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
   if (!this.isModified('password')) {
     return next();
   }
@@ -120,11 +120,11 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
-userSchema.methods.comparePassword = async function(candidatePassword) {
+userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-userSchema.methods.toJSON = function() {
+userSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.password;
   return obj;
