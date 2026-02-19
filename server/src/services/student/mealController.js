@@ -11,6 +11,7 @@ const cache = require('../../utils/cache');
 
 exports.getMealList = async (req, res) => {
   try {
+    console.log(">>>>>>")
     const { category } = req.query;
 
     // 🚀 优化：生成缓存键
@@ -21,7 +22,6 @@ exports.getMealList = async (req, res) => {
     // 🚀 优化：尝试从缓存获取
     const cached = await cache.get(cacheKey);
     if (cached) {
-      console.log('✅ 菜品列表缓存命中');
       return success(res, cached);
     }
 

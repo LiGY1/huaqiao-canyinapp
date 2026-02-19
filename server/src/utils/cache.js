@@ -2,7 +2,6 @@
  * 缓存工具类
  * 支持 Redis 缓存和内存缓存（当 Redis 不可用时）
  */
-
 const redis = require('redis');
 const chalk = require('chalk');
 

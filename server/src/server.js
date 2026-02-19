@@ -5,7 +5,6 @@ const chalk = require("chalk");
 const compression = require("compression");
 const connectDB = require("./config/database");
 const errorHandler = require("./middleware/errorHandler");
-const requestLogger = require("./middleware/requestLogger");
 const { initBucket } = require("./config/minio");
 const routes = require("./routes");
 
@@ -33,7 +32,6 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // 添加缓存控制中间件
 app.use(require("./middleware/cacheRule"));
-app.use(requestLogger);
 
 // 挂载路由
 for (const route of routes) {
