@@ -17,8 +17,15 @@
 
         <!-- 报告内容 -->
         <view v-else class="report-content">
-          <!-- 报告头部 -->
-          <report-header v-model:report-type="reportType" />
+          <!-- 报告头部（包含日期筛选） -->
+          <report-header 
+            v-model:report-type="reportType"
+            v-model:selected-date="selectedDate"
+            :current-date="currentDate"
+            :is-current-period="isCurrentPeriod"
+            @change-period="changePeriod"
+            @reset-to-today="resetToToday"
+          />
 
           <!-- weekly内容 -->
           <weekly-report v-if="reportType === 'weekly'" :weeklyData="weeklyData" />
@@ -53,7 +60,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, watch, unref } from "vue";
+import { ref, onMounted, onUnmounted, watch, unref, computed } from "vue";
 import layout from "@/components/layout.vue";
 
 // 导入组件
@@ -63,6 +70,62 @@ import monthlyReport from "./components/monthlyReport.vue";
 import aiReportCard from "./components/aiReportCard.vue";
 import historyReportModal from "./components/historyReportModal.vue";
 import { getWeeklyReport, getAiReportApi, generateAIReport, getMonthlyReport } from "@/api/student/report";
+
+// 日期相关状态
+const selectedDate = ref(formatDate(new Date()));
+const currentDate = formatDate(new Date());
+
+// 格式化日期为 YYYY-MM-DD
+function formatDate(date) {
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+// 判断是否是当前周期
+const isCurrentPeriod = computed(() => {
+  const selected = new Date(selectedDate.value);
+  const today = new Date();
+  
+  if (reportType.value === 'weekly') {
+    // 判断选中日期和今天是否在同一周
+    const getWeekStart = (date) => {
+      const d = new Date(date);
+      const day = d.getDay();
+      const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+      return new Date(d.setDate(diff)).setHours(0, 0, 0, 0);
+    };
+    return getWeekStart(selected) === getWeekStart(today);
+  } else {
+    // 判断选中日期和今天是否在同一月
+    return selected.getFullYear() === today.getFullYear() && 
+           selected.getMonth() === today.getMonth();
+  }
+});
+
+// 切换周期（上周/下周，上月/下月）
+const changePeriod = (offset) => {
+  const current = new Date(selectedDate.value);
+  
+  if (reportType.value === 'weekly') {
+    // 加减7天
+    current.setDate(current.getDate() + (offset * 7));
+  } else {
+    // 加减1个月
+    current.setMonth(current.getMonth() + offset);
+  }
+  
+  selectedDate.value = formatDate(current);
+  refreshData();
+};
+
+// 重置到今天
+const resetToToday = () => {
+  selectedDate.value = currentDate;
+  refreshData();
+};
 
 const weeklyData = ref({
   weekRange: "",
@@ -83,8 +146,8 @@ const weeklyData = ref({
 
 // 获取周报数据
 const fetchWeeklyData = async () => {
-  // 1. 调用 API，直接解构出 data
-  const { data } = await getWeeklyReport();
+  // 1. 调用 API，传入日期参数
+  const { data } = await getWeeklyReport({ date: selectedDate.value });
 
   // 2. 赋值给响应式变量，驱动视图更新
   weeklyData.value = data;
@@ -101,10 +164,21 @@ const monthlyData = ref({
   avgCalories: 0,
   targetCalories: 0,
 });
+
 const fetchMonthlyData = async () => {
-  const res = await getMonthlyReport();
+  const res = await getMonthlyReport({ date: selectedDate.value });
   monthlyData.value = res.data;
 };
+
+// 刷新数据
+const refreshData = async () => {
+  if (reportType.value === 'weekly') {
+    await fetchWeeklyData();
+  } else {
+    await fetchMonthlyData();
+  }
+};
+
 fetchWeeklyData();
 fetchMonthlyData();
 // 下拉刷新状态
@@ -185,12 +259,19 @@ const viewHistoryReport = (report) => {
 // 监听报告类型变化
 watch(reportType, async (newType) => {
   aiReport.value = null;
+  // 切换报告类型时，重置日期为今天
+  selectedDate.value = currentDate;
   if (newType === "weekly") {
     fetchWeeklyData();
   } else {
     fetchMonthlyData();
   }
   fetchReportHistory();
+});
+
+// 监听日期变化
+watch(selectedDate, () => {
+  refreshData();
 });
 
 fetchReportHistory();

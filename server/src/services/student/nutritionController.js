@@ -864,7 +864,9 @@ exports.getWeeklyReport = async (req, res) => {
     const userId = req.user._id;
 
     // ---------- 2. 得到本周的时间范围 --------------
-    const { start, end } = getWeekRange();
+    // 支持传入日期参数，如果没有传入则使用当前日期
+    const targetDate = req.query.date ? new Date(req.query.date) : new Date();
+    const { start, end } = getWeekRange(targetDate);
 
     // ---------- 3. 数据库查询 --------------
     const records = await NutritionRecord.find({
@@ -894,7 +896,9 @@ exports.getWeeklyReport = async (req, res) => {
 exports.getMonthlyReport = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { start, end } = getMonthRange();
+    // 支持传入日期参数，如果没有传入则使用当前日期
+    const targetDate = req.query.date ? new Date(req.query.date) : new Date();
+    const { start, end } = getMonthRange(targetDate);
 
     const records = await NutritionRecord.find({
       user: userId,
