@@ -10,7 +10,7 @@
       </view>
       <view class="stats-grid">
         <view class="stat-item">
-          <text class="stat-label">日均摄入热量</text>
+          <text class="stat-label">本周日均摄入</text>
           <text class="stat-value">{{ weeklyData.avgCalories }}</text>
           <text class="stat-unit">千卡/天</text>
         </view>
