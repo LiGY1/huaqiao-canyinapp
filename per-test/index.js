@@ -3,11 +3,10 @@ const autocannon = require('autocannon')
 // 配置压测参数
 const instance = autocannon({
   url: 'http://localhost:8080/api/student/meals?category=all&isTest=true',
-  connections: 1000, // 并发连接数（模拟多少个客户端同时请求）
-  pipelining: 1,     // HTTP 管道化请求数
+  connections: 1000, // 并发连接数,模拟多少个客户端同时请求
+  pipelining: 1,
   duration: 120,      // 测试持续时间（秒）
-  overallRate: 1000,
-
+  overallRate: 300,  // 每秒发送多少请求
   headers: {
     'Connection': 'keep-alive',
     'Content-Type': 'application/json',

@@ -15,7 +15,7 @@
 export default {
   props: {
     src: { type: String, required: true },
-    placeholder: { type: String, default: "/static/loading.png" }, // 你的占位图
+    placeholder: { type: String, default: "/static/loading.png" }, // 占位图
   },
   data() {
     return {
@@ -43,11 +43,9 @@ export default {
   methods: {
     observe() {
       this.observer = uni.createIntersectionObserver(this);
-      // 监听当前组件相对于视窗的位置
       this.observer.relativeToViewport({ bottom: 100 }).observe(`#${this.elId}`, (res) => {
         if (res.intersectionRatio > 0) {
           this.isShow = true;
-          // 图片进入视口后，停止监听以节省性能
           this.observer.disconnect();
         }
       });
