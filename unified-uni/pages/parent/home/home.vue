@@ -43,6 +43,42 @@
             </view>
           </view>
 
+          <!-- 三餐状态 -->
+          <view class="meal-status-section">
+            <text class="meal-status-title">今日用餐情况</text>
+            <view class="meal-status-grid">
+              <view class="meal-status-item" :class="{ eaten: mealStatus.breakfast.eaten }">
+                <view class="meal-icon">🌅</view>
+                <text class="meal-name">早餐</text>
+                <text v-if="mealStatus.breakfast.eaten" class="meal-badge eaten-badge">已用餐</text>
+                <text v-else class="meal-badge not-eaten-badge">未用餐</text>
+                <view v-if="mealStatus.breakfast.eaten && mealStatus.breakfast.items.length > 0" class="meal-items">
+                  <text class="meal-item" v-for="(item, index) in mealStatus.breakfast.items" :key="index">{{ item }}</text>
+                </view>
+              </view>
+              
+              <view class="meal-status-item" :class="{ eaten: mealStatus.lunch.eaten }">
+                <view class="meal-icon">☀️</view>
+                <text class="meal-name">午餐</text>
+                <text v-if="mealStatus.lunch.eaten" class="meal-badge eaten-badge">已用餐</text>
+                <text v-else class="meal-badge not-eaten-badge">未用餐</text>
+                <view v-if="mealStatus.lunch.eaten && mealStatus.lunch.items.length > 0" class="meal-items">
+                  <text class="meal-item" v-for="(item, index) in mealStatus.lunch.items" :key="index">{{ item }}</text>
+                </view>
+              </view>
+              
+              <view class="meal-status-item" :class="{ eaten: mealStatus.dinner.eaten }">
+                <view class="meal-icon">🌙</view>
+                <text class="meal-name">晚餐</text>
+                <text v-if="mealStatus.dinner.eaten" class="meal-badge eaten-badge">已用餐</text>
+                <text v-else class="meal-badge not-eaten-badge">未用餐</text>
+                <view v-if="mealStatus.dinner.eaten && mealStatus.dinner.items.length > 0" class="meal-items">
+                  <text class="meal-item" v-for="(item, index) in mealStatus.dinner.items" :key="index">{{ item }}</text>
+                </view>
+              </view>
+            </view>
+          </view>
+
           <!-- <view class="report-actions">
             <view class="action-row">
               <button class="report-btn weekly" @click="handleGenerateReport('weekly')" :disabled="isGenerating">
@@ -222,6 +258,13 @@ const childStatus = ref({
   nutritionScore: 0,
 });
 
+// 三餐状态
+const mealStatus = ref({
+  breakfast: { eaten: false, items: [] },
+  lunch: { eaten: false, items: [] },
+  dinner: { eaten: false, items: [] }
+});
+
 // 营养数据
 const nutritionLoading = ref(false);
 const nutritionData = ref({
@@ -350,6 +393,11 @@ const fetchChildNutrition = async () => {
           }
         });
         childStatus.value.mealsCompleted = mealTypes.size;
+
+        // 更新三餐状态
+        if (res.data.mealStatus) {
+          mealStatus.value = res.data.mealStatus;
+        }
       }
 
       // 加载营养数据
@@ -559,6 +607,91 @@ onMounted(() => {
   font-size: 20rpx;
   color: #6b7280;
   margin-top: 4rpx;
+}
+
+.meal-status-section {
+  margin-top: 30rpx;
+  padding-top: 24rpx;
+  border-top: 1rpx solid #d1fae5;
+}
+
+.meal-status-title {
+  font-size: 24rpx;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 16rpx;
+  display: block;
+}
+
+.meal-status-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+}
+
+.meal-status-item {
+  background: #ffffff;
+  border-radius: 12rpx;
+  padding: 16rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 2rpx solid #e5e7eb;
+  transition: all 0.3s;
+
+  &.eaten {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
+  }
+}
+
+.meal-icon {
+  font-size: 32rpx;
+  margin-bottom: 8rpx;
+}
+
+.meal-name {
+  font-size: 22rpx;
+  font-weight: 500;
+  color: #374151;
+  margin-bottom: 8rpx;
+}
+
+.meal-badge {
+  font-size: 18rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 10rpx;
+  font-weight: 500;
+}
+
+.eaten-badge {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.not-eaten-badge {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.meal-items {
+  margin-top: 12rpx;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 6rpx;
+}
+
+.meal-item {
+  font-size: 18rpx;
+  color: #6b7280;
+  background: #f9fafb;
+  padding: 4rpx 8rpx;
+  border-radius: 6rpx;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .report-actions {

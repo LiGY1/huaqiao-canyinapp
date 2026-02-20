@@ -10,7 +10,6 @@ const nutritionRecordSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
-
   intake: {
     calories: {
       type: Number,

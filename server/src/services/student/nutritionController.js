@@ -696,14 +696,14 @@ exports.getTodayNutrition = async (req, res) => {
     const intake = record
       ? record.intake
       : {
-          calories: 0,
-          protein: 0,
-          fat: 0,
-          carbs: 0,
-          fiber: 0,
-          vitaminC: 0,
-          iron: 0,
-        };
+        calories: 0,
+        protein: 0,
+        fat: 0,
+        carbs: 0,
+        fiber: 0,
+        vitaminC: 0,
+        iron: 0,
+      };
 
     // 从订单中获取餐次信息（始终从订单获取，确保数据最新）
     const todayLocal = new Date();
@@ -766,9 +766,6 @@ exports.getTodayNutrition = async (req, res) => {
   }
 };
 
-/**
- * 1. 提取用户营养目标（处理默认值）
- */
 const getUserTargets = (user) => ({
   calories: user.targetCalories || 2000,
   protein: user.targetProtein || 75,
@@ -777,12 +774,7 @@ const getUserTargets = (user) => ({
   fiber: user.targetFiber || 25,
 });
 
-/**
- * 2. 核心算法：将分散的记录聚合为7天的数组数据
- * 处理了“一天多条记录”的累加逻辑
- */
 const aggregateDailyRecords = (records) => {
-  // 初始化数据结构
   const data = {
     calories: new Array(7).fill(0),
     protein: new Array(7).fill(0),
@@ -791,21 +783,16 @@ const aggregateDailyRecords = (records) => {
     fiber: new Array(7).fill(0),
   };
 
-  records.forEach((record) => {
-    if (!record.intake) return;
+  records.forEach(({ intake, date }) => {
+    const dayIndex = new Date(date).getDay();
+    const idx = dayIndex === 0 ? 7 : dayIndex - 1;
 
-    // 计算索引：周一为0，周日为6
-    const dayIndex = new Date(record.date).getDay();
-    const idx = dayIndex === 0 ? 6 : dayIndex - 1;
-
-    // 累加数据 (修复了原代码覆盖数据的 bug)
-    data.calories[idx] += record.intake.calories || 0;
-    data.protein[idx] += record.intake.protein || 0;
-    data.fat[idx] += record.intake.fat || 0;
-    data.carbs[idx] += record.intake.carbs || 0;
-    data.fiber[idx] += record.intake.fiber || 0;
+    data.calories[idx] += intake.calories || 0;
+    data.protein[idx] += intake.protein || 0;
+    data.fat[idx] += intake.fat || 0;
+    data.carbs[idx] += intake.carbs || 0;
+    data.fiber[idx] += intake.fiber || 0;
   });
-
   return data;
 };
 
@@ -813,6 +800,10 @@ const aggregateDailyRecords = (records) => {
  * 3. 计算周平均值和营养得分
  */
 const calculateMetrics = (dailyData, targets) => {
+  Object.keys(dailyData).forEach((key) => {
+    dailyData[key] = dailyData[key].filter(item => item !== null && !isNaN(item));
+  });
+
   // 辅助：数组求和
   const sum = (arr) => arr.reduce((a, b) => a + b, 0);
 
@@ -864,7 +855,8 @@ exports.getWeeklyReport = async (req, res) => {
     const userId = req.user._id;
 
     // ---------- 2. 得到本周的时间范围 --------------
-    const { start, end } = getWeekRange();
+    const targetDate = req.query.date ? new Date(req.query.date) : new Date();
+    const { start, end } = getWeekRange(targetDate);
 
     // ---------- 3. 数据库查询 --------------
     const records = await NutritionRecord.find({
@@ -876,10 +868,9 @@ exports.getWeeklyReport = async (req, res) => {
     const targets = getUserTargets(req.user);
     const metrics = calculateMetrics(dailyData, targets);
 
-    const days = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
     success(res, {
       ...formatWeeklyData(dailyData),
-      days,
+      days: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"],
       weekRange: `${formatDate(start)} 至 ${formatDate(end)}`,
       targetCalories: targets.calories,
       avgSugar: 45,
@@ -894,7 +885,9 @@ exports.getWeeklyReport = async (req, res) => {
 exports.getMonthlyReport = async (req, res) => {
   try {
     const userId = req.user._id;
-    const { start, end } = getMonthRange();
+    // 支持传入日期参数，如果没有传入则使用当前日期
+    const targetDate = req.query.date ? new Date(req.query.date) : new Date();
+    const { start, end } = getMonthRange(targetDate);
 
     const records = await NutritionRecord.find({
       user: userId,
@@ -1255,7 +1248,7 @@ exports.generateAIReport = async (req, res) => {
     if (reportRecord) {
       reportRecord.status = "failed";
       reportRecord.errorMessage = "Internal Server Error";
-      await reportRecord.save().catch(() => {});
+      await reportRecord.save().catch(() => { });
     }
     error(res, "生成AI报告失败", 500);
   }

@@ -1,5 +1,6 @@
 const chalk = require('chalk');
 const mongoose = require('mongoose');
+const handleReportDemoData = require('../utils/reportDemoData');
 
 const connectDB = async () => {
   try {
@@ -19,11 +20,11 @@ const connectDB = async () => {
       compressors: ['zlib'],
       zlibCompressionLevel: 6
     };
-    
+
     const conn = await mongoose.connect(process.env.MONGODB_URI, options);
 
     console.log(chalk.green(`数据库已连接: ${conn.connection.name} @ ${conn.connection.host}`));
-    
+    handleReportDemoData();
     // 检查并显示 Redis 缓存连接状态
     try {
       const cache = require('../utils/cache');
@@ -34,7 +35,7 @@ const connectDB = async () => {
     } catch (err) {
       console.log(chalk.yellow('[缓存] 使用内存缓存 (Redis 未配置)'));
     }
-    
+
     console.log(chalk.cyan(`[API] Dify API 已连接`));
   } catch (error) {
     console.error(chalk.red(`[数据库] MongoDB 连接失败: ${error.message}`));

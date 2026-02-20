@@ -9,21 +9,11 @@ const { updateStudentHealthData, updateDailyNutritionRecord } = require('../../u
 const { getCurrentSolarTerm } = require('../../utils/solarTermUtils');
 const cache = require('../../utils/cache');
 
+const prefix = 'meal:list:';
+
 exports.getMealList = async (req, res) => {
   try {
     const { category } = req.query;
-
-    // 🚀 优化：生成缓存键
-    const cacheKey = cache.generateKey('meal:list', {
-      category: category || 'all'
-    });
-
-    // 🚀 优化：尝试从缓存获取
-    const cached = await cache.get(cacheKey);
-    if (cached) {
-      console.log('✅ 菜品列表缓存命中');
-      return success(res, cached);
-    }
 
     const filter = { status: DISH_STATUS.AVAILABLE };
     if (category && category !== 'all') {
@@ -36,9 +26,6 @@ exports.getMealList = async (req, res) => {
       isPopular: -1,
       salesCount: -1
     });
-
-    // 🚀 优化：存入缓存（5分钟）
-    await cache.set(cacheKey, dishes, 300);
 
     success(res, dishes);
   } catch (err) {
@@ -61,10 +48,10 @@ exports.getCurrentSolarTerm = async (req, res) => {
 
     const solarTermInfo = getCurrentSolarTerm();
     console.log('[节气信息] 返回当前节气:', solarTermInfo.name);
-    
+
     // 🚀 优化：存入缓存（30分钟）
     await cache.set(cacheKey, solarTermInfo, 1800);
-    
+
     success(res, solarTermInfo);
   } catch (err) {
     console.error('[节气信息] 获取失败:', err);
@@ -110,6 +97,41 @@ exports.getSeasonalNotification = async (req, res) => {
     error(res, '获取节气菜品通知失败', 500);
   }
 };
+
+// exports.getMealList = async (req, res) => {
+//   try {
+//     const { category } = req.query;
+
+//     const cacheKey = cache.generateKey(prefix, {
+//       category
+//     });
+
+//     const cached = await cache.get(cacheKey);
+//     if (cached) {
+//       success(res, cached);
+//       return;
+//     }
+
+//     const filter = { status: DISH_STATUS.AVAILABLE };
+//     if (category && category !== 'all') {
+//       filter.category = category;
+//     }
+
+//     const dishes = await Dish.find(filter).sort({
+//       seasonal: -1,
+//       isRecommended: -1,
+//       isPopular: -1,
+//       salesCount: -1
+//     });
+
+//     cache.set(cacheKey, dishes);
+
+//     success(res, dishes);
+//   } catch (err) {
+//     console.error(err);
+//     error(res, '获取菜品列表失败', 500);
+//   }
+// };
 
 exports.getAIRecommendation = async (req, res) => {
   try {
@@ -366,8 +388,8 @@ exports.getAIRecommendation = async (req, res) => {
         const potentialTotalCalories = totalCalories + selectedDish.nutrition.calories;
 
         if (singleMealTargetCalories > 0 &&
-            potentialTotalCalories > singleMealTargetCalories * 1.3 &&
-            recommendedMeals.length >= 4) {
+          potentialTotalCalories > singleMealTargetCalories * 1.3 &&
+          recommendedMeals.length >= 4) {
           candidatePool.splice(randomIndex, 1);
           continue;
         }
@@ -704,7 +726,7 @@ exports.getOrderHistory = async (req, res) => {
         const end = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
         filter.orderDate.$lte = end;
       }
-      
+
       console.log('📅 订单日期过滤:', {
         startDate,
         endDate,
@@ -722,7 +744,7 @@ exports.getOrderHistory = async (req, res) => {
       .populate('items.dish', 'name image category');
 
     const total = await Order.countDocuments(filter);
-    
+
     console.log('📊 查询结果:', {
       查询条件: JSON.stringify(filter),
       找到订单数: orders.length,

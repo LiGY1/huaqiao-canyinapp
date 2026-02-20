@@ -103,7 +103,7 @@ const currentPage = ref(1);
 const pageSize = 10;
 const hasMore = ref(true);
 
-// 3. 使用计算属性，根据日期范围生成统计文本
+// 生成日期范围文本
 const dateRangeText = computed(() => {
   if (!dateRange.startDate || !dateRange.endDate) return "统计数据";
 
@@ -138,6 +138,29 @@ const mealTypeChartRef = ref(null);
 const nutritionChartRef = ref(null);
 let mealChartInstance = null;
 let nutritionChartInstance = null;
+
+// 日期筛选变化
+const handleDateChange = async (range) => {
+  try {
+    // 更新日期范围
+    Object.assign(dateRange, range);
+
+    // 重置分页
+    currentPage.value = 1;
+    hasMore.value = true;
+
+    // 不是首次加载，清空列表
+    if (mealRecords.value.length > 0) {
+      mealRecords.value = [];
+      uni.showLoading({ title: "加载中..." });
+    }
+
+    // 重新加载数据
+    await fetchMealRecords();
+  } finally {
+    uni.hideLoading();
+  }
+};
 
 const fetchMealRecords = async (isLoadMore = false) => {
   if (loading.value) return;
@@ -236,27 +259,6 @@ const fetchMealRecords = async (isLoadMore = false) => {
     loading.value = false;
     refreshing.value = false;
   }
-};
-
-// 日期筛选变化
-const handleDateChange = (range) => {
-  // 更新日期范围
-  Object.assign(dateRange, range);
-
-  // 重置分页
-  currentPage.value = 1;
-  hasMore.value = true;
-
-  // 不是首次加载，清空列表
-  if (mealRecords.value.length > 0) {
-    mealRecords.value = [];
-    uni.showLoading({ title: "加载中..." });
-  }
-
-  // 重新加载数据
-  fetchMealRecords().finally(() => {
-    uni.hideLoading();
-  });
 };
 
 // 下拉刷新

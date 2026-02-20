@@ -15,17 +15,27 @@ export const getMealStatus = () => {
 
 /**
  * 获取周报
+ * @param {Object} data - 请求参数
+ * @param {string} data.date - 日期参数（可选，格式：YYYY-MM-DD）
  * @returns
  */
-export const getWeeklyReport = () => {
+export const getWeeklyReport = (data = {}) => {
   return request({
     url: "/student/nutrition/weekly-report",
+    data,
   });
 };
 
-export const getMonthlyReport = () => {
+/**
+ * 获取月报
+ * @param {Object} data - 请求参数
+ * @param {string} data.date - 日期参数（可选，格式：YYYY-MM-DD）
+ * @returns
+ */
+export const getMonthlyReport = (data = {}) => {
   return request({
     url: "/student/nutrition/monthly-report",
+    data,
   });
 };
 

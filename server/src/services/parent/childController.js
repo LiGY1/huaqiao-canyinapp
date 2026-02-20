@@ -103,6 +103,21 @@ exports.getChildNutrition = async (req, res) => {
       items: order.items.map(item => item.dishName || item.dish?.name || '菜品')
     }));
 
+    // 生成三餐状态
+    const mealStatus = {
+      breakfast: { eaten: false, items: [] },
+      lunch: { eaten: false, items: [] },
+      dinner: { eaten: false, items: [] }
+    };
+
+    // 填充已吃的餐次
+    meals.forEach(meal => {
+      if (mealStatus[meal.mealType]) {
+        mealStatus[meal.mealType].eaten = true;
+        mealStatus[meal.mealType].items = meal.items;
+      }
+    });
+
     const result = {
       date: formatDate(today),
       childName: child.name[0] + "**",
@@ -120,7 +135,8 @@ exports.getChildNutrition = async (req, res) => {
         carbs: 250,
         fiber: 25
       },
-      meals: meals // 返回餐次信息
+      meals: meals, // 返回餐次信息
+      mealStatus: mealStatus // 新增：三餐状态
     };
 
     // 🚀 优化：存入缓存（30秒）- 缓存时间缩短，确保数据及时更新
