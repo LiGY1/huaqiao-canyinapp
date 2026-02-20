@@ -784,19 +784,15 @@ const aggregateDailyRecords = (records) => {
   };
 
   records.forEach(({ intake, date }) => {
-    if (!intake) {
-      return
-    };
     const dayIndex = new Date(date).getDay();
     const idx = dayIndex === 0 ? 7 : dayIndex - 1;
 
-    data.calories[idx] = intake.calories || 0;
-    data.protein[idx] = intake.protein || 0;
-    data.fat[idx] = intake.fat || 0;
-    data.carbs[idx] = intake.carbs || 0;
-    data.fiber[idx] = intake.fiber || 0;
+    data.calories[idx] += intake.calories || 0;
+    data.protein[idx] += intake.protein || 0;
+    data.fat[idx] += intake.fat || 0;
+    data.carbs[idx] += intake.carbs || 0;
+    data.fiber[idx] += intake.fiber || 0;
   });
-
   return data;
 };
 
@@ -804,6 +800,10 @@ const aggregateDailyRecords = (records) => {
  * 3. 计算周平均值和营养得分
  */
 const calculateMetrics = (dailyData, targets) => {
+  Object.keys(dailyData).forEach((key) => {
+    dailyData[key] = dailyData[key].filter(item => item !== null && !isNaN(item));
+  });
+
   // 辅助：数组求和
   const sum = (arr) => arr.reduce((a, b) => a + b, 0);
 
@@ -855,7 +855,6 @@ exports.getWeeklyReport = async (req, res) => {
     const userId = req.user._id;
 
     // ---------- 2. 得到本周的时间范围 --------------
-    // 支持传入日期参数，如果没有传入则使用当前日期
     const targetDate = req.query.date ? new Date(req.query.date) : new Date();
     const { start, end } = getWeekRange(targetDate);
 

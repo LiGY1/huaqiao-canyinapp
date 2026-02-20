@@ -211,17 +211,6 @@ class CacheManager {
    */
   startStatsReporting() {
     // 每5分钟输出一次统计
-    setInterval(() => {
-      const stats = this.getCacheStats();
-      if (stats.total > 0) {
-        console.log(`\n[CACHE STATS] 缓存统计报告 (${stats.cacheType}):`);
-        console.log(`   命中: ${stats.hits} 次`);
-        console.log(`   未命中: ${stats.misses} 次`);
-        console.log(`   设置: ${stats.sets} 次`);
-        console.log(`   删除: ${stats.deletes} 次`);
-        console.log(`   命中率: ${stats.hitRate} (总计: ${stats.total} 次查询)\n`);
-      }
-    }, 5 * 60 * 1000); // 5分钟
   }
 
   /**

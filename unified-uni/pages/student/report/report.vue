@@ -118,7 +118,6 @@ const changePeriod = (offset) => {
   }
   
   selectedDate.value = formatDate(current);
-  refreshData();
 };
 
 // 重置到今天
