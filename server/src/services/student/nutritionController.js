@@ -783,18 +783,18 @@ const aggregateDailyRecords = (records) => {
     fiber: new Array(7).fill(0),
   };
 
-  records.forEach(({intake, date}) => {
+  records.forEach(({ intake, date }) => {
     if (!intake) {
       return
     };
     const dayIndex = new Date(date).getDay();
-    const idx = dayIndex === 0 ? 6 : dayIndex - 1;
+    const idx = dayIndex === 0 ? 7 : dayIndex - 1;
 
-    data.calories[idx] += intake.calories || 0;
-    data.protein[idx] += intake.protein || 0;
-    data.fat[idx] += intake.fat || 0;
-    data.carbs[idx] += intake.carbs || 0;
-    data.fiber[idx] += intake.fiber || 0;
+    data.calories[idx] = intake.calories || 0;
+    data.protein[idx] = intake.protein || 0;
+    data.fat[idx] = intake.fat || 0;
+    data.carbs[idx] = intake.carbs || 0;
+    data.fiber[idx] = intake.fiber || 0;
   });
 
   return data;
@@ -869,10 +869,9 @@ exports.getWeeklyReport = async (req, res) => {
     const targets = getUserTargets(req.user);
     const metrics = calculateMetrics(dailyData, targets);
 
-    const days = ["周一", "周二", "周三", "周四", "周五", "周六", "周日"];
     success(res, {
       ...formatWeeklyData(dailyData),
-      days,
+      days: ["周一", "周二", "周三", "周四", "周五", "周六", "周日"],
       weekRange: `${formatDate(start)} 至 ${formatDate(end)}`,
       targetCalories: targets.calories,
       avgSugar: 45,
