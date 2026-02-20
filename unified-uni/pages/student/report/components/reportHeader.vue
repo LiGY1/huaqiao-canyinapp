@@ -1,11 +1,12 @@
 <template>
   <view class="report-header">
-    <view class="header-content">
-      <h1 class="report-title">营养报告</h1>
-      <p class="report-subtitle">基于您的饮食数据，AI智能生成专业营养分析</p>
-    </view>
-    
-    <view class="report-type-selector">
+    <!-- 标题和类型选择器在同一行 -->
+    <view class="header-row">
+      <view class="header-content">
+        <h1 class="report-title">营养报告</h1>
+        <p class="report-subtitle">AI智能分析</p>
+      </view>
+      
       <view class="toggle-group">
         <view
           class="toggle-item"
@@ -136,14 +137,22 @@ const resetToToday = () => {
 <style scoped>
 .report-header {
   background: linear-gradient(to bottom, #f0f5ff, #ffffff);
-  border-radius: 20rpx;
-  padding: 30rpx;
-  margin-bottom: 30rpx;
-  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.08);
+  border-radius: 18rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.06);
+}
+
+/* 标题和切换器在同一行 */
+.header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20rpx;
 }
 
 .header-content {
-  margin-bottom: 30rpx;
+  flex: 1;
 }
 
 .report-title {
@@ -152,25 +161,21 @@ const resetToToday = () => {
   background: linear-gradient(to right, #667eea, #764ba2);
   background-clip: text;
   display: block;
-  margin-bottom: 10rpx;
+  margin-bottom: 6rpx;
+  line-height: 1.2;
 }
 
 .report-subtitle {
   font-size: 24rpx;
-  color: #666;
+  color: #999;
   display: block;
-}
-
-.report-type-selector {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 30rpx;
+  line-height: 1.2;
 }
 
 .toggle-group {
   display: flex;
   background-color: #f0f0f0;
-  border-radius: 36rpx;
+  border-radius: 34rpx;
   overflow: hidden;
   border: 2rpx solid #e0e0e0;
 }
@@ -179,20 +184,17 @@ const resetToToday = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12rpx 32rpx;
+  padding: 10rpx 28rpx;
   font-size: 26rpx;
   color: #666;
-  position: relative;
   transition: all 0.3s ease;
   cursor: pointer;
-  gap: 10rpx;
-  flex: 1;
 }
 
 .toggle-item.active {
   background-color: #667eea;
   color: #fff;
-  box-shadow: 0 4rpx 12rpx rgba(102, 126, 234, 0.4);
+  box-shadow: 0 2rpx 8rpx rgba(102, 126, 234, 0.3);
 }
 
 .toggle-text {
@@ -201,22 +203,22 @@ const resetToToday = () => {
 
 /* 日期筛选器样式 */
 .date-filter {
-  margin-top: 20rpx;
+  margin-top: 16rpx;
 }
 
 .date-picker {
-  margin-bottom: 20rpx;
+  margin-bottom: 14rpx;
 }
 
 .date-picker-value {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20rpx 24rpx;
+  padding: 18rpx 22rpx;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 12rpx;
   color: #fff;
-  font-size: 30rpx;
+  font-size: 28rpx;
   font-weight: 500;
 }
 
@@ -225,20 +227,20 @@ const resetToToday = () => {
 }
 
 .picker-icon {
-  font-size: 32rpx;
-  margin-left: 16rpx;
+  font-size: 30rpx;
+  margin-left: 12rpx;
 }
 
 .date-filter-actions {
   display: flex;
-  gap: 16rpx;
+  gap: 14rpx;
   justify-content: space-between;
 }
 
 .period-btn {
   flex: 1;
-  height: 64rpx;
-  line-height: 64rpx;
+  height: 60rpx;
+  line-height: 60rpx;
   padding: 0;
   font-size: 26rpx;
   border-radius: 12rpx;

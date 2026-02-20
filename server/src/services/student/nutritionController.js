@@ -696,14 +696,14 @@ exports.getTodayNutrition = async (req, res) => {
     const intake = record
       ? record.intake
       : {
-          calories: 0,
-          protein: 0,
-          fat: 0,
-          carbs: 0,
-          fiber: 0,
-          vitaminC: 0,
-          iron: 0,
-        };
+        calories: 0,
+        protein: 0,
+        fat: 0,
+        carbs: 0,
+        fiber: 0,
+        vitaminC: 0,
+        iron: 0,
+      };
 
     // 从订单中获取餐次信息（始终从订单获取，确保数据最新）
     const todayLocal = new Date();
@@ -766,9 +766,6 @@ exports.getTodayNutrition = async (req, res) => {
   }
 };
 
-/**
- * 1. 提取用户营养目标（处理默认值）
- */
 const getUserTargets = (user) => ({
   calories: user.targetCalories || 2000,
   protein: user.targetProtein || 75,
@@ -777,12 +774,7 @@ const getUserTargets = (user) => ({
   fiber: user.targetFiber || 25,
 });
 
-/**
- * 2. 核心算法：将分散的记录聚合为7天的数组数据
- * 处理了“一天多条记录”的累加逻辑
- */
 const aggregateDailyRecords = (records) => {
-  // 初始化数据结构
   const data = {
     calories: new Array(7).fill(0),
     protein: new Array(7).fill(0),
@@ -791,19 +783,18 @@ const aggregateDailyRecords = (records) => {
     fiber: new Array(7).fill(0),
   };
 
-  records.forEach((record) => {
-    if (!record.intake) return;
-
-    // 计算索引：周一为0，周日为6
-    const dayIndex = new Date(record.date).getDay();
+  records.forEach(({intake, date}) => {
+    if (!intake) {
+      return
+    };
+    const dayIndex = new Date(date).getDay();
     const idx = dayIndex === 0 ? 6 : dayIndex - 1;
 
-    // 累加数据 (修复了原代码覆盖数据的 bug)
-    data.calories[idx] += record.intake.calories || 0;
-    data.protein[idx] += record.intake.protein || 0;
-    data.fat[idx] += record.intake.fat || 0;
-    data.carbs[idx] += record.intake.carbs || 0;
-    data.fiber[idx] += record.intake.fiber || 0;
+    data.calories[idx] += intake.calories || 0;
+    data.protein[idx] += intake.protein || 0;
+    data.fat[idx] += intake.fat || 0;
+    data.carbs[idx] += intake.carbs || 0;
+    data.fiber[idx] += intake.fiber || 0;
   });
 
   return data;
@@ -1259,7 +1250,7 @@ exports.generateAIReport = async (req, res) => {
     if (reportRecord) {
       reportRecord.status = "failed";
       reportRecord.errorMessage = "Internal Server Error";
-      await reportRecord.save().catch(() => {});
+      await reportRecord.save().catch(() => { });
     }
     error(res, "生成AI报告失败", 500);
   }

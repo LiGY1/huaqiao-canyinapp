@@ -299,7 +299,7 @@ const onRefresherRefresh = async () => {
 <style scoped>
 .report-container {
   height: 100%;
-  padding: 20rpx;
+  padding: 18rpx;
   background-color: #f5f7fa;
 }
 
@@ -335,7 +335,7 @@ const onRefresherRefresh = async () => {
 .report-content {
   display: flex;
   flex-direction: column;
-  gap: 30rpx;
+  gap: 24rpx;
   height: 100%;
 }
 
