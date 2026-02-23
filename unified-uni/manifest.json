@@ -1,5 +1,5 @@
 {
-    "name" : "unified-uni",
+    "name" : "智善伙伴",
     "appid" : "__UNI__CA00E85",
     "description" : "",
     "versionName" : "1.0.0",
@@ -17,7 +17,9 @@
             "delay" : 0
         },
         /* 模块配置 */
-        "modules" : {},
+        "modules" : {
+            "Push" : {}
+        },
         /* 应用发布信息 */
         "distribute" : {
             /* android打包配置 */
@@ -45,7 +47,15 @@
                 "dSYMs" : false
             },
             /* SDK配置 */
-            "sdkConfigs" : {},
+            "sdkConfigs" : {
+                "push" : {
+                    "unipush" : {
+                        "version" : "2",
+                        "offline" : true,
+                        "hms" : {}
+                    }
+                }
+            },
             "icons" : {
                 "android" : {
                     "hdpi" : "unpackage/res/icons/72x72.png",
@@ -114,6 +124,9 @@
     "h5" : {
         "router" : {
             "mode" : "history"
+        },
+        "unipush" : {
+            "enable" : true
         }
     }
 }
