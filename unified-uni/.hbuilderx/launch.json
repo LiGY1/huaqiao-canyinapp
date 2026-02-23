@@ -2,12 +2,27 @@
     "version" : "1.0",
     "configurations" : [
         {
-            "playground" : "standard",
+            "customPlaygroundType" : "local",
+            "packageName" : "uni.app.UNICA00E85",
+            "playground" : "custom",
             "type" : "uni-app:app-android"
         },
         {
             "playground" : "standard",
             "type" : "uni-app:app-ios"
+        },
+        {
+            "app" : {
+                "launchtype" : "local"
+            },
+            "default" : {
+                "launchtype" : "local"
+            },
+            "h5" : {
+                "launchtype" : "local"
+            },
+            "provider" : "alipay",
+            "type" : "uniCloud"
         }
     ]
 }
