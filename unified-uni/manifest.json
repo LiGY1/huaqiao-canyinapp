@@ -126,7 +126,7 @@
             "mode" : "history"
         },
         "unipush" : {
-            "enable" : true
+            "enable" : false
         }
     }
 }

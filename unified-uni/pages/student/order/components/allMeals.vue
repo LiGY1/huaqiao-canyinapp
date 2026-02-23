@@ -20,6 +20,17 @@
       <view v-for="cat in categories" :key="cat.id" :id="'cat-' + cat.id" class="category-section">
         <view class="section-header">
           <text class="section-title">{{ cat.name }}</text>
+          <!-- 当季特色分类显示节气信息 -->
+          <view v-if="cat.id === 'seasonal' && solarTermInfo" class="solar-term-info">
+            <view class="solar-term-badge" :style="{ backgroundColor: solarTermInfo.color.secondary }">
+              <text class="solar-term-name" :style="{ color: solarTermInfo.color.primary }">
+                {{ solarTermInfo.name }}
+              </text>
+              <text class="solar-term-en">{{ solarTermInfo.enName }}</text>
+            </view>
+            <text class="solar-term-desc">{{ solarTermInfo.description }}</text>
+            <text class="solar-term-tips">💡 {{ solarTermInfo.healthTips }}</text>
+          </view>
         </view>
 
         <view v-if="groupedMeals[cat.id] && groupedMeals[cat.id].length > 0" class="meals-list">
@@ -71,6 +82,7 @@
 import { ref, computed, onMounted, watch } from "vue";
 import LazyImage from "@/components/LazyImage/index.vue";
 import Loading from "@/components/Loading/index.vue";
+import { getCurrentSolarTerm } from "@/api/meal.js";
 
 const props = defineProps({
   meals: {
@@ -84,6 +96,9 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["add-to-cart", "decrease-quantity"]);
+
+// 节气信息
+const solarTermInfo = ref(null);
 
 const onAddToCart = (meal) => {
   emit("add-to-cart", meal);
@@ -100,6 +115,23 @@ const getQuantity = (mealId) => {
   const item = props.cartItems.find((item) => item.id === mealId);
   return item ? item.quantity : 0;
 };
+
+// 获取节气信息
+const fetchSolarTerm = async () => {
+  try {
+    const res = await getCurrentSolarTerm();
+    if (res.success && res.data) {
+      solarTermInfo.value = res.data;
+    }
+  } catch (error) {
+    console.error("获取节气信息失败:", error);
+  }
+};
+
+// 组件挂载时获取节气信息
+onMounted(() => {
+  fetchSolarTerm();
+});
 
 const currentCategory = ref("");
 const scrollIntoId = ref("");
@@ -308,6 +340,50 @@ const onScroll = (e) => {
   font-weight: 700;
   color: #1e293b;
   position: relative;
+}
+
+/* 节气信息样式 */
+.solar-term-info {
+  margin-top: 16rpx;
+  padding: 20rpx;
+  background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+  border-radius: 16rpx;
+  border-left: 6rpx solid #10b981;
+}
+
+.solar-term-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 12rpx;
+  padding: 8rpx 20rpx;
+  border-radius: 24rpx;
+  margin-bottom: 12rpx;
+}
+
+.solar-term-name {
+  font-size: 28rpx;
+  font-weight: 700;
+}
+
+.solar-term-en {
+  font-size: 20rpx;
+  color: #64748b;
+  text-transform: capitalize;
+}
+
+.solar-term-desc {
+  display: block;
+  font-size: 24rpx;
+  color: #475569;
+  margin-bottom: 8rpx;
+  line-height: 1.5;
+}
+
+.solar-term-tips {
+  display: block;
+  font-size: 22rpx;
+  color: #059669;
+  line-height: 1.6;
 }
 
 .meals-list {
