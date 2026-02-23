@@ -6,6 +6,8 @@ const unifiedRoutes = require("./unified");
 const roleQueryRoutes = require("./roleQuery");
 const monitoringRoutes = require("./monitoring");
 const tokenManagementRoutes = require("./tokenManagement");
+const { testPush } = require("../utils/pushMsg");
+const { success } = require("../utils/responseFormatter");
 
 module.exports = [
   {
@@ -40,4 +42,11 @@ module.exports = [
     path: "/api/token-management",
     callback: tokenManagementRoutes
   },
+  {
+    path: "/api/test-push",
+    callback: async (req, res) => {
+      const { data } = await testPush();
+      success(res, data.data, '测试推送成功');
+    }
+  }
 ]
