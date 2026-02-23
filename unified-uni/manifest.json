@@ -52,7 +52,16 @@
                     "unipush" : {
                         "version" : "2",
                         "offline" : true,
-                        "hms" : {}
+                        "hms" : {},
+                        "icons" : {
+                            "small" : {
+                                "ldpi" : "unpackage/res/icons/20x20.png",
+                                "mdpi" : "unpackage/res/icons/29x29.png",
+                                "hdpi" : "unpackage/res/icons/40x40.png",
+                                "xhdpi" : "unpackage/res/icons/40x40.png",
+                                "xxhdpi" : "unpackage/res/icons/72x72.png"
+                            }
+                        }
                     }
                 }
             },
