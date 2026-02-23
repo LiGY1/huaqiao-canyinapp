@@ -2,8 +2,13 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { verifyTokenWithCache } = require('../utils/jwtUtils');
 
+const whiteList = new Set([
+  "/api/test-push",
+  "/api/student/meals"
+])
+
 exports.protect = async (req, res, next) => {
-  if (req.query.isTest === 'true' && req.baseUrl === "/api/student/meals") {
+  if (whiteList.has(req.path)) {
     next();
     return;
   }
