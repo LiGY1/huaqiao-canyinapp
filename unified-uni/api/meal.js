@@ -57,26 +57,12 @@ export const getOrderDetails = async (orderId) => {
 
 // 获取当前节气信息
 export const getCurrentSolarTerm = async () => {
-  try {
-    const res = await request({
-      url: "/student/meals/current-solar-term",
-      method: "GET",
-    });
-    return res;
-  } catch (error) {
-    console.error("获取节气信息失败:", error);
-    // 返回模拟数据
-    return {
-      code: 200,
-      success: true,
-      data: {
-        name: "立冬",
-        color: {
-          tag: "success",
-        },
-      },
-    };
-  }
+  const res = await request({
+    url: "/student/meals/current-solar-term",
+    method: "GET",
+  });
+  return res;
+
 };
 
 // 获取用户余额

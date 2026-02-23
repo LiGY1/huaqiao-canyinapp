@@ -1,18 +1,17 @@
 <script>
 	export default {
 		onLaunch: function() {
-			console.log("App Launch");
+			
+			// #ifdef APP-PLUS
 			uni.getPushClientId({
 				success: async (res) => {
 					let push_clientid = res.cid;
-					console.log("客户端推送标识:", push_clientid);
 					const resp = await uniCloud.callFunction({
 						name: "bindCid",
 						data: {
 							cid: push_clientid,
 						},
 					});
-					console.log(resp);
 				},
 				fail(err) {
 					console.log(err);
@@ -35,6 +34,7 @@
 					console.log("用户点击了通知", res.data);
 				}
 			});
+			// #endif
 		},
 	};
 </script>
