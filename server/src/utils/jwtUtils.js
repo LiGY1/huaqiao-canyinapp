@@ -198,18 +198,22 @@ exports.verifyTokenWithCache = async (token) => {
     
     // 检查 Redis 中是否存在（白名单检查）
     const tokenKey = getTokenKey(token);
-    const cached = await cacheManager.get(tokenKey);
-    
-    if (!cached) {
-      // Token 不在白名单中，视为无效
-      return null;
-    }
+    // const cached = await cacheManager.get(tokenKey);
+     
+    // if (!cached) {
+    //   // Token 不在白名单中，视为无效
+    //   return null;
+    // }
 
     // 验证用户 ID 是否匹配
-    if (cached.userId !== decoded.id.toString()) {
+    // if (cached.userId !== decoded.id.toString()) {
+    //   return null;
+    // }
+
+    if(!decoded) {
       return null;
     }
-
+    
     return decoded;
   } catch (error) {
     return null;

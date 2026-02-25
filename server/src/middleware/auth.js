@@ -35,10 +35,10 @@ exports.protect = async (req, res, next) => {
     // 使用 Redis 缓存验证 token（白名单模式）
     // 如果 Redis 不可用，会降级到仅验证 JWT 本身
     const decoded = await verifyTokenWithCache(token);
-
+ 
     // 如果 Redis 验证失败，尝试降级到仅 JWT 验证（向后兼容）
     let finalDecoded = decoded;
-    if (!decoded) {
+    if (!decoded && false) {
       // 尝试同步验证（不检查 Redis）
       try {
         const syncDecoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -51,6 +51,7 @@ exports.protect = async (req, res, next) => {
           // 如果 Redis 未连接，记录警告但允许访问
           const cacheManager = require('../utils/cache');
           const cacheStatus = cacheManager.getConnectionStatus();
+
           if (!cacheStatus.connected) {
             console.warn('[AUTH] Redis 未连接，使用降级验证模式（仅 JWT 验证）');
             finalDecoded = syncDecoded;
