@@ -2,6 +2,9 @@ const mongoose = require('mongoose')
 const NutritionRecord = require('../models/NutritionRecord')
 const Dish = require('../models/Dish')
 const User = require('../models/User')
+const Order = require('../models/Order')
+const PhysicalExam = require('../models/PhysicalExam')
+const { ORDER_STATUS, MEAL_TYPES, USER_ROLES, HEALTH_STATUS } = require('../config/constants')
 const fs = require('fs')
 const path = require('path')
 
@@ -252,6 +255,222 @@ async function maskUserNames() {
   }
 }
 
+/**
+ * 生成学校仪表板所需的订单数据
+ * 为学生生成最近两周的订单数据
+ */
+async function generateSchoolDashboardOrders() {
+  try {
+    // 获取所有学生
+    const students = await User.find({ role: USER_ROLES.STUDENT })
+    if (students.length === 0) {
+      return
+    }
+
+    // 获取所有可用菜品
+    const dishes = await Dish.find({ status: 1 })
+    if (dishes.length === 0) {
+      return
+    }
+
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+
+    const orders = []
+
+    // 为每个学生生成最近14天的订单
+    for (const student of students) {
+      for (let dayOffset = 0; dayOffset < 14; dayOffset++) {
+        const orderDate = new Date(today)
+        orderDate.setDate(today.getDate() - dayOffset)
+
+        // 每天生成三餐订单（有一定概率不点餐）
+        const mealTypes = [
+          { type: MEAL_TYPES.BREAKFAST, hour: 7, probability: 0.85 },
+          { type: MEAL_TYPES.LUNCH, hour: 12, probability: 0.95 },
+          { type: MEAL_TYPES.DINNER, hour: 18, probability: 0.80 }
+        ]
+
+        for (const meal of mealTypes) {
+          // 根据概率决定是否点餐
+          if (Math.random() > meal.probability) continue
+
+          const mealOrderDate = new Date(orderDate)
+          mealOrderDate.setHours(meal.hour, Math.floor(Math.random() * 60), 0, 0)
+
+          // 随机选择2-4个菜品
+          const itemCount = 2 + Math.floor(Math.random() * 3)
+          const selectedDishes = []
+          const usedDishIds = new Set()
+
+          for (let i = 0; i < itemCount && selectedDishes.length < itemCount; i++) {
+            const randomDish = dishes[Math.floor(Math.random() * dishes.length)]
+            if (!usedDishIds.has(randomDish._id.toString())) {
+              usedDishIds.add(randomDish._id.toString())
+              selectedDishes.push(randomDish)
+            }
+          }
+
+          // 构建订单项
+          const items = selectedDishes.map(dish => ({
+            dish: dish._id,
+            dishName: dish.name,
+            dishCategory: dish.category,
+            dishImage: dish.image || '',
+            quantity: 1,
+            price: dish.price || 10,
+            nutrition: {
+              calories: dish.nutrition?.calories || 0,
+              protein: dish.nutrition?.protein || 0,
+              fat: dish.nutrition?.fat || 0,
+              carbs: dish.nutrition?.carbs || 0,
+              fiber: dish.nutrition?.fiber || 0,
+              vitaminC: dish.nutrition?.vitaminC || 0,
+              calcium: dish.nutrition?.calcium || 0,
+              iron: dish.nutrition?.iron || 0
+            }
+          }))
+
+          // 计算总营养
+          const totalNutrition = items.reduce((acc, item) => ({
+            calories: acc.calories + (item.nutrition.calories || 0),
+            protein: acc.protein + (item.nutrition.protein || 0),
+            fat: acc.fat + (item.nutrition.fat || 0),
+            carbs: acc.carbs + (item.nutrition.carbs || 0),
+            fiber: acc.fiber + (item.nutrition.fiber || 0),
+            vitaminC: acc.vitaminC + (item.nutrition.vitaminC || 0),
+            calcium: acc.calcium + (item.nutrition.calcium || 0),
+            iron: acc.iron + (item.nutrition.iron || 0)
+          }), {
+            calories: 0, protein: 0, fat: 0, carbs: 0,
+            fiber: 0, vitaminC: 0, calcium: 0, iron: 0
+          })
+
+          const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+
+          orders.push({
+            orderNumber: `ORDER${Date.now()}${Math.floor(Math.random() * 10000)}`,
+            user: student._id,
+            studentUser: student._id,
+            items,
+            mealType: meal.type,
+            totalAmount,
+            status: ORDER_STATUS.COMPLETED,
+            orderDate: mealOrderDate,
+            scheduledDate: mealOrderDate,
+            completedAt: new Date(mealOrderDate.getTime() + 30 * 60 * 1000), // 30分钟后完成
+            location: {
+              campus: '主校区',
+              canteen: '第一食堂',
+              floor: '1楼',
+              window: `${Math.floor(Math.random() * 5) + 1}号窗口`
+            },
+            totalNutrition
+          })
+        }
+      }
+    }
+
+    // 删除旧的订单数据（最近14天的）
+    const fourteenDaysAgo = new Date(today)
+    fourteenDaysAgo.setDate(today.getDate() - 14)
+    await Order.deleteMany({
+      orderDate: { $gte: fourteenDaysAgo }
+    })
+
+    // 批量插入新订单
+    if (orders.length > 0) {
+      await Order.insertMany(orders)
+    }
+  } catch (error) {
+    console.error('生成订单数据失败:', error)
+  }
+}
+
+/**
+ * 生成学生体检数据
+ * 为每个学生生成一条最近的体检记录
+ */
+async function generatePhysicalExamData() {
+  try {
+    // 获取所有学生
+    const students = await User.find({ role: USER_ROLES.STUDENT })
+    if (students.length === 0) {
+      return
+    }
+
+    const exams = []
+    const today = new Date()
+
+    for (const student of students) {
+      // 体检日期在最近30天内随机
+      const examDate = new Date(today)
+      examDate.setDate(today.getDate() - Math.floor(Math.random() * 30))
+
+      // 根据学生年龄生成合理的身高体重（假设学生年龄在6-18岁）
+      const age = student.age || (10 + Math.floor(Math.random() * 8))
+      const height = 120 + age * 5 + Math.floor(Math.random() * 10) - 5 // 身高cm
+      const weight = 30 + age * 3 + Math.floor(Math.random() * 10) - 5 // 体重kg
+
+      // 计算BMI
+      const heightInMeters = height / 100
+      const bmi = (weight / (heightInMeters * heightInMeters)).toFixed(2)
+
+      // 根据BMI确定健康状态
+      let healthStatus = HEALTH_STATUS.GOOD
+      const bmiValue = parseFloat(bmi)
+      if (bmiValue < 16) {
+        healthStatus = HEALTH_STATUS.POOR
+      } else if (bmiValue < 18.5) {
+        healthStatus = HEALTH_STATUS.FAIR
+      } else if (bmiValue < 24) {
+        healthStatus = HEALTH_STATUS.GOOD
+      } else if (bmiValue < 28) {
+        healthStatus = HEALTH_STATUS.FAIR
+      } else {
+        healthStatus = HEALTH_STATUS.POOR
+      }
+
+      // 随机调整健康状态分布，让excellent更多一些
+      if (healthStatus === HEALTH_STATUS.GOOD && Math.random() > 0.5) {
+        healthStatus = HEALTH_STATUS.EXCELLENT
+      }
+
+      exams.push({
+        student: student._id,
+        examDate,
+        height,
+        weight,
+        bmi: parseFloat(bmi),
+        vision: {
+          left: `${(4.5 + Math.random() * 0.8).toFixed(1)}`,
+          right: `${(4.5 + Math.random() * 0.8).toFixed(1)}`
+        },
+        bloodPressure: {
+          systolic: 100 + Math.floor(Math.random() * 20),
+          diastolic: 60 + Math.floor(Math.random() * 15)
+        },
+        heartRate: 70 + Math.floor(Math.random() * 20),
+        hemoglobin: 120 + Math.floor(Math.random() * 30),
+        healthStatus,
+        nutritionScore: 70 + Math.floor(Math.random() * 30),
+        notes: '体检正常',
+        examiner: '校医'
+      })
+    }
+
+    // 删除旧的体检数据
+    await PhysicalExam.deleteMany({})
+
+    // 批量插入新体检数据
+    if (exams.length > 0) {
+      await PhysicalExam.insertMany(exams)
+    }
+  } catch (error) {
+    console.error('生成体检数据失败:', error)
+  }
+}
+
 module.exports = async function seedNutritionRecords() {
   // 检查今天是否已经运行过
   if (hasRunToday()) {
@@ -260,6 +479,12 @@ module.exports = async function seedNutritionRecords() {
 
   // 执行用户姓名脱敏操作
   await maskUserNames()
+
+  // 生成学校仪表板所需的订单数据
+  await generateSchoolDashboardOrders()
+
+  // 生成学生体检数据
+  await generatePhysicalExamData()
 
   const userId = new mongoose.Types.ObjectId('68fdeb46be5156b253d36f72')
 
