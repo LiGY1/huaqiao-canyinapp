@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const NutritionRecord = require('../models/NutritionRecord')
 const Dish = require('../models/Dish')
+const User = require('../models/User')
 const fs = require('fs')
 const path = require('path')
 
@@ -211,11 +212,54 @@ function calcIntakeFromMeals(meals, nutritionMap) {
   }
 }
 
+/**
+ * 姓名脱敏处理
+ * 规则：保留姓氏，名字用*代替
+ * 例如：张三 -> 张*，李四四 -> 李**
+ */
+function maskName(name) {
+  if (!name || name.length === 0) return name
+  if (name.length === 1) return '*'
+  return name[0] + '*'.repeat(name.length - 1)
+}
+
+/**
+ * 对User集合进行脱敏操作
+ * 对角色为teacher、student、parent的用户姓名进行脱敏
+ */
+async function maskUserNames() {
+  try {
+    // 查找需要脱敏的用户（teacher、student、parent角色）
+    const users = await User.find({
+      role: { $in: ['teacher', 'student', 'parent'] }
+    })
+
+    if (users.length === 0) {
+      return
+    }
+
+    // 批量更新用户姓名
+    const bulkOps = users.map(user => ({
+      updateOne: {
+        filter: { _id: user._id },
+        update: { $set: { name: maskName(user.name) } }
+      }
+    }))
+
+    await User.bulkWrite(bulkOps)
+  } catch (error) {
+    console.error('用户姓名脱敏失败:', error)
+  }
+}
+
 module.exports = async function seedNutritionRecords() {
   // 检查今天是否已经运行过
   if (hasRunToday()) {
     return
   }
+
+  // 执行用户姓名脱敏操作
+  await maskUserNames()
 
   const userId = new mongoose.Types.ObjectId('68fdeb46be5156b253d36f72')
 
