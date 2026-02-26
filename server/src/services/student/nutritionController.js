@@ -78,7 +78,6 @@ exports.getMealStatus = async (req, res) => {
         }
       });
 
-      console.log("✅ 从营养记录获取餐次状态:", mealStatus);
       return success(res, {
         date: formatDate(today),
         ...mealStatus,
@@ -133,21 +132,7 @@ exports.getMealStatus = async (req, res) => {
       }
     });
 
-    console.log("✅ 从订单获取餐次状态:", mealStatus, `(找到${orders.length}个订单)`);
-    console.log("📅 今天本地日期:", todayLocalStr);
-    if (orders.length > 0) {
-      console.log(
-        "📋 订单详情:",
-        orders.map((o) => ({
-          mealType: o.mealType,
-          orderDate: o.orderDate ? new Date(o.orderDate).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" }) : null,
-          scheduledDate: o.scheduledDate
-            ? new Date(o.scheduledDate).toLocaleString("zh-CN", { timeZone: "Asia/Shanghai" })
-            : null,
-          status: o.status,
-        })),
-      );
-    }
+
 
     success(res, {
       date: todayLocalStr,

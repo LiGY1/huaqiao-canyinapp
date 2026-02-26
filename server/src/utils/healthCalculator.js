@@ -18,7 +18,6 @@ async function updateStudentHealthData(studentId, studentInfo = {}) {
     });
 
     if (weekRecords.length === 0) {
-      console.log(`学生 ${studentId} 最近7天无饮食记录，跳过更新`);
       return null;
     }
 

@@ -10,10 +10,8 @@ exports.login = async (req, res) => {
   try {
     const { username, password } = req.body;
 
-    console.log('[食堂端登录] 收到登录请求，用户名:', username);
 
     if (!username || !password) {
-      console.log('[食堂端登录] 缺少用户名或密码');
       return error(res, '请提供用户名和密码', 400);
     }
 
@@ -21,25 +19,16 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ username });
     
     if (!user) {
-      console.log('[食堂端登录] 用户不存在:', username);
       return error(res, '用户名或密码错误', 401);
     }
 
-    console.log('[食堂端登录] 找到用户:', {
-      username: user.username,
-      role: user.role,
-      isActive: user.isActive
-    });
-
     // 检查用户角色
     if (![USER_ROLES.CANTEEN_ADMIN, USER_ROLES.CANTEEN_STAFF].includes(user.role)) {
-      console.log('[食堂端登录] 用户角色不正确:', user.role, '需要:', [USER_ROLES.CANTEEN_ADMIN, USER_ROLES.CANTEEN_STAFF]);
       return error(res, '该账号不是食堂端账号，请使用正确的登录入口', 403);
     }
 
     // 检查用户是否激活
     if (user.isActive === false) {
-      console.log('[食堂端登录] 用户账号未激活');
       return error(res, '账号已被禁用，请联系管理员', 403);
     }
 
@@ -47,15 +36,12 @@ exports.login = async (req, res) => {
     const isPasswordMatch = await user.comparePassword(password);
     
     if (!isPasswordMatch) {
-      console.log('[食堂端登录] 密码验证失败');
       return error(res, '用户名或密码错误', 401);
     }
 
-    console.log('[食堂端登录] 密码验证成功');
 
     const token = await generateToken(user._id);
     
-    console.log('[食堂端登录] Token 生成成功');
 
     success(res, {
       token,

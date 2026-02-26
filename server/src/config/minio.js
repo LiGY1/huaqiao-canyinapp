@@ -30,13 +30,10 @@ const initBucket = async () => {
       };
 
       await minioClient.setBucketPolicy(BUCKET_NAME, JSON.stringify(policy));
-      console.log(chalk.green(`[存储] MinIO 存储桶已创建: ${BUCKET_NAME} (公开访问)`));
     } else {
-      console.log(chalk.blue(`[存储] MinIO 已连接: ${BUCKET_NAME} @ ${process.env.MINIO_ENDPOINT || 'localhost'}`));
     }
   } catch (err) {
     console.error(chalk.red('[存储] MinIO 初始化失败:'), err.message);
-    console.log('警告: MinIO 不可用，文件上传功能将无法使用');
   }
 };
 
