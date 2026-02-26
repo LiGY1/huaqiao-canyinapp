@@ -42,7 +42,6 @@ exports.performanceMonitor = (req, res, next) => {
     // 性能日志
     const level = duration > 1000 ? '🐌' : duration > 500 ? '⚠️' : '✅';
     
-    console.log(`${level} ${req.method} ${req.path} - ${duration}ms - Memory: ${memoryUsed.heapUsed}MB`);
 
     // 慢查询警告
     if (duration > 1000) {
@@ -91,7 +90,6 @@ exports.requestLogger = (req, res, next) => {
   const userId = req.user?.id || req.user?._id || 'anonymous';
   const userRole = req.user?.role || 'unknown';
   
-  console.log(`📝 [${timestamp}] ${userRole} (${userId}) -> ${req.method} ${req.path}`);
   
   // 记录查询参数（排除敏感信息）
   const safeQuery = { ...req.query };
@@ -99,10 +97,6 @@ exports.requestLogger = (req, res, next) => {
     safeQuery.token = safeQuery.token.substring(0, 10) + '...';
   }
   
-  if (Object.keys(safeQuery).length > 0) {
-    console.log(`   参数:`, safeQuery);
-  }
-
   next();
 };
 

@@ -42,12 +42,10 @@ exports.getCurrentSolarTerm = async (req, res) => {
     // 🚀 优化：尝试从缓存获取
     const cached = await cache.get(cacheKey);
     if (cached) {
-      console.log('✅ 节气信息缓存命中');
       return success(res, cached);
     }
 
     const solarTermInfo = getCurrentSolarTerm();
-    console.log('[节气信息] 返回当前节气:', solarTermInfo.name);
 
     // 🚀 优化：存入缓存（30分钟）
     await cache.set(cacheKey, solarTermInfo, 1800);

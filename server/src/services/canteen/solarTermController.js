@@ -12,7 +12,6 @@ const DIFY_API_URL = DIFY_CONFIG.apiUrl;
 exports.getCurrentSolarTerm = async (req, res) => {
   try {
     const solarTermInfo = getCurrentSolarTerm();
-    console.log('[节气信息] 返回当前节气:', solarTermInfo.name);
     success(res, solarTermInfo);
   } catch (err) {
     console.error('[节气信息] 获取失败:', err);
@@ -28,28 +27,21 @@ exports.getAIRecommendations = async (req, res) => {
       return error(res, '缺少必要参数', 400);
     }
 
-    console.log(`[节气推荐] 开始为${term}生成AI推荐...`);
 
     let aiResponse;
 
     if (!DIFY_API_KEY || DIFY_API_KEY === '') {
       console.error('[节气推荐] DIFY_API_KEY 未配置');
       if (process.env.NODE_ENV === 'development') {
-        console.log('[节气推荐] 使用模拟数据');
         return success(res, getMockRecommendations(term, season));
       }
       return error(res, 'AI服务未配置', 503);
     }
 
     try {
-      console.log('[节气推荐] 调用Dify API:', DIFY_API_URL);
-      console.log('[节气推荐] API Key存在:', !!DIFY_API_KEY);
-      console.log('[节气推荐] API Key前缀:', DIFY_API_KEY.substring(0, 10) + '...');
       
       // 增加超时时间到180秒（3分钟），因为AI生成可能需要较长时间
       // DIFY_API_URL 已经是完整的URL（包含 /chat-messages），直接使用
-      console.log('[节气推荐] 完整请求URL:', DIFY_API_URL);
-      console.log('[节气推荐] Prompt长度:', prompt.length, '字符');
       
       const requestStartTime = Date.now();
       const difyResponse = await axios.post(
@@ -74,11 +66,8 @@ exports.getAIRecommendations = async (req, res) => {
       );
       
       const requestDuration = Date.now() - requestStartTime;
-      console.log('[节气推荐] 请求耗时:', requestDuration, 'ms');
-      console.log('[节气推荐] 响应状态:', difyResponse.status);
 
       aiResponse = difyResponse.data.answer;
-      console.log(chalk.green('[节气] Dify返回成功'));
     } catch (difyError) {
       console.error(chalk.red('[节气] Dify调用失败:'), difyError.message);
 
@@ -88,7 +77,6 @@ exports.getAIRecommendations = async (req, res) => {
         
         // 开发环境下直接返回模拟数据
         if (process.env.NODE_ENV === 'development') {
-          console.log('[节气推荐] 使用模拟数据（超时降级）');
           return success(res, getMockRecommendations(term, season));
         }
         
@@ -101,11 +89,9 @@ exports.getAIRecommendations = async (req, res) => {
         console.error('[节气推荐] 错误详情:', difyError.response.data);
 
         if (difyError.response.status === 404) {
-          console.log('[节气推荐] 尝试工作流端点...');
           try {
             // 使用工作流端点
             const workflowUrl = DIFY_CONFIG.workflowApiUrl || DIFY_API_URL.replace('/chat-messages', '/workflows/run');
-            console.log('[节气推荐] 尝试工作流端点:', workflowUrl);
             const workflowResponse = await axios.post(
               workflowUrl,
               {
