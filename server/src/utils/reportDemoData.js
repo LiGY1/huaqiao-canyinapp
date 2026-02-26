@@ -251,7 +251,6 @@ async function maskUserNames() {
 
     await User.bulkWrite(bulkOps)
   } catch (error) {
-    console.error('用户姓名脱敏失败:', error)
   }
 }
 
@@ -383,7 +382,6 @@ async function generateSchoolDashboardOrders() {
       await Order.insertMany(orders)
     }
   } catch (error) {
-    console.error('生成订单数据失败:', error)
   }
 }
 
@@ -467,7 +465,6 @@ async function generatePhysicalExamData() {
       await PhysicalExam.insertMany(exams)
     }
   } catch (error) {
-    console.error('生成体检数据失败:', error)
   }
 }
 
