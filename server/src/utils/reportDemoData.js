@@ -7,6 +7,7 @@ const PhysicalExam = require('../models/PhysicalExam')
 const { ORDER_STATUS, MEAL_TYPES, USER_ROLES, HEALTH_STATUS } = require('../config/constants')
 const fs = require('fs')
 const path = require('path')
+const { v4 } = require('uuid')
 
 // 每日推荐摄入量（儿童/青少年标准）
 const DAILY_TARGETS = {
@@ -35,11 +36,11 @@ function hasRunToday() {
     if (!fs.existsSync(LAST_RUN_FILE)) {
       return false
     }
-    
+
     const data = JSON.parse(fs.readFileSync(LAST_RUN_FILE, 'utf8'))
     const lastRunDate = new Date(data.lastRun)
     const today = new Date()
-    
+
     // 比较日期（忽略时间）
     return lastRunDate.toDateString() === today.toDateString()
   } catch (error) {
@@ -68,7 +69,7 @@ function recordRunTime() {
 async function loadDishNutrition() {
   const dishes = await Dish.find({ status: 1 }).select('name nutrition category')
   const nutritionMap = {}
-  
+
   dishes.forEach(dish => {
     nutritionMap[dish.name] = {
       calories: dish.nutrition?.calories || 0,
@@ -81,7 +82,7 @@ async function loadDishNutrition() {
       category: dish.category
     }
   })
-  
+
   return nutritionMap
 }
 
@@ -90,7 +91,7 @@ async function loadDishNutrition() {
  */
 function filterDishesByCategory(nutritionMap, categories) {
   const categoryArray = Array.isArray(categories) ? categories : [categories]
-  return Object.keys(nutritionMap).filter(name => 
+  return Object.keys(nutritionMap).filter(name =>
     categoryArray.includes(nutritionMap[name].category)
   )
 }
@@ -110,7 +111,7 @@ function pickRandomDish(dishes, nutritionMap, excludeDishes = []) {
 function selectDishesForMeal(nutritionMap, targetCalories, mealType) {
   const dishes = []
   let currentCalories = 0
-  
+
   // 1. 主食（米饭/面食）- 必选，早餐和午餐可能选2份
   const staples = filterDishesByCategory(nutritionMap, 'staple')
   const stapleCount = (mealType === 'breakfast' || mealType === 'lunch') && Math.random() > 0.6 ? 2 : 1
@@ -121,7 +122,7 @@ function selectDishesForMeal(nutritionMap, targetCalories, mealType) {
       currentCalories += nutritionMap[staple].calories
     }
   }
-  
+
   // 2. 主菜（肉类/混合菜）- 选2-3个
   const mains = filterDishesByCategory(nutritionMap, ['meat', 'mixed'])
   const mainCount = mealType === 'lunch' ? 3 : 2 // 午餐3个主菜，其他2个
@@ -132,7 +133,7 @@ function selectDishesForMeal(nutritionMap, targetCalories, mealType) {
       currentCalories += nutritionMap[main].calories
     }
   }
-  
+
   // 3. 蔬菜 - 选2个
   const vegetables = filterDishesByCategory(nutritionMap, 'vegetable')
   for (let i = 0; i < 2 && vegetables.length > 0; i++) {
@@ -142,7 +143,7 @@ function selectDishesForMeal(nutritionMap, targetCalories, mealType) {
       currentCalories += nutritionMap[veg].calories
     }
   }
-  
+
   // 4. 汤类 - 午餐和晚餐必选
   if (mealType === 'lunch' || mealType === 'dinner') {
     const soups = filterDishesByCategory(nutritionMap, 'soup')
@@ -154,9 +155,9 @@ function selectDishesForMeal(nutritionMap, targetCalories, mealType) {
       }
     }
   }
-  
+
   // 5. 如果热量不足目标的85%，继续添加高热量菜品
-  const allDishes = Object.keys(nutritionMap).sort((a, b) => 
+  const allDishes = Object.keys(nutritionMap).sort((a, b) =>
     nutritionMap[b].calories - nutritionMap[a].calories
   )
   let attempts = 0
@@ -167,7 +168,7 @@ function selectDishesForMeal(nutritionMap, targetCalories, mealType) {
     currentCalories += nutritionMap[dish].calories
     attempts++
   }
-  
+
   return dishes
 }
 
@@ -348,7 +349,7 @@ async function generateSchoolDashboardOrders() {
           const totalAmount = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
 
           orders.push({
-            orderNumber: `ORDER${Date.now()}${Math.floor(Math.random() * 10000)}`,
+            orderNumber: v4(),
             user: student._id,
             studentUser: student._id,
             items,
@@ -382,6 +383,7 @@ async function generateSchoolDashboardOrders() {
       await Order.insertMany(orders)
     }
   } catch (error) {
+    console.log(error.message, '>>>>>>')
   }
 }
 
