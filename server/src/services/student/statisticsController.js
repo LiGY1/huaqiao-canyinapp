@@ -18,7 +18,6 @@ exports.getOverview = async (req, res) => {
     // 🚀 优化：尝试从缓存获取
     const cached = await cache.get(cacheKey);
     if (cached) {
-      console.log('✅ 学生概览缓存命中');
       return success(res, cached);
     }
 
@@ -112,7 +111,6 @@ exports.getSpendingTrends = async (req, res) => {
     // 🚀 优化：尝试从缓存获取
     const cached = await cache.get(cacheKey);
     if (cached) {
-      console.log('✅ 学生消费趋势缓存命中');
       return success(res, cached);
     }
 
@@ -170,7 +168,6 @@ exports.getFavoriteDishes = async (req, res) => {
     // 🚀 优化：尝试从缓存获取
     const cached = await cache.get(cacheKey);
     if (cached) {
-      console.log('✅ 学生喜爱菜品缓存命中');
       return success(res, cached);
     }
 
@@ -233,7 +230,6 @@ exports.getNutritionSummary = async (req, res) => {
     // 🚀 优化：尝试从缓存获取
     const cached = await cache.get(cacheKey);
     if (cached) {
-      console.log('✅ 学生营养统计缓存命中');
       return success(res, cached);
     }
 

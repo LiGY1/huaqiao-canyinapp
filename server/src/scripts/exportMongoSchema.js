@@ -301,9 +301,7 @@ function generateMarkdown(schemaData) {
 async function exportSchema() {
   try {
     // 连接数据库
-    console.log('正在连接数据库...');
     await mongoose.connect(process.env.MONGODB_URI);
-    console.log('数据库连接成功');
     
     // 创建输出目录
     const outputDir = path.join(__dirname, '../../Mongodb_File');
@@ -315,7 +313,6 @@ async function exportSchema() {
     
     // 遍历所有模型
     for (const [modelName, Model] of Object.entries(models)) {
-      console.log(`正在处理模型: ${modelName}...`);
       
       const schema = Model.schema;
       let collectionName;
@@ -367,24 +364,19 @@ async function exportSchema() {
     // 保存JSON文件
     const jsonPath = path.join(outputDir, 'schema.json');
     fs.writeFileSync(jsonPath, JSON.stringify(schemaData, null, 2), 'utf8');
-    console.log(`JSON文件已保存: ${jsonPath}`);
     
     // 保存Markdown文件
     const mdPath = path.join(outputDir, 'schema.md');
     const markdown = generateMarkdown(schemaData);
     fs.writeFileSync(mdPath, markdown, 'utf8');
-    console.log(`Markdown文件已保存: ${mdPath}`);
     
     // 为每个模型生成单独的Markdown文件
     for (const [modelName, data] of Object.entries(schemaData)) {
       const modelMd = generateMarkdown({ [modelName]: data });
       const modelMdPath = path.join(outputDir, `${modelName}.md`);
       fs.writeFileSync(modelMdPath, modelMd, 'utf8');
-      console.log(`模型文档已保存: ${modelMdPath}`);
     }
     
-    console.log('\n导出完成！');
-    console.log(`输出目录: ${outputDir}`);
     
     await mongoose.disconnect();
     process.exit(0);

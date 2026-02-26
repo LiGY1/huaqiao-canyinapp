@@ -26,7 +26,6 @@ async function invalidateUserCache(userId) {
     ]);
     
     if (process.env.CACHE_DEBUG === 'true') {
-      console.log(`[缓存失效] 已清除用户 ${userId} 的相关缓存`);
     }
   } catch (error) {
     console.error('[缓存失效] 清除用户缓存失败:', error.message);
@@ -43,7 +42,6 @@ async function invalidateTeacherCache(teacherName) {
     await cache.delPattern(`*role:query:teacher*${teacherName}*`);
     
     if (process.env.CACHE_DEBUG === 'true') {
-      console.log(`[缓存失效] 已清除教师 ${teacherName} 的相关缓存`);
     }
   } catch (error) {
     console.error('[缓存失效] 清除教师缓存失败:', error.message);
@@ -61,7 +59,6 @@ async function invalidateClassCache(className) {
     await cache.delPattern(`*role:query:teacher*${className}*`);
     
     if (process.env.CACHE_DEBUG === 'true') {
-      console.log(`[缓存失效] 已清除班级 ${className} 的相关缓存`);
     }
   } catch (error) {
     console.error('[缓存失效] 清除班级缓存失败:', error.message);
@@ -91,7 +88,6 @@ async function invalidateOrderCache(order) {
     await Promise.all(tasks);
     
     if (process.env.CACHE_DEBUG === 'true') {
-      console.log(`[缓存失效] 订单 ${order.orderNumber} 相关缓存已清除`);
     }
   } catch (error) {
     console.error('[缓存失效] 清除订单缓存失败:', error.message);
@@ -117,7 +113,6 @@ async function invalidateOrderCacheBatch(orders) {
     await Promise.all([...userIds].map(userId => invalidateUserCache(userId)));
     
     if (process.env.CACHE_DEBUG === 'true') {
-      console.log(`[缓存失效] 批量清除 ${orders.length} 个订单的缓存 (${userIds.size} 个用户)`);
     }
   } catch (error) {
     console.error('[缓存失效] 批量清除订单缓存失败:', error.message);

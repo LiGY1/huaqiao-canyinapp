@@ -105,7 +105,6 @@ function requestLogger(req, res, next) {
       return;
     }
     
-    console.log(`${timestamp} ${method} ${url} ${status} ${time}`);
   });
   
   next();

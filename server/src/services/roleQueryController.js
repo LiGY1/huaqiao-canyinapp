@@ -38,7 +38,6 @@ exports.queryByRole = async (req, res) => {
       // 简化日志输出
       const roleNames = { teacher: '教师', student: '学生', parent: '家长', all: '全校' };
       const nameText = teacherName || studentName || parentName || '所有数据';
-      console.log(`[缓存] ${roleNames[role]}查询 - 命中: ${nameText}`);
       
       // 🚀 智能预热：预测并预热相关数据
       preheater.recordAccess(cacheKey);
@@ -51,7 +50,6 @@ exports.queryByRole = async (req, res) => {
         try {
           res.setHeader('Content-Type', 'text/plain; charset=utf-8');
           const markdownContent = formatAsMarkdown(cached);
-          console.log(`[Markdown缓存] 生成成功，长度: ${markdownContent.length} 字符`);
           return res.send(markdownContent);
         } catch (markdownError) {
           console.error('[Markdown缓存] 格式化失败:', markdownError);
@@ -111,7 +109,6 @@ exports.queryByRole = async (req, res) => {
     const roleNames = { teacher: '教师', student: '学生', parent: '家长', all: '全校' };
     const nameText = teacherName || studentName || parentName || '所有数据';
     const ttlText = cacheTTL >= 60 ? `${Math.floor(cacheTTL/60)}分钟` : `${cacheTTL}秒`;
-    console.log(`[缓存] ${roleNames[role]}查询 - 已缓存: ${nameText} (${ttlText})`);
     
     // 根据format参数返回不同格式
     if (format === 'json') {
@@ -121,7 +118,6 @@ exports.queryByRole = async (req, res) => {
       try {
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
         const markdownContent = formatAsMarkdown(result);
-        console.log(`[Markdown] 生成成功，长度: ${markdownContent.length} 字符`);
         return res.send(markdownContent);
       } catch (markdownError) {
         console.error('[Markdown] 格式化失败:', markdownError);
