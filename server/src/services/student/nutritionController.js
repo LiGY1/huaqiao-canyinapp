@@ -186,23 +186,41 @@ const calculateNutritionMatch = (meal, nutritionNeeds, todayNutrition) => {
 
   const recommendedCalories = targetCalories * mealRatio;
   const currentCalories = todayNutrition.calories || 0;
-  const neededCalories = Math.max(200, recommendedCalories - currentCalories);
+  const remainingCalories = recommendedCalories - currentCalories;
+  const isOverTarget = currentCalories >= targetCalories; // 是否已超标
 
-  // 热量匹配度
+  // 热量匹配度 - 根据是否超标采用不同策略
   if (meal.calories > 0) {
-    if (meal.calories >= 100 && meal.calories <= 800) {
-      score += 5;
-      const caloriesDiff = Math.abs(meal.calories - neededCalories);
-      if (caloriesDiff <= neededCalories * 0.3) {
+    if (isOverTarget) {
+      // 已超标：优先推荐低热量菜品
+      if (meal.calories <= 200) {
+        score += 15;
+        reasons.push("低热量");
+      } else if (meal.calories <= 300) {
         score += 10;
-        reasons.push("热量匹配");
-      } else if (caloriesDiff <= neededCalories * 0.5) {
+      } else if (meal.calories <= 400) {
         score += 5;
+      } else {
+        // 超过400千卡，扣分
+        score -= Math.min(15, Math.floor((meal.calories - 400) / 50));
       }
-    } else if (meal.calories < 100) {
-      score -= 5;
-    } else if (meal.calories > 1000) {
-      score -= 10;
+    } else {
+      // 未超标：按需求匹配
+      const neededCalories = Math.max(200, remainingCalories);
+      if (meal.calories >= 100 && meal.calories <= 800) {
+        score += 5;
+        const caloriesDiff = Math.abs(meal.calories - neededCalories);
+        if (caloriesDiff <= neededCalories * 0.3) {
+          score += 10;
+          reasons.push("热量匹配");
+        } else if (caloriesDiff <= neededCalories * 0.5) {
+          score += 5;
+        }
+      } else if (meal.calories < 100) {
+        score -= 5;
+      } else if (meal.calories > 1000) {
+        score -= 10;
+      }
     }
   } else {
     score -= 5;
@@ -437,23 +455,75 @@ const selectBalancedMealCombo = (scoredMeals, nutritionNeeds, todayNutrition) =>
   const targetCaloriesTotal = nutritionNeeds?.targetCalories || 2000;
   const targetProteinTotal = nutritionNeeds?.targetProtein || 60;
 
-  const targetCalories = Math.max(300, targetCaloriesTotal * mealRatio - (todayNutrition.calories || 0));
-  const targetProtein = Math.max(10, targetProteinTotal * mealRatio - (todayNutrition.protein || 0));
+  // 计算剩余需要的热量和蛋白质
+  const remainingCalories = targetCaloriesTotal * mealRatio - (todayNutrition.calories || 0);
+  const remainingProtein = targetProteinTotal * mealRatio - (todayNutrition.protein || 0);
+  
+  // 如果已经超标，设置最小推荐值；否则使用剩余值
+  const targetCalories = remainingCalories > 0 ? Math.max(200, remainingCalories) : 200;
+  const targetProtein = remainingProtein > 0 ? Math.max(10, remainingProtein) : 10;
 
   const selected = [];
   let currentCalories = 0;
   let currentProtein = 0;
 
-  // 策略1：优先选择高评分
-  for (const meal of scoredMeals) {
-    if (targetCalories > 0 && meal.calories > targetCalories * 2) continue;
-    if (selected.some((m) => m.id === meal.id)) continue;
+  // 策略1：从候选中选择，增加随机性
+  // 将候选分为不同类别，确保多样性
+  const mealsByCategory = {
+    staple: scoredMeals.filter(m => m.category === "staple"),
+    meat: scoredMeals.filter(m => m.category === "meat"),
+    vegetable: scoredMeals.filter(m => m.category === "vegetable"),
+    mixed: scoredMeals.filter(m => m.category === "mixed"),
+    other: scoredMeals.filter(m => !["staple", "meat", "vegetable", "mixed"].includes(m.category))
+  };
 
+  // 优先确保有主食
+  if (mealsByCategory.staple.length > 0) {
+    const stapleOptions = mealsByCategory.staple.slice(0, Math.min(3, mealsByCategory.staple.length));
+    const randomStaple = stapleOptions[Math.floor(Math.random() * stapleOptions.length)];
+    if (randomStaple) {
+      selected.push(randomStaple);
+      currentCalories += randomStaple.calories || 0;
+      currentProtein += randomStaple.protein || 0;
+    }
+  }
+
+  // 优先确保有主菜（肉类或混合）
+  const mainDishOptions = [...mealsByCategory.meat, ...mealsByCategory.mixed]
+    .filter(m => !selected.some(s => s.id === m.id))
+    .slice(0, Math.min(5, mealsByCategory.meat.length + mealsByCategory.mixed.length));
+  
+  if (mainDishOptions.length > 0) {
+    const randomMainDish = mainDishOptions[Math.floor(Math.random() * mainDishOptions.length)];
+    if (randomMainDish) {
+      // 检查热量限制
+      if (!(remainingCalories <= 0 && randomMainDish.calories > 300) &&
+          !(remainingCalories > 0 && randomMainDish.calories > targetCalories * 2)) {
+        selected.push(randomMainDish);
+        currentCalories += randomMainDish.calories || 0;
+        currentProtein += randomMainDish.protein || 0;
+      }
+    }
+  }
+
+  // 从剩余候选中随机选择，直到达到目标数量
+  const remaining = scoredMeals.filter(m => !selected.some(s => s.id === m.id));
+  
+  for (const meal of remaining) {
+    if (selected.length >= 5) break;
+    
+    // 热量检查
+    if (remainingCalories <= 0 && meal.calories > 300) continue;
+    if (remainingCalories > 0 && meal.calories > targetCalories * 2) continue;
+    
+    // 增加随机性：不是每个符合条件的都选，而是有一定概率跳过
+    // 前3个必选，后面的有70%概率选择
+    if (selected.length >= 3 && Math.random() > 0.7) continue;
+    
     selected.push(meal);
     currentCalories += meal.calories || 0;
     currentProtein += meal.protein || 0;
 
-    if (selected.length >= 5) break;
     if (selected.length >= 3 && currentCalories >= targetCalories * 0.7 && currentProtein >= targetProtein * 0.6) break;
   }
 
@@ -465,41 +535,18 @@ const selectBalancedMealCombo = (scoredMeals, nutritionNeeds, todayNutrition) =>
     }
   }
 
-  // 确保主食和主菜
-  const hasStaple = selected.some((m) => m.category === "staple");
-  const hasMainDish = selected.some((m) => ["meat", "mixed", "vegetable"].includes(m.category));
-
-  // 补主食
-  if (!hasStaple) {
-    const staple = scoredMeals.find((m) => m.category === "staple" && !selected.some((s) => s.id === m.id));
-    if (staple) {
-      const lastNonStapleIndex = selected.findIndex((m) => m.category !== "staple");
-      if (lastNonStapleIndex >= 0 && selected.length >= 3) {
-        selected[lastNonStapleIndex] = staple;
-      } else if (selected.length < 5) {
-        selected.push(staple);
+  // 最后轻度打乱顺序（保持第一个主食的位置）
+  if (selected.length > 2) {
+    const first = selected[0];
+    const rest = selected.slice(1);
+    // 只打乱后面的，保持第一个
+    for (let i = rest.length - 1; i > 0; i--) {
+      if (Math.random() > 0.5) { // 50%概率交换
+        const j = Math.floor(Math.random() * (i + 1));
+        [rest[i], rest[j]] = [rest[j], rest[i]];
       }
     }
-  }
-
-  // 补主菜
-  if (!hasMainDish) {
-    const mainDish = scoredMeals.find(
-      (m) => ["meat", "mixed", "vegetable"].includes(m.category) && !selected.some((s) => s.id === m.id),
-    );
-    if (mainDish) {
-      if (selected.length < 5) {
-        selected.push(mainDish);
-      } else {
-        const lastIndex = selected.length - 1;
-        if (lastIndex >= 0 && selected[lastIndex].category === "staple") {
-          const replaceIndex = selected.findIndex((m, idx) => idx < selected.length - 1 && m.category !== "staple");
-          if (replaceIndex >= 0) selected[replaceIndex] = mainDish;
-        } else if (lastIndex >= 0) {
-          selected[lastIndex] = mainDish;
-        }
-      }
-    }
+    return [first, ...rest].slice(0, 5);
   }
 
   return selected.slice(0, 5);
@@ -512,25 +559,52 @@ const generateRecommendationReason = (meals, nutritionNeeds, todayNutrition, use
   const reasons = [];
   const hour = new Date().getHours();
 
+  // 餐次提示
   if (hour >= 6 && hour < 9) reasons.push("早餐推荐");
   else if (hour >= 11 && hour < 14) reasons.push("午餐推荐");
   else if (hour >= 17 && hour < 20) reasons.push("晚餐推荐");
 
   const targetCal = nutritionNeeds?.targetCalories || 2000;
-  const caloriesPercent = (todayNutrition.calories / targetCal) * 100;
+  const currentCal = todayNutrition.calories || 0;
+  const caloriesPercent = (currentCal / targetCal) * 100;
 
-  if (caloriesPercent < 50) reasons.push("您今日热量摄入不足，推荐营养均衡的菜品组合");
-  else if (caloriesPercent > 120) reasons.push("您今日热量已达标，推荐清淡低热量的菜品");
-  else reasons.push("根据您的营养需求，推荐以下均衡搭配");
+  // 根据热量摄入情况给出不同的建议
+  if (caloriesPercent < 50) {
+    reasons.push("您今日热量摄入不足，推荐营养均衡的菜品组合");
+  } else if (caloriesPercent >= 100) {
+    // 已达标或超标
+    if (caloriesPercent > 120) {
+      reasons.push("您今日热量已超标，推荐清淡低热量的菜品");
+    } else {
+      reasons.push("您今日热量已达标，推荐适量清淡的菜品");
+    }
+  } else {
+    reasons.push("根据您的营养需求，推荐以下均衡搭配");
+  }
 
+  // 健康状况提示
   if (userInfo?.healthInfo) {
     if (userInfo.healthInfo.hasDiabetes) reasons.push("已考虑控糖需求");
     if (userInfo.healthInfo.hasHypertension) reasons.push("已考虑低脂低钠");
   }
 
-  const totalCalories = meals.reduce((sum, m) => sum + m.calories, 0);
-  const totalProtein = meals.reduce((sum, m) => sum + m.protein, 0);
-  reasons.push(`预计补充热量${Math.round(totalCalories)}千卡，蛋白质${Math.round(totalProtein)}g`);
+  // 计算推荐菜品的营养总量
+  const totalCalories = meals.reduce((sum, m) => sum + (m.calories || 0), 0);
+  const totalProtein = meals.reduce((sum, m) => sum + (m.protein || 0), 0);
+  
+  // 根据是否超标，使用不同的描述
+  if (caloriesPercent >= 100) {
+    // 已达标或超标，不说"补充"，改为"提供"
+    reasons.push(`本餐提供热量约${Math.round(totalCalories)}千卡，蛋白质${Math.round(totalProtein)}g`);
+  } else {
+    // 未达标，可以说"补充"
+    const remaining = targetCal - currentCal;
+    if (totalCalories <= remaining) {
+      reasons.push(`预计补充热量${Math.round(totalCalories)}千卡，蛋白质${Math.round(totalProtein)}g`);
+    } else {
+      reasons.push(`本餐提供热量约${Math.round(totalCalories)}千卡，蛋白质${Math.round(totalProtein)}g`);
+    }
+  }
 
   return reasons.join("，");
 };
@@ -553,11 +627,45 @@ const generateSmartRecommendation = (allMeals, nutritionNeeds, userInfo, todayNu
   // 排序
   scoredMeals.sort((a, b) => b.matchScore - a.matchScore);
 
-  // 阈值筛选
-  const threshold = Math.max(20, Math.floor(scoredMeals[Math.floor(scoredMeals.length * 0.3)]?.matchScore || 0));
+  // 阈值筛选 - 优化：使用更灵活的阈值策略
+  // 1. 取前30%位置的分数，但不低于15分
+  // 2. 如果最高分很低（<30），则降低阈值到10分
+  const topScore = scoredMeals[0]?.matchScore || 0;
+  const percentile30Score = scoredMeals[Math.floor(scoredMeals.length * 0.3)]?.matchScore || 0;
+  
+  let threshold;
+  if (topScore < 30) {
+    // 所有菜品分数都很低，使用最低阈值
+    threshold = 10;
+  } else {
+    // 正常情况，使用30%分位数，但不低于15分
+    threshold = Math.max(15, percentile30Score);
+  }
+  
   const qualifiedMeals = scoredMeals.filter((meal) => meal.matchScore >= threshold);
   let candidates =
     qualifiedMeals.length >= 3 ? qualifiedMeals : scoredMeals.slice(0, Math.max(3, Math.min(5, scoredMeals.length)));
+
+  // 增加多样性：在候选菜品中引入随机性
+  // 将候选菜品分为高分组和中分组，从两组中随机选择
+  if (candidates.length > 10) {
+    const topTier = candidates.slice(0, Math.ceil(candidates.length * 0.4)); // 前40%
+    const midTier = candidates.slice(Math.ceil(candidates.length * 0.4)); // 后60%
+    
+    // 随机打乱两组
+    shuffleArray(topTier);
+    shuffleArray(midTier);
+    
+    // 重新组合：优先从高分组选，但也混入中分组
+    candidates = [...topTier.slice(0, Math.ceil(topTier.length * 0.7)), ...midTier.slice(0, Math.ceil(midTier.length * 0.3))];
+    shuffleArray(candidates); // 最后再打乱一次
+  } else if (candidates.length > 5) {
+    // 候选较少时，轻度打乱（保持前几名，打乱后面的）
+    const top3 = candidates.slice(0, 3);
+    const rest = candidates.slice(3);
+    shuffleArray(rest);
+    candidates = [...top3, ...rest];
+  }
 
   // 组合
   const recommendedMeals = selectBalancedMealCombo(candidates, nutritionNeeds, todayNutrition);
@@ -586,15 +694,43 @@ const generateSmartRecommendation = (allMeals, nutritionNeeds, userInfo, todayNu
 };
 
 /**
+ * Fisher-Yates 洗牌算法 - 用于增加推荐多样性
+ */
+const shuffleArray = (array) => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+};
+
+/**
  * 调用 AI 营养大模型生成结构化建议
  * @param {Object} intake 用户当前摄入
- * @param {Object} targets 目标设定
+ * @param {Object} mealList 菜品列表
+ * @param {Object} userInfo 用户信息
  * @returns {Promise<Object>} 包含分析结论和推荐菜品列表的结构化数据
  */
 const recommendDiet = async (intake, mealList, userInfo) => {
   const allMeals = (mealList || []).map(adaptMealData);
 
-  return generateSmartRecommendation(allMeals, intake, userInfo, intake);
+  // 构建营养需求目标
+  const nutritionNeeds = {
+    targetCalories: userInfo.targetCalories || 2000,
+    targetProtein: userInfo.targetProtein || 60,
+    targetCarbs: userInfo.targetCarbs || 300,
+    targetFiber: userInfo.targetFiber || 25,
+  };
+
+  // 当前摄入量
+  const todayNutrition = {
+    calories: intake.calories || 0,
+    protein: intake.protein || 0,
+    carbs: intake.carbs || 0,
+    fiber: intake.fiber || 0,
+  };
+
+  return generateSmartRecommendation(allMeals, nutritionNeeds, userInfo, todayNutrition);
 };
 
 const fetchNutritionIntake = async (userId, startOfDay, endOfDay) => {
@@ -785,6 +921,7 @@ const aggregateDailyRecords = (records) => {
  * 3. 计算周平均值和营养得分
  */
 const calculateMetrics = (dailyData, targets) => {
+  // 过滤掉无效数据
   Object.keys(dailyData).forEach((key) => {
     dailyData[key] = dailyData[key].filter(item => item !== null && !isNaN(item));
   });
@@ -793,20 +930,21 @@ const calculateMetrics = (dailyData, targets) => {
   const sum = (arr) => arr.reduce((a, b) => a + b, 0);
 
   // 辅助：计算单项分数 (上限100)
-  // 逻辑：(周总摄入 / 7天 / 目标值) * 100
+  // 逻辑：(实际平均摄入 / 目标值) * 100
   const calcScore = (arr, targetVal) => {
-    if (!targetVal) return 0;
-    const weeklyAvg = sum(arr) / 7;
-    return Math.min(100, Math.round((weeklyAvg / targetVal) * 100));
+    if (!targetVal || arr.length === 0) return 0;
+    const actualAvg = sum(arr) / arr.length; // 使用实际长度计算平均值
+    return Math.min(100, Math.round((actualAvg / targetVal) * 100));
   };
 
-  const avgCalories = Math.round(sum(dailyData.calories) / 7);
+  // 使用实际天数计算平均值
+  const validDays = dailyData.calories.length || 7; // 如果没有有效数据，默认7天
+  const avgCalories = validDays > 0 ? Math.round(sum(dailyData.calories) / validDays) : 0;
 
   return {
     avgCalories,
-    calorieDeficit: avgCalories * 7 - targets.calories * 7,
+    calorieDeficit: avgCalories * validDays - targets.calories * validDays,
     scores: {
-      // 如果你的业务逻辑是用卡路里完成度代表碳水，保留原逻辑；这里我按碳水计算
       carbs: calcScore(dailyData.carbs, targets.carbs),
       protein: calcScore(dailyData.protein, targets.protein),
       fat: calcScore(dailyData.fat, targets.fat),

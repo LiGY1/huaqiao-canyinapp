@@ -94,6 +94,10 @@ export function useAIRecommendation(syncCartState) {
    */
   const handleRecommend = async () => {
     loadingRecommendation.value = true;
+    
+    // 根据是否已有推荐，显示不同的提示
+    const isRefresh = aiRecommendation.value !== null;
+    
     try {
       const { data } = await getRecommendApi();
       const recommendation = data.suggestion;
@@ -103,20 +107,23 @@ export function useAIRecommendation(syncCartState) {
       allRecommendedMeals.value = recommendedMeals;
       displayedMeals.value = recommendedMeals;
 
-      uni.showToast({ title: `推荐生成成功！`, icon: "success" });
+      uni.showToast({ 
+        title: isRefresh ? '已更换推荐方案！' : '推荐生成成功！', 
+        icon: "success" 
+      });
     } catch (error) {
       console.error(error);
-      uni.showToast({ title: "推荐生成失败", icon: "none" });
+      uni.showToast({ 
+        title: isRefresh ? "更换推荐失败" : "推荐生成失败", 
+        icon: "none" 
+      });
     } finally {
       loadingRecommendation.value = false;
     }
   };
 
   const handleRecommendClick = async () => {
-    if (aiRecommendation.value !== null && allRecommendedMeals.value.length > 0) {
-      refreshDisplayedMeals();
-      return;
-    }
+    // 每次都重新请求，获取新的推荐结果
     await handleRecommend();
   };
 
