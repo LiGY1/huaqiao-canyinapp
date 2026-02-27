@@ -7,7 +7,7 @@
           <image :src="userInfo.avatar || '/static/logo.png'" mode="aspectFill" class="avatar"></image>
         </view>
         <view class="user-main">
-          <text class="user-name">{{ userInfo.name || '食堂管理员' }}</text>
+          <text class="user-name">{{ userInfo.name || '后勤管理员' }}</text>
           <text class="user-role">{{ getRoleText(userInfo.role) }}</text>
         </view>
       </view>

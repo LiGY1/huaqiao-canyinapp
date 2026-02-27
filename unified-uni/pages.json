@@ -168,7 +168,7 @@
     {
       "path": "pages/canteen/dashboard",
       "style": {
-        "navigationBarTitleText": "食堂管理"
+        "navigationBarTitleText": "后勤管理"
       }
     },
     {

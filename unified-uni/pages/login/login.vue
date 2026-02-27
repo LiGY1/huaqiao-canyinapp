@@ -174,12 +174,12 @@
               </view>
             </view>
 
-            <view class="grid-card orange" hover-class="grid-hover" @click="tip('食堂端')">
+            <view class="grid-card orange" hover-class="grid-hover" @click="tip('后勤端')">
               <view class="grid-icon-bg">
                 <uni-icons type="cart-filled" size="24" color="#ea580c"></uni-icons>
               </view>
               <view class="grid-text">
-                <text class="main">食堂端</text>
+                <text class="main">后勤端</text>
                 <text class="sub">订单·库存</text>
               </view>
             </view>
@@ -208,7 +208,7 @@ const roleHomePages = {
   student: "/pages/student/home/home",
   parent: "/pages/parent/home/home",
   school: "/pages/school/dashboard/dashboard",
-  canteen: "/pages/canteen/dashboard",
+  canteen_admin: "/pages/canteen/dashboard",
 };
 
 const goPage = (url) => {

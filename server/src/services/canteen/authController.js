@@ -24,7 +24,7 @@ exports.login = async (req, res) => {
 
     // 检查用户角色
     if (![USER_ROLES.CANTEEN_ADMIN, USER_ROLES.CANTEEN_STAFF].includes(user.role)) {
-      return error(res, '该账号不是食堂端账号，请使用正确的登录入口', 403);
+      return error(res, '该账号不是后勤端账号，请使用正确的登录入口', 403);
     }
 
     // 检查用户是否激活
@@ -54,8 +54,8 @@ exports.login = async (req, res) => {
       }
     }, '登录成功');
   } catch (err) {
-    console.error('[食堂端登录] 登录异常:', err);
-    console.error('[食堂端登录] 错误堆栈:', err.stack);
+    console.error('[后勤端登录] 登录异常:', err);
+    console.error('[后勤端登录] 错误堆栈:', err.stack);
     error(res, '登录失败: ' + (err.message || '服务器错误'), 500);
   }
 };

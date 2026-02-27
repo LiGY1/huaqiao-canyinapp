@@ -3,7 +3,7 @@
     <view class="page-container">
       <view class="page-title">设置页面</view>
       <view class="page-content">
-        <text>食堂端设置功能正在开发中...</text>
+        <text>后勤端设置功能正在开发中...</text>
       </view>
     </view>
   </layout>
