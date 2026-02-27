@@ -44,7 +44,7 @@ export const roleTabbarConfig = {
       { path: "pages/school/profile/profile", label: "个人中心", icon: "gear", isAI: false },
     ],
   },
-  // 食堂端tabbar配置
+  // 后勤端tabbar配置
   canteen: {
     navItems: [
       { path: "pages/canteen/dashboard", label: "AI数据大屏", icon: "home-filled", isAI: false },

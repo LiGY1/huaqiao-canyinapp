@@ -12,6 +12,11 @@
     <!-- 文本输入 -->
     <view class="input-content" v-if="activeTab === 'text'">
       <view class="text-input-area">
+        <!-- 电话按钮 -->
+        <view class="voice-button" @tap="openVoiceCall">
+          <uni-icons type="phone-filled" size="24" color="#1a5f9e"></uni-icons>
+        </view>
+        
         <textarea
           class="text-input"
           v-model="localInput"
@@ -24,6 +29,7 @@
           confirm-type="send"
           maxlength="-1"
         ></textarea>
+        
         <view class="send-button" :class="{ disabled: !localInput.trim() || disabled }" @tap="handleSendMessage">
           <text class="send-icon">↑</text>
         </view>
@@ -235,6 +241,24 @@ const handleSendMessage = () => {
   display: flex;
   align-items: flex-end;
   gap: 20rpx;
+}
+
+/* 电话按钮 */
+.voice-button {
+  width: 80rpx;
+  height: 80rpx;
+  background: #f0f7ff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.voice-button:active {
+  background: #e0f0ff;
+  transform: scale(0.95);
 }
 
 .text-input {

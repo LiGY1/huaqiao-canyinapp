@@ -34,8 +34,8 @@ const PORTAL_URLS = {
   [USER_ROLES.TEACHER]: "http://localhost:5175", // 学校端（教师）
   [USER_ROLES.PRINCIPAL]: "http://localhost:5175", // 学校端（校长）
   [USER_ROLES.ADMIN]: "http://localhost:5175", // 学校端（管理员）
-  [USER_ROLES.CANTEEN_ADMIN]: "http://localhost:5176", // 食堂端（管理员）
-  [USER_ROLES.CANTEEN_STAFF]: "http://localhost:5176", // 食堂端（员工）
+  [USER_ROLES.CANTEEN_ADMIN]: "http://localhost:5176", // 后勤端（管理员）
+  [USER_ROLES.CANTEEN_STAFF]: "http://localhost:5176", // 后勤端（员工）
 };
 
 // 生产环境 - 独立端口模式（兼容旧配置）
@@ -73,18 +73,14 @@ function getRedirectUrl(role, req = null) {
       let host = "localhost";
       if (forwardedHost) {
         host = forwardedHost.split(":")[0];
-        console.log(chalk.cyan(`[统一登录] 使用代理转发的主机名: X-Forwarded-Host=${forwardedHost}`));
       } else if (hostHeader) {
         host = hostHeader.split(":")[0];
-        console.log(chalk.cyan(`[统一登录] 使用直接访问的主机名: Host=${hostHeader}`));
       }
 
       baseUrl = `${protocol}://${host}:${UNIFIED_PORT}`;
-      console.log(chalk.cyan(`[统一登录] 动态构建跳转URL: protocol=${protocol}, host=${host}, baseUrl=${baseUrl}`));
     } else {
       // 如果没有请求对象，回退到配置文件中的值
       baseUrl = UNIFIED_BASE_URL;
-      console.log(chalk.yellow(`[统一登录] 使用配置的 baseUrl: ${baseUrl}`));
     }
 
     return `${baseUrl}${path}/`; // 添加末尾斜杠
@@ -350,7 +346,7 @@ exports.getPortalConfig = async (req, res) => {
           canteen: {
             roles: [USER_ROLES.CANTEEN_ADMIN, USER_ROLES.CANTEEN_STAFF],
             url: getRedirectUrl(USER_ROLES.CANTEEN_ADMIN, req),
-            name: "食堂端",
+            name: "后勤端",
           },
         },
       },

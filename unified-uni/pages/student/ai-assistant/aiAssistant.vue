@@ -243,7 +243,7 @@ export default {
 
     openVoiceCall() {
       uni.navigateTo({
-        url: "/pages/student/voice-call",
+        url: "/pages/student/voice-call/voiceCall",
       });
     },
 

@@ -62,6 +62,13 @@
       }
     },
     {
+      "path": "pages/student/voice-call/voiceCall",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "语音通话"
+      }
+    },
+    {
       "path": "pages/parent/home/home",
       "style": {
         "navigationBarTitleText": "家长中心"
@@ -168,7 +175,7 @@
     {
       "path": "pages/canteen/dashboard",
       "style": {
-        "navigationBarTitleText": "食堂管理"
+        "navigationBarTitleText": "后勤管理"
       }
     },
     {
