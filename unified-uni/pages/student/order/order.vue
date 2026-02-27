@@ -110,7 +110,6 @@ const { submitting, submitOrder } = useOrder(cartState, cartTotalPrice, syncCart
 
 onMounted(() => {
   fetchMeals();
-  getCurrentSolarTerm()
 });
 </script>
 

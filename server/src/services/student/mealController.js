@@ -34,12 +34,9 @@ exports.getMealList = async (req, res) => {
   }
 };
 
-exports.getCurrentSolarTerm = async (req, res) => {
+exports.getCurrentSolarTermRecommend = async (req, res) => {
   try {
-    // 🚀 优化：生成缓存键
     const cacheKey = 'solar:term:current';
-
-    // 🚀 优化：尝试从缓存获取
     const cached = await cache.get(cacheKey);
     if (cached) {
       return success(res, cached);
@@ -47,9 +44,7 @@ exports.getCurrentSolarTerm = async (req, res) => {
 
     const solarTermInfo = getCurrentSolarTerm();
 
-    // 🚀 优化：存入缓存（30分钟）
-    await cache.set(cacheKey, solarTermInfo, 1800);
-
+    cache.set(cacheKey, solarTermInfo, 1800);
     success(res, solarTermInfo);
   } catch (err) {
     console.error('[节气信息] 获取失败:', err);

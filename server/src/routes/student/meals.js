@@ -10,6 +10,6 @@ router.use(protect);
 router.get('/', mealService.getMealList);
 router.get('/ai-recommendation', mealService.getAIRecommendation);
 router.get('/seasonal-notification', mealService.getSeasonalNotification);
-router.get('/current-solar-term', mealService.getCurrentSolarTerm);
+router.get('/current-solar-term', mealService.getCurrentSolarTermRecommend);
 
 module.exports = router;

@@ -39,21 +39,33 @@ function getCurrentSolarTerm(date = new Date()) {
   const month = date.getMonth();
   const day = date.getDate();
 
+  // 创建只包含年月日的Date对象，用于比较
+  const compareDate = new Date(year, month, day);
+
   const currentYearTerms = calculateSolarTermDates(year);
   const lastYearTerms = calculateSolarTermDates(year - 1);
 
   const allTerms = [];
 
-  allTerms.push({ index: 22, date: lastYearTerms[22] });
-  allTerms.push({ index: 23, date: lastYearTerms[23] });
-
-  for (let i = 0; i < currentYearTerms.length; i++) {
-    allTerms.push({ index: i, date: currentYearTerms[i] });
+  // 只在1-2月时才添加去年的小寒、大寒
+  if (month <= 1) {
+    allTerms.push({ index: 22, date: new Date(lastYearTerms[22].getFullYear(), lastYearTerms[22].getMonth(), lastYearTerms[22].getDate()) });
+    allTerms.push({ index: 23, date: new Date(lastYearTerms[23].getFullYear(), lastYearTerms[23].getMonth(), lastYearTerms[23].getDate()) });
   }
 
+  // 添加今年的所有节气
+  for (let i = 0; i < currentYearTerms.length; i++) {
+    const termDate = currentYearTerms[i];
+    allTerms.push({ 
+      index: i, 
+      date: new Date(termDate.getFullYear(), termDate.getMonth(), termDate.getDate()) 
+    });
+  }
+
+  // 找到当前日期对应的节气（找到最后一个小于等于当前日期的节气）
   let currentTerm = allTerms[0];
   for (let i = 0; i < allTerms.length; i++) {
-    if (date >= allTerms[i].date) {
+    if (compareDate >= allTerms[i].date) {
       currentTerm = allTerms[i];
     } else {
       break;
@@ -77,33 +89,58 @@ function getCurrentSolarTerm(date = new Date()) {
 }
 
 function calculateSolarTermDates(year) {
-
-  const termDates = [
-    new Date(year, 1, 4),
-    new Date(year, 1, 19),
-    new Date(year, 2, 6),
-    new Date(year, 2, 21),
-    new Date(year, 3, 5),
-    new Date(year, 3, 20),
-    new Date(year, 4, 6),
-    new Date(year, 4, 21),
-    new Date(year, 5, 6),
-    new Date(year, 5, 21),
-    new Date(year, 6, 7),
-    new Date(year, 6, 23),
-    new Date(year, 7, 8),
-    new Date(year, 7, 23),
-    new Date(year, 8, 8),
-    new Date(year, 8, 23),
-    new Date(year, 9, 8),
-    new Date(year, 9, 23),
-    new Date(year, 10, 7),
-    new Date(year, 10, 22),
-    new Date(year, 11, 7),
-    new Date(year, 11, 22),
-    new Date(year, 0, 6),
-    new Date(year, 0, 20)
+  // 节气日期会随年份变化，这里提供2024-2026年的近似值
+  // 实际应用中应该使用天文算法计算精确日期
+  
+  // 基准年份的节气日期（2025年）
+  const baseYear = 2025;
+  const baseDates = [
+    { month: 1, day: 3 },   // 立春 2月3-5日
+    { month: 1, day: 18 },  // 雨水 2月18-20日
+    { month: 2, day: 5 },   // 惊蛰 3月5-7日
+    { month: 2, day: 20 },  // 春分 3月20-22日
+    { month: 3, day: 4 },   // 清明 4月4-6日
+    { month: 3, day: 19 },  // 谷雨 4月19-21日
+    { month: 4, day: 5 },   // 立夏 5月5-7日
+    { month: 4, day: 20 },  // 小满 5月20-22日
+    { month: 5, day: 5 },   // 芒种 6月5-7日
+    { month: 5, day: 21 },  // 夏至 6月21-22日
+    { month: 6, day: 6 },   // 小暑 7月6-8日
+    { month: 6, day: 22 },  // 大暑 7月22-24日
+    { month: 7, day: 7 },   // 立秋 8月7-9日
+    { month: 7, day: 22 },  // 处暑 8月22-24日
+    { month: 8, day: 7 },   // 白露 9月7-9日
+    { month: 8, day: 22 },  // 秋分 9月22-24日
+    { month: 9, day: 8 },   // 寒露 10月8-9日
+    { month: 9, day: 23 },  // 霜降 10月23-24日
+    { month: 10, day: 7 },  // 立冬 11月7-8日
+    { month: 10, day: 22 }, // 小雪 11月22-23日
+    { month: 11, day: 6 },  // 大雪 12月6-8日
+    { month: 11, day: 21 }, // 冬至 12月21-23日
+    { month: 0, day: 5 },   // 小寒 1月5-7日（次年）
+    { month: 0, day: 20 }   // 大寒 1月20-21日（次年）
   ];
+
+  // 根据年份差异调整日期（简化算法，每4年调整1天）
+  const yearDiff = year - baseYear;
+  const dayAdjust = Math.floor(yearDiff / 4);
+
+  const termDates = baseDates.map(({ month, day }) => {
+    let adjustedDay = day + dayAdjust;
+    let adjustedMonth = month;
+    
+    // 处理日期溢出（简化处理）
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    if (adjustedDay > daysInMonth) {
+      adjustedDay = adjustedDay - daysInMonth;
+      adjustedMonth = month + 1;
+    } else if (adjustedDay < 1) {
+      adjustedMonth = month - 1;
+      adjustedDay = new Date(year, adjustedMonth + 1, 0).getDate() + adjustedDay;
+    }
+    
+    return new Date(year, adjustedMonth, adjustedDay);
+  });
 
   return termDates;
 }
