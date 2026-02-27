@@ -15,21 +15,44 @@
     </view>
 
     <!-- 聊天消息流 -->
-    <scroll-view class="chat-container" scroll-y :scroll-top="scrollTop" scroll-with-animation>
+    <scroll-view 
+      class="chat-container" 
+      scroll-y 
+      :scroll-into-view="scrollIntoViewId"
+      scroll-with-animation
+      @scroll="onScroll"
+      :lower-threshold="100"
+    >
+      <view id="scroll-top-pad"></view>
       <view class="chat-stream">
-        <view v-for="(msg, index) in messages" :key="index" :class="['chat-message', msg.isUser ? 'user' : 'ai']">
-          <view class="message-bubble">{{ msg.content }}</view>
-        </view>
+        <ChatMessage 
+          v-for="(msg, index) in messages" 
+          :key="index" 
+          :id="'msg-' + index"
+          :message="msg" 
+          :disabled="isTyping" 
+        />
       </view>
+      <view style="height: 20px" id="bottom-anchor"></view>
     </scroll-view>
+
+    <!-- 输入框 -->
+    <view class="input-bar">
+      <input
+        id="quickInput"
+        v-model="inputMessage"
+        class="control-input"
+        type="text"
+        placeholder="输入消息，按Enter发送"
+        confirm-type="send"
+      />
+      <button class="send-btn-inline" @click="handleSendMessage">
+        <text class="send-icon-inline">↑</text>
+      </button>
+    </view>
 
     <!-- 底部控制栏 -->
     <view class="control-bar">
-      <button class="control-btn dial-btn" :class="{ 'dial-active': isConnected }" @click="handleDial">
-        <text class="btn-icon">📞</text>
-        <text class="btn-text">{{ isConnected ? "挂断" : "拨号" }}</text>
-      </button>
-
       <button class="control-btn" :class="{ recording: isRecording }" :disabled="!canRecord" @click="handleRecord">
         <text class="btn-icon">🎤</text>
         <text class="btn-text">{{ isRecording ? "录音中" : "录音" }}</text>
@@ -71,14 +94,21 @@
 </template>
 
 <script setup>
-import { ref, computed, onUnmounted } from "vue";
+import { ref, computed, onUnmounted, onMounted, nextTick } from "vue";
+import ChatMessage from "@/pages/student/ai-assistant/components/chatMessage.vue";
 
 // 状态管理
 const isConnected = ref(false);
 const isRecording = ref(false);
 const showSettings = ref(false);
 const messages = ref([]);
-const scrollTop = ref(0);
+const scrollIntoViewId = ref("");
+const inputMessage = ref("");
+const isTyping = ref(false);
+
+// 滚动控制
+const shouldAutoScroll = ref(true);
+const isProgrammaticScroll = ref(false);
 
 // 配置
 const otaUrl = ref("http://192.168.5.254:8002/xiaozhi/ota/");
@@ -102,26 +132,112 @@ let opusDecoder = null; // Opus解码器
 // 计算属性
 const canRecord = computed(() => isConnected.value);
 
-// 添加消息
-const addMessage = (content, isUser = false) => {
-  messages.value.push({ content, isUser });
-  // 滚动到底部
-  setTimeout(() => {
-    scrollTop.value = 999999;
-  }, 100);
+// 节流函数
+const throttle = (func, delay) => {
+  let lastCall = 0;
+  return function (...args) {
+    const now = Date.now();
+    if (now - lastCall >= delay) {
+      lastCall = now;
+      func.apply(this, args);
+    }
+  };
 };
 
-// 拨号/挂断
-const handleDial = async () => {
-  if (isConnected.value) {
-    disconnect();
-  } else {
-    if (!otaUrl.value.trim()) {
-      showSettings.value = true;
-      addMessage("请填入OTA服务器地址", false);
-      return;
+// 滚动到底部
+const scrollToBottom = throttle(() => {
+  if (!shouldAutoScroll.value) return;
+
+  nextTick(() => {
+    isProgrammaticScroll.value = true;
+    scrollIntoViewId.value = "";
+    nextTick(() => {
+      scrollIntoViewId.value = "bottom-anchor";
+    });
+  });
+}, 450);
+
+// 重置自动滚动
+const resetAutoScroll = () => {
+  shouldAutoScroll.value = true;
+  isProgrammaticScroll.value = true;
+};
+
+// 监听滚动事件
+const onScroll = (e) => {
+  if (isProgrammaticScroll.value) {
+    isProgrammaticScroll.value = false;
+    return;
+  }
+  if (isTyping.value) {
+    shouldAutoScroll.value = false;
+  }
+};
+
+// 添加消息
+const addMessage = (content, isUser = false) => {
+  if (!content.trim()) {
+    return;
+  }
+  const message = {
+    sender: isUser ? "user" : "ai",
+    text: content,
+    html: content,
+    timestamp: Date.now(),
+    quickButtons: [],
+    files: [],
+  };
+
+  messages.value.push(message);
+
+  // 滚动到底部
+  nextTick(() => {
+    scrollToBottom();
+  });
+};
+
+// 发送文本消息
+let sendingMessage = false; // 防止重复发送
+const handleSendMessage = () => {
+  if (sendingMessage) {
+    return;
+  }
+  const message = inputMessage.value.trim();
+  if (!message) {
+    return;
+  }
+
+  // 如果未连接，提示用户
+  if (!isConnected.value) {
+    addMessage("请先点击拨号按钮连接服务器", false);
+    return;
+  }
+
+  try {
+    sendingMessage = true;
+
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+      const listenMessage = {
+        type: "listen",
+        state: "detect",
+        text: message,
+      };
+      websocket.send(JSON.stringify(listenMessage));
+      // 显示用户消息
+      addMessage(message, true);
     }
-    await connect();
+
+    // 清空输入框
+    inputMessage.value = "";
+
+    // 延迟重置发送状态
+    setTimeout(() => {
+      sendingMessage = false;
+      console.log("发送状态已重置");
+    }, 300);
+  } catch (error) {
+    addMessage("发送消息失败", false);
+    sendingMessage = false;
   }
 };
 
@@ -142,6 +258,7 @@ const connect = async () => {
 
     websocket.onopen = async () => {
       isConnected.value = true;
+      resetAutoScroll();
       addMessage("连接成功，开始聊天吧~😊", false);
 
       // 发送hello消息
@@ -276,17 +393,8 @@ const handleWebSocketMessage = (event) => {
 
 // 处理文本消息
 const handleTextMessage = (message) => {
-  if (message.type === "hello") {
-  } else if (message.type === "stt") {
-    if (message.text) {
-      addMessage(message.text, true);
-    }
-  } else if (message.type === "llm") {
-    if (message.text) {
-      addMessage(message.text, false);
-    }
-  } else if (message.type === "tts") {
-    // TTS状态处理
+  if (message.type === "tts" || message === "llm") {
+    addMessage(message.text, false);
   }
 };
 
@@ -758,6 +866,22 @@ const handleBack = () => {
     delta: 1,
   });
 };
+
+// 组件挂载时自动连接
+onMounted(async () => {
+  // 自动连接服务器
+  if (otaUrl.value.trim()) {
+    await connect();
+  } else {
+    addMessage("请在设置中配置OTA服务器地址", false);
+  }
+  
+  // 初始化滚动
+  resetAutoScroll();
+  nextTick(() => {
+    scrollToBottom();
+  });
+});
 
 // 组件卸载时清理
 onUnmounted(() => {

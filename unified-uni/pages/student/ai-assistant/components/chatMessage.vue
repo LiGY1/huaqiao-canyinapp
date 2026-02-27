@@ -101,7 +101,7 @@ const onQuickButtonClick = (text) => {
 }
 
 .message {
-  padding: 24rpx 32rpx;
+  padding: 12rpx 16rpx;
   border-radius: 36rpx;
   box-shadow: 0 4rpx 16rpx rgba(26, 95, 158, 0.08);
   font-size: 30rpx;
