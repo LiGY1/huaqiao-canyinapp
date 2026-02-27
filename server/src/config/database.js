@@ -9,7 +9,7 @@ const connectDB = async () => {
       maxPoolSize: 50,           // 最大连接数（默认10）
       minPoolSize: 10,           // 最小连接数（默认0）
       maxIdleTimeMS: 30000,      // 连接空闲30秒后关闭
-      serverSelectionTimeoutMS: 5000,  // 服务器选择超时5秒
+      serverSelectionTimeoutMS: 15000,  // 服务器选择超时15秒
       socketTimeoutMS: 45000,    // Socket超时45秒
       family: 4,                 // 使用IPv4
       // 性能优化
