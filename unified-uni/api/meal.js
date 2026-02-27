@@ -12,17 +12,12 @@ export const getMealList = async (type = "all") => {
 
 // 提交订单
 export const submitOrder = async (orderData) => {
-  try {
-    const res = await request({
-      url: "/student/orders",
-      method: "POST",
-      data: orderData,
-    });
-    return res;
-  } catch (error) {
-    console.error("提交订单失败:", error);
-    throw error;
-  }
+  const res = await request({
+    url: "/student/orders",
+    method: "POST",
+    data: orderData,
+  });
+  return res;
 };
 
 // 获取今日营养数据

@@ -55,7 +55,6 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import layout from "@/components/layout.vue";
-import { getCurrentSolarTerm } from "@/api/meal.js";
 
 // 导入本地组件
 import diningTypeSelector from "./components/diningTypeSelector.vue";

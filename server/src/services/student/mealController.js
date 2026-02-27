@@ -620,15 +620,14 @@ exports.submitOrder = async (req, res) => {
 
     await updateNutritionRecord(req.user._id, totalNutrition, order._id, mealType);
 
-    updateDailyNutritionRecord(req.user._id, order.orderDate || new Date())
-      .then(() => updateStudentHealthData(req.user._id, {
-        height: user.height,
-        weight: user.weight,
-        gender: user.gender
-      }))
-      .catch(err => console.error('更新健康数据失败:', err));
+    // updateDailyNutritionRecord(req.user._id, order.orderDate || new Date())
+    //   .then(() => updateStudentHealthData(req.user._id, {
+    //     height: user.height,
+    //     weight: user.weight,
+    //     gender: user.gender
+    //   }))
+    //   .catch(err => console.error('更新健康数据失败:', err));
 
-    // 🚀 缓存失效：清除相关缓存
     const cacheInvalidation = require('../../utils/cacheInvalidation');
     cacheInvalidation.invalidateOrderCache(order).catch(err => {
       console.error('缓存失效失败:', err);
