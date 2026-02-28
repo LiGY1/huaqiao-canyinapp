@@ -4,7 +4,11 @@
     <view class="input-content" v-if="inputMode === 'text'">
       <view class="text-input-area">
         <!-- 语音按钮 -->
-        <view class="voice-button" @tap="switchToVoiceMode">
+        <view 
+          class="voice-button" 
+          :class="{ disabled: disabled }"
+          @tap="switchToVoiceMode"
+        >
           <uni-icons type="mic-filled" size="24" color="#1a5f9e"></uni-icons>
         </view>
         
@@ -31,27 +35,42 @@
     <view class="input-content" v-if="inputMode === 'voice'">
       <view class="voice-input-area">
         <!-- 返回文本按钮 -->
-        <view class="back-to-text-button" @tap="switchToTextMode">
+        <view 
+          class="back-to-text-button" 
+          :class="{ disabled: isRecording || disabled }"
+          @tap="switchToTextMode"
+        >
           <uni-icons type="font" size="24" color="#1a5f9e"></uni-icons>
         </view>
         
-        <!-- 按住录音按钮 -->
+        <!-- 拨号/挂断按钮 -->
         <view 
           class="record-button" 
-          :class="{ recording: isRecording }"
-          @touchstart="handleRecordStart"
-          @touchend="handleRecordEnd"
-          @touchcancel="handleRecordCancel"
-          @contextmenu.prevent
+          :class="{ recording: isRecording, disabled: !isRecording && disabled }"
+          @tap="toggleRecording"
         >
           <view class="record-button-inner">
-            <uni-icons type="mic-filled" size="32" :color="isRecording ? '#fff' : '#1a5f9e'"></uni-icons>
+            <uni-icons 
+              :type="isRecording ? 'phone-filled' : 'mic-filled'" 
+              size="32" 
+              :color="isRecording ? '#fff' : '#1a5f9e'"
+            ></uni-icons>
             <text class="record-text">{{ recordButtonText }}</text>
           </view>
         </view>
         
-        <!-- 占位元素，保持布局对称 -->
-        <view class="placeholder-button"></view>
+        <!-- 录音控制按钮（暂停/恢复） -->
+        <view 
+          class="record-control-button"
+          :class="{ disabled: !isDialed, paused: isDialed && !isSendingAudio }"
+          @tap="toggleRecordingControl"
+        >
+          <uni-icons 
+            :type="isSendingAudio ? 'mic-filled' : 'mic'" 
+            size="24" 
+            :color="!isDialed ? '#cbd5e1' : (isSendingAudio ? '#1a5f9e' : '#ef4444')"
+          ></uni-icons>
+        </view>
       </view>
     </view>
   </view>
@@ -82,6 +101,8 @@ const emit = defineEmits([
   "keyboard-height-change",
   "record-start",
   "record-end",
+  "record-pause",
+  "record-resume",
 ]);
 
 // Local state
@@ -89,7 +110,9 @@ const localInput = ref("");
 const inputBottom = ref(0);
 const areaHeight = ref(0);
 const inputMode = ref("text"); // 'text' or 'voice'
-const isRecording = ref(false);
+const isRecording = ref(false); // 是否正在录音（发送音频数据）
+const isDialed = ref(false); // 是否已拨号（建立连接）
+const isSendingAudio = ref(false); // 是否正在发送音频（用于控制右侧按钮状态）
 const recordingDuration = ref(0); // 录音时长（秒）
 
 let uniKeyboardListener = null;
@@ -103,9 +126,9 @@ const recordButtonText = computed(() => {
     const minutes = Math.floor(recordingDuration.value / 60);
     const seconds = recordingDuration.value % 60;
     const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    return `松开发送 ${timeStr}`;
+    return `点击挂断 ${timeStr}`;
   }
-  return '按住录音';
+  return '点击拨号';
 });
 
 // Watch for external changes to activeTab
@@ -133,10 +156,16 @@ const switchTab = (tab) => {
 };
 
 const switchToVoiceMode = () => {
+  if (props.disabled) {
+    return;
+  }
   inputMode.value = "voice";
 };
 
 const switchToTextMode = () => {
+  if (isRecording.value || props.disabled) {
+    return;
+  }
   inputMode.value = "text";
 };
 
@@ -144,8 +173,69 @@ const openVoiceCall = () => {
   emit("open-voice-call");
 };
 
-const handleRecordStart = (e) => {
-  if (props.disabled) return;
+// 切换录音状态（拨号/挂断）
+const toggleRecording = () => {
+  // 如果已拨号，执行挂断
+  if (isDialed.value) {
+    stopRecording();
+    return;
+  }
+  
+  // 如果未拨号，检查是否被禁用
+  if (props.disabled) {
+    return;
+  }
+  
+  // 开始拨号并录音
+  isDialed.value = true;
+  isRecording.value = true;
+  isSendingAudio.value = true;
+  startRecording();
+};
+
+// 切换录音控制（暂停/恢复录音）
+const toggleRecordingControl = () => {
+  // 如果未拨号，不允许操作
+  if (!isDialed.value) {
+    return;
+  }
+  
+  if (isSendingAudio.value) {
+    // 当前正在发送音频，暂停
+    pauseRecording();
+  } else {
+    // 当前已暂停，恢复
+    resumeRecording();
+  }
+};
+
+const pauseRecording = () => {
+  isSendingAudio.value = false;
+  
+  // 显示提示
+  uni.showToast({
+    title: "已暂停录音",
+    icon: "error",
+    duration: 1500,
+  });
+  
+  emit("record-pause");
+};
+
+const resumeRecording = () => {
+  isSendingAudio.value = true;
+  
+  // 显示提示
+  uni.showToast({
+    title: "已恢复录音",
+    icon: "success",
+    duration: 1500,
+  });
+  
+  emit("record-resume");
+};
+
+const startRecording = () => {
   isRecording.value = true;
   recordingDuration.value = 0;
   
@@ -157,9 +247,10 @@ const handleRecordStart = (e) => {
   emit("record-start");
 };
 
-const handleRecordEnd = (e) => {
-  if (!isRecording.value) return;
+const stopRecording = () => {
   isRecording.value = false;
+  isDialed.value = false; // 重置拨号状态
+  isSendingAudio.value = false; // 重置发送状态
   
   // 停止计时器
   if (recordingTimer) {
@@ -167,18 +258,8 @@ const handleRecordEnd = (e) => {
     recordingTimer = null;
   }
   
-  emit("record-end");
-};
-
-const handleRecordCancel = (e) => {
-  if (!isRecording.value) return;
-  isRecording.value = false;
-  
-  // 停止计时器
-  if (recordingTimer) {
-    clearInterval(recordingTimer);
-    recordingTimer = null;
-  }
+  // 重置录音时长
+  recordingDuration.value = 0;
   
   emit("record-end");
 };
@@ -332,9 +413,14 @@ const handleSendMessage = () => {
   transition: all 0.3s;
 }
 
-.voice-button:active {
+.voice-button:active:not(.disabled) {
   background: #e0f0ff;
   transform: scale(0.95);
+}
+
+.voice-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* 语音录音模式 */
@@ -357,9 +443,14 @@ const handleSendMessage = () => {
   transition: all 0.3s;
 }
 
-.back-to-text-button:active {
+.back-to-text-button:active:not(.disabled) {
   background: #e0f0ff;
   transform: scale(0.95);
+}
+
+.back-to-text-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .record-button {
@@ -371,15 +462,31 @@ const handleSendMessage = () => {
   align-items: center;
   justify-content: center;
   transition: all 0.3s;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+}
+
+.record-button:active:not(.disabled) {
+  transform: scale(0.98);
 }
 
 .record-button.recording {
   background: linear-gradient(135deg, #ef4444, #dc2626);
-  transform: scale(0.98);
+  animation: pulse 2s infinite;
+  cursor: pointer;
+}
+
+.record-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 20rpx rgba(239, 68, 68, 0);
+  }
 }
 
 .record-button-inner {
@@ -402,6 +509,44 @@ const handleSendMessage = () => {
   width: 80rpx;
   height: 80rpx;
   flex-shrink: 0;
+}
+
+/* 录音控制按钮 */
+.record-control-button {
+  width: 80rpx;
+  height: 80rpx;
+  background: #f0f7ff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.record-control-button:active:not(.disabled) {
+  background: #e0f0ff;
+  transform: scale(0.95);
+}
+
+.record-control-button.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+  background: #f8fafc;
+}
+
+.record-control-button.paused {
+  background: #fee2e2;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
 }
 
 .text-input {

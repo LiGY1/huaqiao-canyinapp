@@ -26,10 +26,10 @@
           />
 
           <!-- 输入中状态 -->
-          <TypingIndicator v-if="isTyping" id="typing-indicator" />
-          
+          <TypingIndicator v-if="isTyping && !isVoiceThinking" id="typing-indicator" />
+
           <!-- 语音AI思考中状态 -->
-          <view v-if="isVoiceThinking" class="voice-thinking" id="voice-thinking">
+          <view v-if="isVoiceThinking && !isTyping" class="voice-thinking" id="voice-thinking">
             <view class="thinking-bubble">
               <view class="thinking-dots">
                 <view class="dot"></view>
@@ -51,7 +51,7 @@
         <!-- 底部输入区域 -->
         <InputArea
           :active-tab="activeTab"
-          :disabled="isTyping"
+          :disabled="isTyping || isVoiceThinking || isRecording"
           @send-message="handleSendMessage"
           @switch-tab="switchTab"
           @open-voice-call="openVoiceCall"
@@ -60,6 +60,8 @@
           @keyboard-height-change="onKeyboardHeightChange"
           @record-start="handleRecordStart"
           @record-end="handleRecordEnd"
+          @record-pause="handleRecordPause"
+          @record-resume="handleRecordResume"
         />
       </view>
     </view>
@@ -77,6 +79,12 @@ import storage from "@/utils/storage";
 import { throttle } from "@/utils/tool";
 import { saveChatHistory, getChatHistory, clearAllChatHistory, sendMessage } from "@/api/student/aiAssistant";
 import { BASE_URL } from "@/utils/request.js";
+
+const otaUrl = "http://192.168.5.254:8002/xiaozhi/ota/";
+const deviceId = "F4:E7:72:BB:B3:93";
+const clientId = "web_ai_assistant";
+const deviceMac = "web_ai_assistant";
+const deviceName = "AI助手";
 
 const completionEvents = new Set([
   "message_end",
@@ -159,12 +167,18 @@ export default {
 
       // 录音相关
       isRecording: false,
-      recognition: null, // Web Speech API 识别实例
       recognizedText: "", // 识别的文本
-      recognitionSent: false, // 标记是否已发送识别结果
       voiceWebSocket: null, // 语音AI的WebSocket连接
       isVoiceConnected: false, // 语音AI连接状态
       isVoiceThinking: false, // 语音AI思考中状态
+
+      // 音频录制相关（本地录音+服务器识别）
+      mediaStream: null,
+      audioContext: null,
+      audioProcessor: null,
+      audioProcessorType: null,
+      pcmDataBuffer: new Int16Array(),
+      opusEncoder: null, // Opus编码器
 
       // 音频播放相关
       audioQueue: [],
@@ -172,11 +186,6 @@ export default {
       webAudioContext: null,
       nextPlayTime: 0,
       opusDecoder: null,
-
-      mediaStream: null,
-      audioContext: null,
-      audioProcessor: null,
-      pcmDataBuffer: new Int16Array(),
 
       // 流式响应临时变量
       currentUserMessage: "",
@@ -522,7 +531,7 @@ export default {
       text = text.trim();
       if (!text) return;
 
-      if (this.isTyping) {
+      if (this.isTyping || this.isVoiceThinking) {
         uni.showToast({
           title: "AI正在回答中...",
           icon: "none",
@@ -603,9 +612,18 @@ export default {
       this.handleSendMessage(text);
     },
 
-    // 录音相关方法 - 使用 Web Speech API
+    // 录音相关方法 - 使用本地录音+服务器识别（参考test_page.html）
     async handleRecordStart() {
       try {
+        // 检查是否有其他AI正在工作
+        if (this.isTyping || this.isVoiceThinking) {
+          uni.showToast({
+            title: "AI正在回答中，请稍候",
+            icon: "none",
+          });
+          return;
+        }
+
         // 如果语音AI未连接，先连接
         if (!this.isVoiceConnected) {
           await this.connectVoiceAI();
@@ -613,124 +631,76 @@ export default {
           await new Promise((resolve) => setTimeout(resolve, 1000));
         }
 
-        // 检查浏览器支持
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) {
+        if (!this.isVoiceConnected || !this.voiceWebSocket || this.voiceWebSocket.readyState !== WebSocket.OPEN) {
+          uni.showToast({
+            title: "语音AI未连接",
+            icon: "none",
+          });
+          return;
+        }
+
+        // 检查麦克风权限
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
           uni.showModal({
-            title: "不支持语音识别",
-            content: "请使用 Chrome、Edge 或 Safari 浏览器",
+            title: "不支持录音",
+            content: "您的浏览器不支持录音功能",
             showCancel: false,
           });
           return;
         }
 
-        // 如果已有实例，先停止
-        if (this.recognition) {
-          try {
-            this.recognition.stop();
-          } catch (e) {
-            // 忽略错误
+        // 显示加载提示
+        uni.showLoading({
+          title: "初始化中...",
+          mask: true,
+        });
+
+        // 初始化Opus编码器（增加重试机制）
+        if (!this.opusEncoder) {
+          let retryCount = 0;
+          const maxRetries = 5;
+
+          while (retryCount < maxRetries) {
+            this.opusEncoder = await this.initOpusEncoder();
+            if (this.opusEncoder) {
+              break;
+            }
+            retryCount++;
+            await new Promise((resolve) => setTimeout(resolve, 500));
+          }
+
+          if (!this.opusEncoder) {
+            uni.hideLoading();
+            uni.showModal({
+              title: "初始化失败",
+              content: "Opus编码器初始化失败，请刷新页面重试",
+              showCancel: false,
+            });
+            return;
           }
         }
 
-        // 创建新的识别实例
-        this.recognition = new SpeechRecognition();
-        this.recognition.lang = "zh-CN";
-        this.recognition.continuous = false;
-        this.recognition.interimResults = true;
+        // 初始化音频录制
+        await this.initAudioRecording();
 
-        // 识别结果事件
-        this.recognition.onresult = (event) => {
-          // 获取所有识别结果并拼接
-          const transcript = Array.from(event.results)
-            .map((result) => result[0])
-            .map((result) => result.transcript)
-            .join("");
-
-          // 检查是否有最终结果
-          const hasFinalResult = Array.from(event.results).some((result) => result.isFinal);
-
-          if (transcript && transcript.trim()) {
-            this.recognizedText = transcript.trim();
-
-            // 如果是最终结果，标记已发送并自动发送
-            if (hasFinalResult) {
-              this.recognitionSent = true; // 标记已发送
-
-              setTimeout(() => {
-                this.handleSendMessage(this.recognizedText, true);
-                this.recognizedText = "";
-              }, 500);
-            }
-          }
-        };
-
-        // 识别开始
-        this.recognition.onstart = () => {
-          this.isRecording = true;
-          this.recognitionSent = false; // 重置发送标志
-        };
-
-        // 识别结束
-        this.recognition.onend = () => {
-          this.isRecording = false;
-
-          // 只有在还没发送过的情况下才发送
-          if (!this.recognitionSent && this.recognizedText && this.recognizedText.trim()) {
-            setTimeout(() => {
-              this.handleSendMessage(this.recognizedText, true);
-              this.recognizedText = "";
-            }, 500);
-          } else if (!this.recognitionSent && !this.recognizedText) {
-            // 没有识别出任何文字
-            uni.showToast({
-              title: "未识别到语音，请重试",
-              icon: "none",
-              duration: 2000,
-            });
-          }
-        };
-
-        // 识别错误
-        this.recognition.onerror = (event) => {
-          this.isRecording = false;
-
-          if (event.error === "network") {
-            uni.showModal({
-              title: "网络错误",
-              content:
-                "Chrome 浏览器的语音识别需要连接 Google 服务器。\n\n建议：\n1. 使用 Edge 浏览器\n2. 检查网络连接\n3. 如在中国大陆，可能需要特殊网络环境",
-              showCancel: false,
-            });
-          } else if (event.error === "not-allowed") {
-            uni.showModal({
-              title: "需要麦克风权限",
-              content: "请允许浏览器访问麦克风",
-              showCancel: false,
-            });
-          } else if (event.error === "no-speech") {
-            uni.showToast({
-              title: "未检测到语音，请重试",
-              icon: "none",
-            });
-          } else if (event.error === "aborted") {
-            return;
-          } else {
-            uni.showToast({
-              title: "语音识别失败: " + event.error,
-              icon: "none",
-            });
-          }
-        };
-
-        // 开始识别
-        this.recognition.start();
+        this.isRecording = true;
+        uni.hideLoading();
       } catch (error) {
+        uni.hideLoading();
         this.isRecording = false;
-        uni.showToast({
-          title: "启动失败: " + error.message,
-          icon: "none",
-        });
+
+        if (error.name === "NotAllowedError") {
+          uni.showModal({
+            title: "需要麦克风权限",
+            content: "请允许浏览器访问麦克风",
+            showCancel: false,
+          });
+        } else {
+          uni.showToast({
+            title: "启动失败: " + error.message,
+            icon: "none",
+          });
+        }
       }
     },
 
@@ -740,13 +710,146 @@ export default {
       }
 
       try {
-        if (this.recognition) {
-          this.recognition.stop();
+        this.isRecording = false;
+
+        // 停止AudioWorklet
+        if (this.audioProcessorType === "worklet" && this.audioProcessor && this.audioProcessor.port) {
+          this.audioProcessor.port.postMessage({ command: "stop" });
         }
 
-        this.isRecording = false;
+        // 编码并发送剩余数据
+        this.encodeAndSendOpus();
+
+        // 清除语音AI思考状态，允许切换到文字AI
+        this.isVoiceThinking = false;
+
+        // 注意：不发送空Opus帧，保持WebSocket连接以便继续对话
+        // 服务器会在一段时间没有音频数据后自动结束识别
+
+        // 断开音频节点
+        if (this.audioProcessor) {
+          this.audioProcessor.disconnect();
+          this.audioProcessor = null;
+        }
+
+        // 停止媒体流
+        if (this.mediaStream) {
+          this.mediaStream.getTracks().forEach((track) => {
+            track.stop();
+          });
+          this.mediaStream = null;
+        }
+
+        // 关闭音频上下文
+        if (this.audioContext) {
+          await this.audioContext.close();
+          this.audioContext = null;
+        }
       } catch (error) {
         this.isRecording = false;
+        this.isVoiceThinking = false;
+      }
+    },
+
+    // 暂停录音（不挂断）
+    handleRecordPause() {
+      if (!this.isRecording) {
+        return;
+      }
+
+      this.isRecording = false;
+
+      // 停止AudioWorklet
+      if (this.audioProcessorType === "worklet" && this.audioProcessor && this.audioProcessor.port) {
+        this.audioProcessor.port.postMessage({ command: "stop" });
+      }
+
+      // 编码并发送剩余数据
+      this.encodeAndSendOpus();
+    },
+
+    // 恢复录音
+    async handleRecordResume() {
+      if (this.isRecording) {
+        return;
+      }
+
+      try {
+        // 检查WebSocket连接
+        if (!this.isVoiceConnected || !this.voiceWebSocket || this.voiceWebSocket.readyState !== WebSocket.OPEN) {
+          uni.showToast({
+            title: "语音AI未连接",
+            icon: "none",
+          });
+          return;
+        }
+
+        // 检查是否需要重新获取麦克风权限
+        if (!this.mediaStream || !this.audioContext) {
+          // 重新初始化音频
+          await this.initAudioRecording();
+        } else {
+          // 恢复AudioWorklet
+          if (this.audioProcessorType === "worklet" && this.audioProcessor && this.audioProcessor.port) {
+            this.audioProcessor.port.postMessage({ command: "start" });
+          }
+        }
+
+        this.isRecording = true;
+      } catch (error) {
+        uni.showToast({
+          title: "恢复录音失败",
+          icon: "none",
+        });
+      }
+    },
+
+    // 初始化音频录制（提取公共逻辑）
+    async initAudioRecording() {
+      // 获取麦克风流
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          sampleRate: 24000,
+          channelCount: 1,
+        },
+      });
+
+      this.mediaStream = stream;
+
+      // 创建音频上下文
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      this.audioContext = new AudioContextClass({ sampleRate: 24000 });
+
+      if (this.audioContext.state === "suspended") {
+        await this.audioContext.resume();
+      }
+
+      // 创建音频处理器
+      const processorResult = await this.createAudioProcessor();
+      if (!processorResult) {
+        throw new Error("无法创建音频处理器");
+      }
+
+      this.audioProcessor = processorResult.node;
+      this.audioProcessorType = processorResult.type;
+
+      // 连接音频节点
+      const audioSource = this.audioContext.createMediaStreamSource(stream);
+      audioSource.connect(this.audioProcessor);
+
+      // 创建静音节点（防止回声）
+      const silent = this.audioContext.createGain();
+      silent.gain.value = 0;
+      this.audioProcessor.connect(silent);
+      silent.connect(this.audioContext.destination);
+
+      this.pcmDataBuffer = new Int16Array();
+
+      // 如果使用AudioWorklet，发送开始命令
+      if (this.audioProcessorType === "worklet" && this.audioProcessor.port) {
+        this.audioProcessor.port.postMessage({ command: "start" });
       }
     },
 
@@ -762,6 +865,312 @@ export default {
       this.isRecording = false;
     },
 
+    // 创建音频处理器（AudioWorklet或ScriptProcessor）
+    async createAudioProcessor() {
+      try {
+        if (this.audioContext.audioWorklet) {
+          // 使用AudioWorklet
+          const processorCode = `
+            class AudioRecorderProcessor extends AudioWorkletProcessor {
+              constructor() {
+                super();
+                this.frameSize = 1440;  // 60ms @ 24kHz = 1440 samples
+                this.buffer = new Int16Array(this.frameSize);
+                this.bufferIndex = 0;
+                this.isRecording = false;
+                
+                
+                
+                this.port.onmessage = (event) => {
+                  
+                  if (event.data.command === 'start') {
+                    this.isRecording = true;
+                    
+                    this.port.postMessage({ type: 'status', status: 'started' });
+                  } else if (event.data.command === 'stop') {
+                    this.isRecording = false;
+                    
+                    if (this.bufferIndex > 0) {
+                      const finalBuffer = this.buffer.slice(0, this.bufferIndex);
+                      this.port.postMessage({ type: 'buffer', buffer: finalBuffer });
+                      this.bufferIndex = 0;
+                    }
+                    this.port.postMessage({ type: 'status', status: 'stopped' });
+                  }
+                };
+              }
+              
+              process(inputs, outputs, parameters) {
+                if (!this.isRecording) return true;
+                
+                const input = inputs[0][0];
+                if (!input) return true;
+                
+                for (let i = 0; i < input.length; i++) {
+                  if (this.bufferIndex >= this.frameSize) {
+                    this.port.postMessage({ type: 'buffer', buffer: this.buffer.slice(0) });
+                    this.bufferIndex = 0;
+                  }
+                  this.buffer[this.bufferIndex++] = Math.max(-32768, Math.min(32767, Math.floor(input[i] * 32767)));
+                }
+                
+                return true;
+              }
+            }
+            registerProcessor('audio-recorder-processor', AudioRecorderProcessor);
+          `;
+
+          const blob = new Blob([processorCode], { type: "application/javascript" });
+          const url = URL.createObjectURL(blob);
+
+          await this.audioContext.audioWorklet.addModule(url);
+
+          URL.revokeObjectURL(url);
+
+          const audioProcessor = new AudioWorkletNode(this.audioContext, "audio-recorder-processor");
+
+          audioProcessor.port.onmessage = (event) => {
+            if (event.data.type === "buffer") {
+              this.processPCMBuffer(event.data.buffer);
+            } else if (event.data.type === "status") {
+            }
+          };
+
+          return { node: audioProcessor, type: "worklet" };
+        } else {
+          return this.createScriptProcessor();
+        }
+      } catch (error) {
+        console.error("创建AudioWorklet失败:", error);
+
+        return this.createScriptProcessor();
+      }
+    },
+
+    // 创建ScriptProcessor作为后备方案
+    createScriptProcessor() {
+      try {
+        const frameSize = 4096;
+        const scriptProcessor = this.audioContext.createScriptProcessor(frameSize, 1, 1);
+
+        scriptProcessor.onaudioprocess = (event) => {
+          if (!this.isRecording) return;
+
+          const input = event.inputBuffer.getChannelData(0);
+          const buffer = new Int16Array(input.length);
+
+          for (let i = 0; i < input.length; i++) {
+            buffer[i] = Math.max(-32768, Math.min(32767, Math.floor(input[i] * 32767)));
+          }
+
+          this.processPCMBuffer(buffer);
+        };
+
+        return { node: scriptProcessor, type: "processor" };
+      } catch (error) {
+        console.error("创建ScriptProcessor失败:", error);
+        return null;
+      }
+    },
+
+    // 处理PCM缓冲区数据
+    processPCMBuffer(buffer) {
+      if (!this.isRecording) {
+        return;
+      }
+
+      // 合并缓冲区
+      const newBuffer = new Int16Array(this.pcmDataBuffer.length + buffer.length);
+      newBuffer.set(this.pcmDataBuffer);
+      newBuffer.set(buffer, this.pcmDataBuffer.length);
+      this.pcmDataBuffer = newBuffer;
+
+      // 每1440个采样点编码一次 (60ms @ 24kHz)
+      const samplesPerFrame = 1440;
+      while (this.pcmDataBuffer.length >= samplesPerFrame) {
+        const frameData = this.pcmDataBuffer.slice(0, samplesPerFrame);
+        this.pcmDataBuffer = this.pcmDataBuffer.slice(samplesPerFrame);
+        this.encodeAndSendOpus(frameData);
+      }
+    },
+
+    // 编码并发送Opus数据
+    encodeAndSendOpus(pcmData = null) {
+      if (!this.opusEncoder) {
+        return;
+      }
+
+      try {
+        if (pcmData) {
+          const opusData = this.opusEncoder.encode(pcmData);
+
+          if (opusData && opusData.length > 0) {
+            if (this.voiceWebSocket && this.voiceWebSocket.readyState === WebSocket.OPEN) {
+              this.voiceWebSocket.send(opusData.buffer);
+            }
+          }
+        } else {
+          // 编码剩余数据
+          if (this.pcmDataBuffer.length > 0) {
+            const samplesPerFrame = 1440; // 60ms @ 24kHz
+            if (this.pcmDataBuffer.length < samplesPerFrame) {
+              // 填充到1440个采样点
+              const paddedBuffer = new Int16Array(samplesPerFrame);
+              paddedBuffer.set(this.pcmDataBuffer);
+
+              this.encodeAndSendOpus(paddedBuffer);
+            } else {
+              this.encodeAndSendOpus(this.pcmDataBuffer.slice(0, samplesPerFrame));
+            }
+            this.pcmDataBuffer = new Int16Array(0);
+          }
+        }
+      } catch (error) {
+        // 忽略编码错误
+      }
+    },
+
+    // 初始化Opus编码器
+    async initOpusEncoder() {
+      if (this.opusEncoder) return this.opusEncoder;
+
+      try {
+        // 等待Opus库加载
+        await this.waitForOpusLibrary();
+
+        const mod = window.ModuleInstance;
+
+        if (!mod) {
+          console.error("ModuleInstance未定义");
+          return null;
+        }
+
+        // 检查必要的函数是否存在
+        if (typeof mod._opus_encoder_get_size !== "function") {
+          console.error("opus_encoder_get_size函数不存在");
+          return null;
+        }
+
+        const encoder = {
+          channels: 1,
+          sampleRate: 24000, // 改为24kHz以匹配服务器要求
+          frameSize: 1440, // 60ms @ 24kHz = 1440 samples
+          maxPacketSize: 4000,
+          module: mod,
+          encoderPtr: null,
+
+          init: function () {
+            if (this.encoderPtr) return true;
+
+            try {
+              // 获取编码器大小
+              const encoderSize = this.module._opus_encoder_get_size(this.channels);
+
+              // 分配内存
+              this.encoderPtr = this.module._malloc(encoderSize);
+              if (!this.encoderPtr) {
+                console.error("无法分配编码器内存");
+                return false;
+              }
+
+              // 初始化编码器 (application = 2048 for VOIP)
+              const err = this.module._opus_encoder_init(this.encoderPtr, this.sampleRate, this.channels, 2048);
+
+              if (err < 0) {
+                console.error("Opus编码器初始化失败，错误码:", err);
+                this.module._free(this.encoderPtr);
+                this.encoderPtr = null;
+                return false;
+              }
+
+              // 设置比特率 (16kbps)
+              this.module._opus_encoder_ctl(this.encoderPtr, 4002, 16000);
+
+              // 设置复杂度 (0-10)
+              this.module._opus_encoder_ctl(this.encoderPtr, 4010, 5);
+
+              // 设置使用DTX (不传输静音帧)
+              this.module._opus_encoder_ctl(this.encoderPtr, 4016, 1);
+
+              return true;
+            } catch (error) {
+              console.error("Opus编码器初始化异常:", error);
+              if (this.encoderPtr) {
+                this.module._free(this.encoderPtr);
+                this.encoderPtr = null;
+              }
+              return false;
+            }
+          },
+
+          encode: function (pcmData) {
+            if (!this.encoderPtr) {
+              if (!this.init()) {
+                return new Uint8Array(0);
+              }
+            }
+
+            try {
+              const mod = this.module;
+
+              // 为PCM数据分配内存
+              const pcmPtr = mod._malloc(pcmData.length * 2);
+
+              // 将PCM数据复制到HEAP
+              for (let i = 0; i < pcmData.length; i++) {
+                mod.HEAP16[(pcmPtr >> 1) + i] = pcmData[i];
+              }
+
+              // 为输出分配内存
+              const outPtr = mod._malloc(this.maxPacketSize);
+
+              // 进行编码
+              const encodedLen = mod._opus_encode(this.encoderPtr, pcmPtr, this.frameSize, outPtr, this.maxPacketSize);
+
+              if (encodedLen < 0) {
+                console.error("Opus编码失败，错误码:", encodedLen);
+                mod._free(pcmPtr);
+                mod._free(outPtr);
+                return new Uint8Array(0);
+              }
+
+              // 复制编码后的数据
+              const opusData = new Uint8Array(encodedLen);
+              for (let i = 0; i < encodedLen; i++) {
+                opusData[i] = mod.HEAPU8[outPtr + i];
+              }
+
+              // 释放内存
+              mod._free(pcmPtr);
+              mod._free(outPtr);
+
+              return opusData;
+            } catch (error) {
+              console.error("Opus编码异常:", error);
+              return new Uint8Array(0);
+            }
+          },
+
+          destroy: function () {
+            if (this.encoderPtr) {
+              this.module._free(this.encoderPtr);
+              this.encoderPtr = null;
+            }
+          },
+        };
+
+        if (!encoder.init()) {
+          console.error("编码器初始化失败");
+          return null;
+        }
+
+        return encoder;
+      } catch (error) {
+        console.error("初始化Opus编码器失败:", error);
+        return null;
+      }
+    },
+
     // 语音AI相关方法
     async connectVoiceAI() {
       try {
@@ -771,6 +1180,7 @@ export default {
         });
 
         // 获取WebSocket地址
+
         const wsUrl = await this.getVoiceWebSocketUrl();
 
         if (!wsUrl) {
@@ -778,6 +1188,7 @@ export default {
         }
 
         // 创建WebSocket连接
+
         this.voiceWebSocket = new WebSocket(wsUrl);
         this.voiceWebSocket.binaryType = "arraybuffer";
 
@@ -787,6 +1198,7 @@ export default {
           uni.hideLoading();
 
           // 发送hello消息
+
           await this.sendVoiceHelloMessage();
         };
 
@@ -800,6 +1212,8 @@ export default {
         };
 
         this.voiceWebSocket.onerror = (error) => {
+          console.error("=== WebSocket连接错误 ===");
+          console.error("错误:", error);
           this.isVoiceConnected = false;
           uni.hideLoading();
           uni.showToast({
@@ -808,6 +1222,8 @@ export default {
           });
         };
       } catch (error) {
+        console.error("=== 连接语音AI失败 ===");
+        console.error("错误:", error);
         uni.hideLoading();
         uni.showToast({
           title: "连接失败: " + error.message,
@@ -818,12 +1234,6 @@ export default {
 
     async getVoiceWebSocketUrl() {
       try {
-        const otaUrl = "http://192.168.5.254:8002/xiaozhi/ota/";
-        const deviceId = "F4:E7:72:BB:B3:93";
-        const clientId = "web_ai_assistant";
-        const deviceMac = "web_ai_assistant";
-        const deviceName = "AI助手";
-
         const res = await new Promise((resolve, reject) => {
           uni.request({
             url: otaUrl,
@@ -863,6 +1273,7 @@ export default {
               resolve(response);
             },
             fail: (error) => {
+              console.error("OTA请求失败:", error);
               reject(error);
             },
           });
@@ -887,14 +1298,20 @@ export default {
           return finalUrl;
         }
 
+        console.error("响应中没有websocket信息，完整响应:", res);
         throw new Error("响应中没有 websocket 信息");
       } catch (error) {
+        console.error("获取WebSocket URL失败:", error);
+        console.error("错误详情:", error.message, error.stack);
         return null;
       }
     },
 
     async sendVoiceHelloMessage() {
-      if (!this.voiceWebSocket || this.voiceWebSocket.readyState !== WebSocket.OPEN) return;
+      if (!this.voiceWebSocket || this.voiceWebSocket.readyState !== WebSocket.OPEN) {
+        console.warn("WebSocket未连接，无法发送hello消息");
+        return;
+      }
 
       const helloMessage = {
         type: "hello",
@@ -933,10 +1350,10 @@ export default {
           timestamp: Date.now(),
         };
         this.messages.push(userMessage);
-        
+
         // 显示思考状态
         this.isVoiceThinking = true;
-        
+
         this.$nextTick(() => {
           this.scrollToBottom();
         });
@@ -953,12 +1370,36 @@ export default {
       try {
         if (typeof event.data === "string") {
           const message = JSON.parse(event.data);
+          
 
-          if (message.type === "tts" || message.type === "llm") {
+          if (message.type === "stt") {
+            // 语音识别结果
             if (message.text && message.text.trim()) {
-              // 隐藏思考状态
-              this.isVoiceThinking = false;
               
+
+              // 显示用户消息
+              const userMessage = {
+                sender: "user",
+                text: message.text,
+                timestamp: Date.now(),
+              };
+              this.messages.push(userMessage);
+
+              // 显示语音AI思考状态（不显示文字AI状态）
+              this.isVoiceThinking = true;
+              this.isTyping = false;
+
+              this.$nextTick(() => {
+                this.scrollToBottom();
+              });
+            }
+          } else if (message.type === "tts" || message.type === "llm") {
+            if (message.text && message.text.trim()) {
+              
+
+              // 隐藏语音AI思考状态
+              this.isVoiceThinking = false;
+
               // 显示AI回复
               const aiMessage = {
                 sender: "ai",
@@ -969,17 +1410,52 @@ export default {
                 files: [],
               };
               this.messages.push(aiMessage);
+
               this.$nextTick(() => {
                 this.scrollToBottom();
               });
             }
+          } else if (message.type === "listen") {
+            
+
+            // 处理语音识别结果（备用，某些服务器可能用listen返回识别结果）
+            if (message.text && message.text.trim() && message.state === "detect") {
+              
+
+              // 显示用户消息
+              const userMessage = {
+                sender: "user",
+                text: message.text,
+                timestamp: Date.now(),
+              };
+              this.messages.push(userMessage);
+
+              // 显示语音AI思考状态（不显示文字AI状态）
+              this.isVoiceThinking = true;
+              this.isTyping = false;
+
+              this.$nextTick(() => {
+                this.scrollToBottom();
+              });
+            }
+          } else if (message.type === "hello") {
+            
+            
+          } else if (message.type === "error") {
+            console.error("[服务器错误]", message.message || message);
+            this.isVoiceThinking = false;
+          } else {
+            
+            
           }
         } else {
           // 处理二进制音频数据
+          
           this.handleAudioData(event.data);
         }
       } catch (error) {
-        // 忽略错误
+        console.error("[WebSocket错误]", error);
+        this.isVoiceThinking = false;
       }
     },
 
@@ -1017,7 +1493,7 @@ export default {
         if (!this.webAudioContext) {
           const AudioContextClass = window.AudioContext || window.webkitAudioContext;
           this.webAudioContext = new AudioContextClass({
-            sampleRate: 16000,
+            sampleRate: 24000, // 改为24kHz
           });
           this.nextPlayTime = this.webAudioContext.currentTime;
         }
@@ -1103,8 +1579,8 @@ export default {
 
         const decoder = {
           channels: 1,
-          rate: 16000,
-          frameSize: 960,
+          rate: 24000, // 改为24kHz
+          frameSize: 1440, // 60ms @ 24kHz
           module: mod,
           decoderPtr: null,
 
@@ -1195,36 +1671,59 @@ export default {
 
     // 等待Opus库加载
     waitForOpusLibrary() {
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
+        let attempts = 0;
+        const maxAttempts = 50; // 最多等待5秒
+
         const checkOpus = () => {
-          if (typeof window.Module === "undefined") {
+          attempts++;
+
+          // 检查是否超时
+          if (attempts > maxAttempts) {
+            console.error("Opus库加载超时");
+            reject(new Error("Opus库加载超时"));
+            return;
+          }
+
+          // 检查全局Module变量（libopus.js导出的）
+          // 注意：在浏览器环境中，libopus.js会创建全局Module变量
+          if (typeof Module === "undefined" && typeof window.Module === "undefined") {
             setTimeout(checkOpus, 100);
             return;
           }
 
-          if (typeof window.Module.instance !== "undefined") {
-            const mod = window.Module.instance;
-            if (typeof mod._opus_decoder_get_size === "function") {
+          // 获取Module对象
+          const ModuleObj = typeof Module !== "undefined" ? Module : window.Module;
+
+          // 检查Module.instance（libopus.js最后一行导出方式）
+          if (typeof ModuleObj.instance !== "undefined") {
+            const mod = ModuleObj.instance;
+            if (typeof mod._opus_encoder_get_size === "function") {
               window.ModuleInstance = mod;
               resolve(true);
               return;
             }
           }
 
-          if (typeof window.Module._opus_decoder_get_size === "function") {
-            window.ModuleInstance = window.Module;
+          // 检查Module直接导出
+          if (typeof ModuleObj._opus_encoder_get_size === "function") {
+            window.ModuleInstance = ModuleObj;
             resolve(true);
             return;
           }
 
+          // Module存在但函数不存在，继续等待
+
           setTimeout(checkOpus, 100);
         };
+
         checkOpus();
       });
     },
 
     // 将PCM数据转换为AudioBuffer
-    pcmToAudioBuffer(pcmData, sampleRate = 16000) {
+    pcmToAudioBuffer(pcmData, sampleRate = 24000) {
+      // 改为24kHz
       const audioBuffer = this.webAudioContext.createBuffer(1, pcmData.length, sampleRate);
       const channelData = audioBuffer.getChannelData(0);
 
@@ -1243,7 +1742,7 @@ export default {
       }
       this.isVoiceConnected = false;
 
-      // 清理音频资源
+      // 清理音频播放资源
       if (this.webAudioContext) {
         try {
           this.webAudioContext.close();
@@ -1296,7 +1795,34 @@ export default {
   },
   async mounted() {
     // 页面挂载时的初始化
+
+    // 检查Opus库是否已加载
+
+    if (typeof Module !== "undefined") {
+      if (Module.instance) {
+      }
+    }
+
+    // 预先初始化Opus编码器
+
+    try {
+      this.opusEncoder = await this.initOpusEncoder();
+      if (this.opusEncoder) {
+      } else {
+        console.warn("⚠️ Opus编码器预加载失败，将在录音时重试");
+      }
+    } catch (error) {
+      console.warn("⚠️ Opus编码器预加载异常:", error);
+    }
+
+    // 连接语音AI
+
     await this.connectVoiceAI();
+
+    // 检查连接状态
+
+    if (this.voiceWebSocket) {
+    }
   },
 
   onUnload() {
@@ -1408,7 +1934,9 @@ export default {
 }
 
 @keyframes thinking {
-  0%, 80%, 100% {
+  0%,
+  80%,
+  100% {
     transform: scale(0.6);
     opacity: 0.5;
   }
