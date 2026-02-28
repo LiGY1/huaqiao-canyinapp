@@ -1,20 +1,11 @@
 <template>
   <view class="input-area" :style="{ bottom: inputBottom + 'px' }">
-    <!-- <view class="input-tabs">
-      <view class="input-tab" :class="{ active: activeTab === 'text' }" @tap="switchTab('text')">
-        <text>文本输入</text>
-      </view>
-      <view class="input-tab" :class="{ active: activeTab === 'voice' }" @tap="openVoiceCall">
-        <text>呼叫助手</text>
-      </view>
-    </view> -->
-
-    <!-- 文本输入 -->
-    <view class="input-content" v-if="activeTab === 'text'">
+    <!-- 文本输入模式 -->
+    <view class="input-content" v-if="inputMode === 'text'">
       <view class="text-input-area">
-        <!-- 电话按钮 -->
-        <view class="voice-button" @tap="openVoiceCall">
-          <uni-icons type="phone-filled" size="24" color="#1a5f9e"></uni-icons>
+        <!-- 语音按钮 -->
+        <view class="voice-button" @tap="switchToVoiceMode">
+          <uni-icons type="mic-filled" size="24" color="#1a5f9e"></uni-icons>
         </view>
         
         <textarea
@@ -36,23 +27,38 @@
       </view>
     </view>
 
-    <!-- 语音入口 -->
-    <view class="input-content" v-if="activeTab === 'voice'">
+    <!-- 语音录音模式 -->
+    <view class="input-content" v-if="inputMode === 'voice'">
       <view class="voice-input-area">
-        <view class="voice-call-prompt">
-          <text class="prompt-text">点击下方按钮开启语音通话</text>
-          <text class="prompt-subtext">全屏沉浸式体验</text>
+        <!-- 返回文本按钮 -->
+        <view class="back-to-text-button" @tap="switchToTextMode">
+          <uni-icons type="font" size="24" color="#1a5f9e"></uni-icons>
         </view>
-        <button class="start-voice-call-button" @tap="openVoiceCall">
-          <text>开启语音通话</text>
-        </button>
+        
+        <!-- 按住录音按钮 -->
+        <view 
+          class="record-button" 
+          :class="{ recording: isRecording }"
+          @touchstart="handleRecordStart"
+          @touchend="handleRecordEnd"
+          @touchcancel="handleRecordCancel"
+          @contextmenu.prevent
+        >
+          <view class="record-button-inner">
+            <uni-icons type="mic-filled" size="32" :color="isRecording ? '#fff' : '#1a5f9e'"></uni-icons>
+            <text class="record-text">{{ recordButtonText }}</text>
+          </view>
+        </view>
+        
+        <!-- 占位元素，保持布局对称 -->
+        <view class="placeholder-button"></view>
       </view>
     </view>
   </view>
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount, computed } from "vue";
 
 // Props
 const props = defineProps({
@@ -74,16 +80,33 @@ const emit = defineEmits([
   "input-focus",
   "input-blur",
   "keyboard-height-change",
+  "record-start",
+  "record-end",
 ]);
 
 // Local state
 const localInput = ref("");
 const inputBottom = ref(0);
 const areaHeight = ref(0);
+const inputMode = ref("text"); // 'text' or 'voice'
+const isRecording = ref(false);
+const recordingDuration = ref(0); // 录音时长（秒）
 
 let uniKeyboardListener = null;
 let visualViewportHandler = null;
 let resizeHandler = null;
+let recordingTimer = null; // 录音计时器
+
+// 计算录音按钮文本
+const recordButtonText = computed(() => {
+  if (isRecording.value) {
+    const minutes = Math.floor(recordingDuration.value / 60);
+    const seconds = recordingDuration.value % 60;
+    const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    return `松开发送 ${timeStr}`;
+  }
+  return '按住录音';
+});
 
 // Watch for external changes to activeTab
 watch(
@@ -109,8 +132,55 @@ const switchTab = (tab) => {
   emit("switch-tab", tab);
 };
 
+const switchToVoiceMode = () => {
+  inputMode.value = "voice";
+};
+
+const switchToTextMode = () => {
+  inputMode.value = "text";
+};
+
 const openVoiceCall = () => {
   emit("open-voice-call");
+};
+
+const handleRecordStart = (e) => {
+  if (props.disabled) return;
+  isRecording.value = true;
+  recordingDuration.value = 0;
+  
+  // 启动计时器
+  recordingTimer = setInterval(() => {
+    recordingDuration.value++;
+  }, 1000);
+  
+  emit("record-start");
+};
+
+const handleRecordEnd = (e) => {
+  if (!isRecording.value) return;
+  isRecording.value = false;
+  
+  // 停止计时器
+  if (recordingTimer) {
+    clearInterval(recordingTimer);
+    recordingTimer = null;
+  }
+  
+  emit("record-end");
+};
+
+const handleRecordCancel = (e) => {
+  if (!isRecording.value) return;
+  isRecording.value = false;
+  
+  // 停止计时器
+  if (recordingTimer) {
+    clearInterval(recordingTimer);
+    recordingTimer = null;
+  }
+  
+  emit("record-end");
 };
 
 const onInputFocus = (e) => {
@@ -180,6 +250,12 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  // 清理计时器
+  if (recordingTimer) {
+    clearInterval(recordingTimer);
+    recordingTimer = null;
+  }
+  
   if (uniKeyboardListener && uniKeyboardListener.off) {
     uniKeyboardListener.off();
   }
@@ -243,7 +319,7 @@ const handleSendMessage = () => {
   gap: 20rpx;
 }
 
-/* 电话按钮 */
+/* 语音按钮 */
 .voice-button {
   width: 80rpx;
   height: 80rpx;
@@ -259,6 +335,73 @@ const handleSendMessage = () => {
 .voice-button:active {
   background: #e0f0ff;
   transform: scale(0.95);
+}
+
+/* 语音录音模式 */
+.voice-input-area {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  justify-content: space-between;
+}
+
+.back-to-text-button {
+  width: 80rpx;
+  height: 80rpx;
+  background: #f0f7ff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.back-to-text-button:active {
+  background: #e0f0ff;
+  transform: scale(0.95);
+}
+
+.record-button {
+  flex: 1;
+  height: 80rpx;
+  background: #f0f7ff;
+  border-radius: 40rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.record-button.recording {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  transform: scale(0.98);
+}
+
+.record-button-inner {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.record-text {
+  font-size: 30rpx;
+  color: #1a5f9e;
+  font-weight: 500;
+}
+
+.record-button.recording .record-text {
+  color: #fff;
+}
+
+.placeholder-button {
+  width: 80rpx;
+  height: 80rpx;
+  flex-shrink: 0;
 }
 
 .text-input {
@@ -294,31 +437,5 @@ const handleSendMessage = () => {
   font-weight: bold;
 }
 
-/* Voice Call */
-.voice-input-area {
-  padding: 40rpx;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-.start-voice-call-button {
-  background: linear-gradient(135deg, #1a5f9e, #2c72b5);
-  color: white;
-  border-radius: 40rpx;
-  padding: 0 60rpx;
-  height: 80rpx;
-  line-height: 80rpx;
-  font-size: 30rpx;
-  margin-top: 30rpx;
-}
-.prompt-text {
-  font-size: 32rpx;
-  font-weight: bold;
-  color: #334155;
-}
-.prompt-subtext {
-  font-size: 24rpx;
-  color: #94a3b8;
-  margin-top: 10rpx;
-}
+
 </style>

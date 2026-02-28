@@ -39,6 +39,7 @@ const connectDB = async () => {
     console.log(chalk.cyan(`[API] Dify API 已连接`));
   } catch (error) {
     console.error(chalk.red(`[数据库] MongoDB 连接失败: ${error.message}`));
+    connectDB()
     process.exit(1);
   }
 };
