@@ -15,12 +15,12 @@
       </view>
     </scroll-view>
 
-    <!-- 菜品列表区域 -->
+    <!-- 菜品列表 -->
     <scroll-view scroll-y class="meals-content" :scroll-into-view="scrollIntoId" @scroll="onScroll">
+      <!-- 节气信息卡片 -->
       <view v-for="cat in categories" :key="cat.id" :id="'cat-' + cat.id" class="category-section">
         <view class="section-header">
           <text class="section-title">{{ cat.name }}</text>
-          <!-- 当季特色分类显示节气信息 -->
           <view v-if="cat.id === 'seasonal' && solarTermInfo" class="solar-term-info">
             <view class="solar-term-badge" :style="{ backgroundColor: solarTermInfo.color.secondary }">
               <text class="solar-term-name" :style="{ color: solarTermInfo.color.primary }">
@@ -30,6 +30,11 @@
             </view>
             <text class="solar-term-desc">{{ solarTermInfo.description }}</text>
             <text class="solar-term-tips">💡 {{ solarTermInfo.healthTips }}</text>
+
+            <!-- 推荐统计 -->
+            <view v-if="solarTermDishes.length > 0" class="solar-term-stats">
+              <text class="stats-title">为您推荐 {{ solarTermDishes.length }} 道菜品</text>
+            </view>
           </view>
         </view>
 
@@ -39,12 +44,27 @@
             <view class="meal-info">
               <view class="meal-title-row">
                 <text class="meal-name">{{ meal.name }}</text>
-                <text v-if="meal.seasonal" class="seasonal-tag">当季</text>
+                <!-- 节气推荐标签 -->
+                <text v-if="meal.isSeasonalRecommend && meal.matchType === 'term'" class="seasonal-tag term-match">
+                  节气推荐
+                </text>
+                <text
+                  v-else-if="meal.isSeasonalRecommend && meal.matchType === 'smart'"
+                  class="seasonal-tag smart-match"
+                >
+                  智能推荐
+                </text>
+                <text v-else-if="meal.seasonal" class="seasonal-tag">当季</text>
+              </view>
+
+              <!-- 推荐理由 -->
+              <view v-if="meal.seasonalReason" class="seasonal-reason">
+                <text>{{ meal.seasonalReason }}</text>
               </view>
 
               <view class="meal-nutrition-row">
-                <text>{{ meal.calories }}千卡</text>
-                <text>蛋白{{ meal.protein }}g</text>
+                <text>{{ meal.nutrition?.calories || meal.calories || 0 }}千卡</text>
+                <text>蛋白{{ meal.nutrition?.protein || meal.protein || 0 }}g</text>
               </view>
 
               <view class="meal-bottom-row">
@@ -82,7 +102,7 @@
 import { ref, computed, onMounted, watch } from "vue";
 import LazyImage from "@/components/LazyImage/index.vue";
 import Loading from "@/components/Loading/index.vue";
-import { getCurrentSolarTerm } from "@/api/meal.js";
+import { getCurrentSolarTerm, getSolarTermDishes } from "@/api/meal.js";
 
 const props = defineProps({
   meals: {
@@ -99,6 +119,10 @@ const emit = defineEmits(["add-to-cart", "decrease-quantity"]);
 
 // 节气信息
 const solarTermInfo = ref(null);
+// 节气推荐菜品
+const solarTermDishes = ref([]);
+// 加载状态
+const loadingSolarTerm = ref(false);
 
 const onAddToCart = (meal) => {
   emit("add-to-cart", meal);
@@ -116,21 +140,26 @@ const getQuantity = (mealId) => {
   return item ? item.quantity : 0;
 };
 
-// 获取节气信息
-const fetchSolarTerm = async () => {
+// 获取节气信息和推荐菜品
+const fetchSolarTermData = async () => {
+  loadingSolarTerm.value = true;
   try {
-    const res = await getCurrentSolarTerm();
-    if (res.success && res.data) {
-      solarTermInfo.value = res.data;
+    const { data } = await getSolarTermDishes();
+
+    if (data) {
+      solarTermInfo.value = data.solarTerm;
+      solarTermDishes.value = data.dishes;
     }
   } catch (error) {
-    console.error("获取节气信息失败:", error);
+    console.error("获取节气数据失败:", error);
+  } finally {
+    loadingSolarTerm.value = false;
   }
 };
 
-// 组件挂载时获取节气信息
+// 组件挂载时获取节气数据
 onMounted(() => {
-  fetchSolarTerm();
+  fetchSolarTermData();
 });
 
 const currentCategory = ref("");
@@ -153,7 +182,22 @@ const categoryNameMap = {
 
 // 获取所有存在的分类
 const categories = computed(() => {
-  const existingCats = new Set(props.meals.map((m) => m.category || "other"));
+  const existingCats = new Set();
+
+  // 添加原有菜品的分类（排除 seasonal）
+  props.meals.forEach((m) => {
+    const cat = m.category || "other";
+    if (cat !== "seasonal") {
+      // 排除 seasonal 分类
+      existingCats.add(cat);
+    }
+  });
+
+  // 如果有节气推荐菜品，添加 seasonal 分类
+  if (solarTermDishes.value.length > 0) {
+    existingCats.add("seasonal");
+  }
+
   const sortedCats = categoryOrder.filter((id) => existingCats.has(id));
 
   // 添加不在 order 中的剩余分类
@@ -172,11 +216,39 @@ const categories = computed(() => {
 // 分组后的菜品
 const groupedMeals = computed(() => {
   const groups = {};
+
+  // 处理原有菜品（排除 seasonal 分类）
   props.meals.forEach((meal) => {
     const cat = meal.category || "other";
+    // 跳过 seasonal 分类的菜品，这些菜品将被节气推荐接口返回的菜品替代
+    if (cat === "seasonal") {
+      return;
+    }
     if (!groups[cat]) groups[cat] = [];
     groups[cat].push(meal);
   });
+
+  // 只使用节气推荐接口返回的菜品作为 seasonal 分类
+  if (solarTermDishes.value.length > 0) {
+    groups.seasonal = solarTermDishes.value.map((dish) => ({
+      ...dish,
+      id: dish.id || dish._id,
+      category: "seasonal",
+      // 保留推荐信息
+      isSeasonalRecommend: true,
+      recommendScore: dish.recommendScore,
+      matchType: dish.matchType,
+      seasonalReason: dish.seasonalReason,
+    }));
+
+    // 按推荐分数排序
+    groups.seasonal.sort((a, b) => {
+      const scoreA = a.recommendScore || 0;
+      const scoreB = b.recommendScore || 0;
+      return scoreB - scoreA;
+    });
+  }
+
   return groups;
 });
 
@@ -386,6 +458,18 @@ const onScroll = (e) => {
   line-height: 1.6;
 }
 
+.solar-term-stats {
+  margin-top: 16rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx dashed #a7f3d0;
+}
+
+.stats-title {
+  font-size: 24rpx;
+  color: #059669;
+  font-weight: 600;
+}
+
 .meals-list {
   display: flex;
   flex-direction: column;
@@ -429,8 +513,36 @@ const onScroll = (e) => {
   font-size: 20rpx;
   background: #fef3c7;
   color: #d97706;
-  padding: 2rpx 10rpx;
-  border-radius: 6rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+  white-space: nowrap;
+}
+
+/* 不同匹配类型的标签样式 */
+.term-match {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #d97706;
+  font-weight: 600;
+}
+
+.season-match {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #2563eb;
+  font-weight: 600;
+}
+
+.smart-match {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #059669;
+  font-weight: 600;
+}
+
+/* 推荐理由 */
+.seasonal-reason {
+  font-size: 22rpx;
+  color: #059669;
+  margin: 6rpx 0;
+  line-height: 1.4;
 }
 
 .meal-nutrition-row {

@@ -57,7 +57,16 @@ export const getCurrentSolarTerm = async () => {
     method: "GET",
   });
   return res;
+};
 
+// 获取节气推荐菜品
+export const getSolarTermDishes = async (params = { limit: 20, includePopular: true }) => {
+  const res = await request({
+    url: "/student/meals/solar-term-dishes",
+    method: "GET",
+    data: params, // { limit: 10, includePopular: true }
+  });
+  return res;
 };
 
 // 获取用户余额

@@ -52,6 +52,206 @@ exports.getCurrentSolarTermRecommend = async (req, res) => {
   }
 };
 
+// 根据当前节气获取推荐菜品
+exports.getSolarTermDishes = async (req, res) => {
+  try {
+    const { limit = 10, includePopular = true } = req.query;
+
+    // 获取当前节气信息
+    const solarTermInfo = getCurrentSolarTerm();
+    const currentTerm = solarTermInfo.name;
+    const currentSeason = solarTermInfo.season;
+
+    // 构建缓存键
+    const cacheKey = `solar:dishes:${currentTerm}:${limit}`;
+    const cached = await cache.get(cacheKey);
+    if (cached) {
+      return success(res, cached);
+    }
+
+    // 查询条件：状态为可用
+    const baseFilter = { status: DISH_STATUS.AVAILABLE };
+
+    let dishes = [];
+
+    // 第一步：查询当前节气的菜品
+    const termDishes = await Dish.find({
+      ...baseFilter,
+      seasonal: true,
+      solarTerm: currentTerm
+    })
+      .sort({
+        isRecommended: -1,  // 推荐菜品优先
+        averageRating: -1,  // 评分高的优先
+        salesCount: -1      // 销量高的优先
+      })
+      .limit(parseInt(limit));
+
+    dishes = [...termDishes];
+
+    // 第二步：如果节气菜品不足，补充当前季节的菜品
+    if (dishes.length < limit) {
+      const seasonTerms = getSeasonTerms(currentSeason);
+      const remainingLimit = limit - dishes.length;
+
+      const seasonDishes = await Dish.find({
+        ...baseFilter,
+        seasonal: true,
+        solarTerm: { $in: seasonTerms, $ne: currentTerm },
+        _id: { $nin: dishes.map(d => d._id) }
+      })
+        .sort({
+          isRecommended: -1,
+          averageRating: -1,
+          salesCount: -1
+        })
+        .limit(remainingLimit);
+
+      dishes = [...dishes, ...seasonDishes];
+    }
+
+    // 第三步：智能降级策略 - 根据节气特点推荐合适的菜品
+    if (dishes.length < limit) {
+      const remainingLimit = limit - dishes.length;
+      const termPreferences = getTermFoodPreferences(currentTerm, currentSeason);
+      
+      const smartFilter = {
+        ...baseFilter,
+        _id: { $nin: dishes.map(d => d._id) }
+      };
+      
+      // 优先推荐符合节气特点的菜品分类
+      if (termPreferences.categories && termPreferences.categories.length > 0) {
+        smartFilter.category = { $in: termPreferences.categories };
+      }
+      
+      const smartDishes = await Dish.find(smartFilter)
+      .sort({ 
+        isRecommended: -1,
+        averageRating: -1,
+        salesCount: -1
+      })
+      .limit(remainingLimit);
+      
+      dishes = [...dishes, ...smartDishes];
+    }
+
+    // 第四步：如果还不足且允许包含热门菜品，补充热门菜品
+    if (dishes.length < limit && includePopular === 'true') {
+      const remainingLimit = limit - dishes.length;
+
+      const popularDishes = await Dish.find({
+        ...baseFilter,
+        isPopular: true,
+        _id: { $nin: dishes.map(d => d._id) }
+      })
+        .sort({
+          salesCount: -1,
+          averageRating: -1
+        })
+        .limit(remainingLimit);
+
+      dishes = [...dishes, ...popularDishes];
+    }
+
+    // 第五步：如果还是不足，返回所有可用菜品
+    if (dishes.length < limit) {
+      const remainingLimit = limit - dishes.length;
+      
+      const allDishes = await Dish.find({
+        ...baseFilter,
+        _id: { $nin: dishes.map(d => d._id) }
+      })
+      .sort({ 
+        averageRating: -1,
+        salesCount: -1
+      })
+      .limit(remainingLimit);
+      
+      dishes = [...dishes, ...allDishes];
+    }
+
+    // 计算推荐分数（用于前端排序展示）
+    const dishesWithScore = dishes.map(dish => {
+      let score = 0;
+      let matchType = 'general';
+
+      // 节气匹配度（最高权重）
+      if (dish.solarTerm === currentTerm) {
+        score += 50;
+        matchType = 'term';
+      } else if (dish.seasonal && getSeasonTerms(currentSeason).includes(dish.solarTerm)) {
+        score += 30;
+        matchType = 'season';
+      } else if (dish.isPopular) {
+        score += 15;
+        matchType = 'popular';
+      } else {
+        // 智能匹配的菜品
+        const termPreferences = getTermFoodPreferences(currentTerm, currentSeason);
+        if (termPreferences.categories.includes(dish.category)) {
+          score += 25;
+          matchType = 'smart';
+        }
+      }
+
+      // 推荐标记
+      if (dish.isRecommended) {
+        score += 20;
+      }
+
+      // 评分（0-5分，转换为0-15分）
+      score += (dish.averageRating || 0) * 3;
+
+      // 销量（归一化到0-10分）
+      const normalizedSales = Math.min((dish.salesCount || 0) / 100, 1) * 10;
+      score += normalizedSales;
+
+      return {
+        ...dish.toObject(),
+        recommendScore: Math.round(score),
+        matchType,
+        seasonalReason: getSeasonalReason(currentTerm, currentSeason, dish, matchType)
+      };
+    });
+
+    // 按推荐分数排序
+    dishesWithScore.sort((a, b) => b.recommendScore - a.recommendScore);
+
+    const result = {
+      solarTerm: solarTermInfo,
+      dishes: dishesWithScore,
+      total: dishesWithScore.length,
+      algorithm: {
+        termMatches: dishesWithScore.filter(d => d.matchType === 'term').length,
+        seasonMatches: dishesWithScore.filter(d => d.matchType === 'season').length,
+        smartMatches: dishesWithScore.filter(d => d.matchType === 'smart').length,
+        popularMatches: dishesWithScore.filter(d => d.matchType === 'popular').length,
+        generalMatches: dishesWithScore.filter(d => d.matchType === 'general').length
+      }
+    };
+
+    // 缓存结果（30分钟）
+    cache.set(cacheKey, result, 1800);
+
+    success(res, result);
+  } catch (err) {
+    console.error('[节气菜品推荐] 获取失败:', err);
+    error(res, '获取节气推荐菜品失败', 500);
+  }
+};
+
+// 辅助函数：根据季节获取所有节气
+function getSeasonTerms(season) {
+  const seasonMap = {
+    spring: ['立春', '雨水', '惊蛰', '春分', '清明', '谷雨'],
+    summer: ['立夏', '小满', '芒种', '夏至', '小暑', '大暑'],
+    autumn: ['立秋', '处暑', '白露', '秋分', '寒露', '霜降'],
+    winter: ['立冬', '小雪', '大雪', '冬至', '小寒', '大寒']
+  };
+  return seasonMap[season] || [];
+}
+
 exports.getSeasonalNotification = async (req, res) => {
   try {
 
@@ -829,3 +1029,79 @@ async function updateNutritionRecord(userId, nutrition, orderId, mealType) {
   await record.save();
 }
 
+
+// 辅助函数：根据节气特点获取推荐的菜品分类
+function getTermFoodPreferences(term, season) {
+  // 节气饮食偏好映射
+  const termPreferencesMap = {
+    // 春季节气
+    '立春': { categories: ['vegetable', 'mixed', 'soup'], keywords: ['韭菜', '春笋', '豆芽'] },
+    '雨水': { categories: ['soup', 'mixed', 'vegetable'], keywords: ['山药', '红枣', '粥'] },
+    '惊蛰': { categories: ['vegetable', 'mixed', 'meat'], keywords: ['菠菜', '芹菜', '鸡蛋'] },
+    '春分': { categories: ['vegetable', 'mixed', 'soup'], keywords: ['豆类', '新鲜蔬菜'] },
+    '清明': { categories: ['vegetable', 'mixed', 'soup'], keywords: ['青团', '春菜'] },
+    '谷雨': { categories: ['vegetable', 'soup', 'mixed'], keywords: ['香椿', '豆腐'] },
+    
+    // 夏季节气
+    '立夏': { categories: ['vegetable', 'soup', 'beverage'], keywords: ['绿豆', '冬瓜', '苦瓜'] },
+    '小满': { categories: ['vegetable', 'soup', 'mixed'], keywords: ['苦菜', '黄瓜'] },
+    '芒种': { categories: ['vegetable', 'soup', 'beverage'], keywords: ['西瓜', '绿豆汤'] },
+    '夏至': { categories: ['vegetable', 'soup', 'beverage'], keywords: ['面条', '清淡'] },
+    '小暑': { categories: ['vegetable', 'soup', 'beverage'], keywords: ['莲藕', '绿豆'] },
+    '大暑': { categories: ['soup', 'vegetable', 'beverage'], keywords: ['西瓜', '绿豆汤', '清热'] },
+    
+    // 秋季节气
+    '立秋': { categories: ['meat', 'mixed', 'soup'], keywords: ['鸭肉', '莲藕', '百合'] },
+    '处暑': { categories: ['soup', 'vegetable', 'mixed'], keywords: ['银耳', '梨', '润燥'] },
+    '白露': { categories: ['soup', 'mixed', 'vegetable'], keywords: ['龙眼', '红枣'] },
+    '秋分': { categories: ['mixed', 'soup', 'vegetable'], keywords: ['南瓜', '芋头'] },
+    '寒露': { categories: ['soup', 'mixed', 'meat'], keywords: ['芝麻', '蜂蜜', '润肺'] },
+    '霜降': { categories: ['meat', 'mixed', 'soup'], keywords: ['栗子', '山药', '温补'] },
+    
+    // 冬季节气
+    '立冬': { categories: ['meat', 'mixed', 'soup'], keywords: ['羊肉', '牛肉', '温补'] },
+    '小雪': { categories: ['meat', 'soup', 'mixed'], keywords: ['羊肉', '核桃', '温热'] },
+    '大雪': { categories: ['meat', 'soup', 'mixed'], keywords: ['温热食物', '进补'] },
+    '冬至': { categories: ['meat', 'soup', 'staple'], keywords: ['饺子', '汤圆', '温补'] },
+    '小寒': { categories: ['meat', 'soup', 'mixed'], keywords: ['温补', '驱寒'] },
+    '大寒': { categories: ['meat', 'soup', 'mixed'], keywords: ['温补', '为春季做准备'] }
+  };
+  
+  // 如果有具体节气的偏好，返回；否则返回季节通用偏好
+  if (termPreferencesMap[term]) {
+    return termPreferencesMap[term];
+  }
+  
+  // 季节通用偏好
+  const seasonPreferences = {
+    spring: { categories: ['vegetable', 'mixed', 'soup'], keywords: ['新鲜', '清淡'] },
+    summer: { categories: ['vegetable', 'soup', 'beverage'], keywords: ['清热', '解暑'] },
+    autumn: { categories: ['mixed', 'soup', 'meat'], keywords: ['润燥', '滋补'] },
+    winter: { categories: ['meat', 'soup', 'mixed'], keywords: ['温补', '御寒'] }
+  };
+  
+  return seasonPreferences[season] || { categories: ['mixed', 'vegetable', 'meat'], keywords: [] };
+}
+
+// 辅助函数：生成推荐理由
+function getSeasonalReason(term, season, dish, matchType) {
+  const reasons = {
+    term: `${term}节气推荐，应季养生佳品`,
+    season: `${getSeasonName(season)}季节推荐，符合时令特点`,
+    smart: `根据${term}节气特点智能推荐`,
+    popular: '热门菜品，深受欢迎',
+    general: '营养均衡，适合日常食用'
+  };
+  
+  return reasons[matchType] || reasons.general;
+}
+
+function getSeasonName(season) {
+  const names = {
+    spring: '春',
+    summer: '夏',
+    autumn: '秋',
+    winter: '冬'
+  };
+  return names[season] || '';
+}
