@@ -681,6 +681,13 @@ export default {
               this.handleSendMessage(this.recognizedText, true);
               this.recognizedText = "";
             }, 500);
+          } else if (!this.recognitionSent && !this.recognizedText) {
+            // 没有识别出任何文字
+            uni.showToast({
+              title: "未识别到语音，请重试",
+              icon: "none",
+              duration: 2000,
+            });
           }
         };
 
