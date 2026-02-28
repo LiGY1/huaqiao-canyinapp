@@ -47,26 +47,25 @@
                   <LazyImage :src="meal.image" class="meal-image"></LazyImage>
                   
                   <view class="meal-details">
-                    <view class="meal-card-header">
+                    <view class="meal-info-left">
                       <view class="meal-name">{{ meal.name }}</view>
-                      
-                      <view class="quantity-selector">
-                        <view v-if="getQuantity(meal.id) > 0" class="control-group">
-                          <view class="minus-btn" @click.stop="onDecreaseQuantity(meal)">
-                            <uni-icons type="minus-filled" size="20" color="#cbd5e1"></uni-icons>
-                          </view>
-                          <text class="quantity">{{ getQuantity(meal.id) }}</text>
-                        </view>
-                        <view class="add-btn-small" @click.stop="onAddToCart(meal)">
-                          <uni-icons type="plusempty" size="14" color="white"></uni-icons>
-                        </view>
+                      <view class="meal-price">¥{{ Number(meal.price).toFixed(2) }}</view>
+                      <view class="match-score">
+                        <uni-icons size="28rpx" type="star"></uni-icons>
+                        <text>匹配度 {{ meal.matchScore }}%</text>
                       </view>
                     </view>
                     
-                    <view class="meal-price">¥{{ Number(meal.price).toFixed(2) }}</view>
-                    <view class="match-score">
-                      <uni-icons size="28rpx" type="star"></uni-icons>
-                      <text>匹配度 {{ meal.matchScore }}%</text>
+                    <!-- 营养信息在右侧 -->
+                    <view class="meal-nutrition-right">
+                      <view class="nutrition-item">
+                        <text class="nutrition-label">热量</text>
+                        <text class="nutrition-value">{{ meal.calories || 0 }}千卡</text>
+                      </view>
+                      <view class="nutrition-item">
+                        <text class="nutrition-label">蛋白质</text>
+                        <text class="nutrition-value">{{ (meal.protein || 0).toFixed(1) }}g</text>
+                      </view>
                     </view>
                   </view>
                 </view>
@@ -455,6 +454,13 @@ $descMarginButtom: 5rpx;
 .meal-details {
   flex: 1;
   display: flex;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.meal-info-left {
+  flex: 1;
+  display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
@@ -471,61 +477,45 @@ $descMarginButtom: 5rpx;
   font-size: 30rpx;
   color: #0f172a;
   line-height: 1.3;
-  flex: 1;
-  padding-right: 12rpx;
-}
-
-.quantity-selector {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.quantity-selector > * + * {
-  margin-left: 12rpx;
-}
-
-.control-group {
-  display: flex;
-  align-items: center;
-}
-
-.control-group > * + * {
-  margin-left: 12rpx;
-}
-
-.minus-btn {
-  width: 40rpx;
-  height: 40rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.quantity {
-  font-size: 24rpx;
-  font-weight: 700;
-  color: #1e293b;
-  min-width: 30rpx;
-  text-align: center;
-}
-
-.add-btn-small {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  width: 36rpx;
-  height: 36rpx;
-  border-radius: 8rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  margin-bottom: 8rpx;
 }
 
 .meal-price {
   font-size: 32rpx;
   font-weight: 700;
   color: #ef4444;
-  margin-top: 4rpx;
-  margin-bottom: 6rpx;
+  margin-bottom: 8rpx;
+}
+
+.meal-nutrition-right {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.nutrition-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #f8fafc;
+  padding: 8rpx 16rpx;
+  border-radius: 8rpx;
+  border: 1rpx solid #e2e8f0;
+  min-width: 100rpx;
+}
+
+.nutrition-label {
+  font-size: 20rpx;
+  color: #94a3b8;
+  margin-bottom: 4rpx;
+}
+
+.nutrition-value {
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #1e293b;
 }
 
 .match-score {
@@ -537,6 +527,7 @@ $descMarginButtom: 5rpx;
   padding: 6rpx 16rpx;
   border-radius: 32rpx;
   font-weight: 600;
+  align-self: flex-start;
 }
 
 .match-score uni-icons {

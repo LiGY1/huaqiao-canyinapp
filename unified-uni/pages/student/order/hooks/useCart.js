@@ -26,11 +26,18 @@ export function useCart() {
   const totalNutrition = computed(() => {
     const nutrition = { calories: 0, protein: 0, fat: 0, carbs: 0, fiber: 0 };
     cartState.items.forEach((item) => {
-      nutrition.calories += item.calories * item.quantity;
-      nutrition.protein += item.protein * item.quantity;
-      nutrition.fat += item.fat * item.quantity;
-      nutrition.carbs += item.carbs * item.quantity;
-      nutrition.fiber += item.fiber * item.quantity;
+      // 兼容两种数据结构：直接字段或nutrition对象
+      const calories = item.calories ?? item.nutrition?.calories ?? 0;
+      const protein = item.protein ?? item.nutrition?.protein ?? 0;
+      const fat = item.fat ?? item.nutrition?.fat ?? 0;
+      const carbs = item.carbs ?? item.nutrition?.carbs ?? 0;
+      const fiber = item.fiber ?? item.nutrition?.fiber ?? 0;
+      
+      nutrition.calories += calories * item.quantity;
+      nutrition.protein += protein * item.quantity;
+      nutrition.fat += fat * item.quantity;
+      nutrition.carbs += carbs * item.quantity;
+      nutrition.fiber += fiber * item.quantity;
     });
     // 保留一位小数
     Object.keys(nutrition).forEach((key) => {

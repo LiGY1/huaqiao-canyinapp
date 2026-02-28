@@ -186,27 +186,46 @@ const calculateNutritionMatch = (meal, nutritionNeeds, todayNutrition) => {
 
   const recommendedCalories = targetCalories * mealRatio;
   const currentCalories = todayNutrition.calories || 0;
-  const remainingCalories = recommendedCalories - currentCalories;
-  const isOverTarget = currentCalories >= targetCalories; // 是否已超标
+  const remainingCalories = targetCalories - currentCalories;
+  const remainingMealCalories = recommendedCalories - currentCalories;
+  
+  // 判断当前餐次是否已达标或接近达标
+  const isCurrentMealSufficient = currentCalories >= recommendedCalories * 0.8; // 当前餐次已达80%
+  const isDailyOverTarget = currentCalories >= targetCalories; // 全天已超标
 
-  // 热量匹配度 - 根据是否超标采用不同策略
+  // 热量匹配度 - 根据摄入情况采用不同策略
   if (meal.calories > 0) {
-    if (isOverTarget) {
-      // 已超标：优先推荐低热量菜品
+    if (isDailyOverTarget) {
+      // 全天已超标：严格限制高热量
+      if (meal.calories <= 150) {
+        score += 20;
+        reasons.push("低热量");
+      } else if (meal.calories <= 250) {
+        score += 10;
+        reasons.push("适度热量");
+      } else if (meal.calories <= 350) {
+        score += 2;
+      } else {
+        // 超过350千卡，大幅扣分
+        score -= Math.min(25, Math.floor((meal.calories - 350) / 40));
+        reasons.push("热量偏高");
+      }
+    } else if (isCurrentMealSufficient) {
+      // 当前餐次接近达标：优先推荐低热量菜品
       if (meal.calories <= 200) {
         score += 15;
         reasons.push("低热量");
       } else if (meal.calories <= 300) {
-        score += 10;
+        score += 8;
       } else if (meal.calories <= 400) {
-        score += 5;
+        score += 3;
       } else {
         // 超过400千卡，扣分
-        score -= Math.min(15, Math.floor((meal.calories - 400) / 50));
+        score -= Math.min(20, Math.floor((meal.calories - 400) / 50));
       }
     } else {
-      // 未超标：按需求匹配
-      const neededCalories = Math.max(200, remainingCalories);
+      // 未达标：按剩余需求匹配
+      const neededCalories = Math.max(200, remainingMealCalories);
       if (meal.calories >= 100 && meal.calories <= 800) {
         score += 5;
         const caloriesDiff = Math.abs(meal.calories - neededCalories);
@@ -215,6 +234,9 @@ const calculateNutritionMatch = (meal, nutritionNeeds, todayNutrition) => {
           reasons.push("热量匹配");
         } else if (caloriesDiff <= neededCalories * 0.5) {
           score += 5;
+        } else if (meal.calories > neededCalories * 1.5) {
+          // 超出需求过多，扣分
+          score -= 5;
         }
       } else if (meal.calories < 100) {
         score -= 5;
@@ -392,9 +414,6 @@ const evaluateDiversity = (meal) => {
   if (meal.category === "mixed") {
     score += 5;
     reasons.push("荤素搭配");
-  } else if (meal.category === "vegetable") {
-    score += 2;
-    reasons.push("蔬菜类");
   } else if (meal.category === "meat") {
     score += 3;
     reasons.push("肉类");
@@ -412,7 +431,7 @@ const evaluateDiversity = (meal) => {
  * 5. 计算总评分
  */
 const calculateNutritionalScore = (meal, nutritionNeeds, userInfo, todayNutrition) => {
-  let score = 0;
+  let score = 30; // 基础分
   const reasons = [];
 
   const nutritionScore = calculateNutritionMatch(meal, nutritionNeeds, todayNutrition);
@@ -432,6 +451,23 @@ const calculateNutritionalScore = (meal, nutritionNeeds, userInfo, todayNutritio
   const diversityScore = evaluateDiversity(meal);
   score += diversityScore.score;
   reasons.push(...diversityScore.reasons);
+
+  // 根据热量摄入情况，调整蔬菜类菜品的评分
+  const targetCalories = nutritionNeeds?.targetCalories || 2000;
+  const currentCalories = todayNutrition.calories || 0;
+  const isDailyOverTarget = currentCalories >= targetCalories;
+  
+  if (meal.category === "vegetable") {
+    if (isDailyOverTarget) {
+      // 超标时，大幅提升蔬菜评分
+      score += 15;
+      reasons.push("低热量蔬菜");
+    } else {
+      // 正常时，适度提升蔬菜评分
+      score += 5;
+      reasons.push("蔬菜类");
+    }
+  }
 
   score = Math.max(0, Math.min(100, score));
 
@@ -454,84 +490,124 @@ const selectBalancedMealCombo = (scoredMeals, nutritionNeeds, todayNutrition) =>
 
   const targetCaloriesTotal = nutritionNeeds?.targetCalories || 2000;
   const targetProteinTotal = nutritionNeeds?.targetProtein || 60;
+  const currentCalories = todayNutrition.calories || 0;
+  const currentProtein = todayNutrition.protein || 0;
 
   // 计算剩余需要的热量和蛋白质
-  const remainingCalories = targetCaloriesTotal * mealRatio - (todayNutrition.calories || 0);
-  const remainingProtein = targetProteinTotal * mealRatio - (todayNutrition.protein || 0);
+  const remainingCalories = targetCaloriesTotal * mealRatio - currentCalories;
+  const remainingProtein = targetProteinTotal * mealRatio - currentProtein;
   
-  // 如果已经超标，设置最小推荐值；否则使用剩余值
-  const targetCalories = remainingCalories > 0 ? Math.max(200, remainingCalories) : 200;
-  const targetProtein = remainingProtein > 0 ? Math.max(10, remainingProtein) : 10;
+  // 判断是否超标
+  const isDailyOverTarget = currentCalories >= targetCaloriesTotal;
+  const isMealSufficient = currentCalories >= targetCaloriesTotal * mealRatio * 0.8;
+  
+  // 根据超标情况设置不同的限制
+  let maxMealCalories, maxSingleCalories, targetMealCount;
+  
+  if (isDailyOverTarget) {
+    // 全天超标：严格限制
+    maxMealCalories = 200; // 整餐不超过200千卡
+    maxSingleCalories = 150; // 单个菜品不超过150千卡
+    targetMealCount = 2; // 只推荐2个菜品
+  } else if (isMealSufficient) {
+    // 当前餐次接近达标：适度限制
+    maxMealCalories = 350; // 整餐不超过350千卡
+    maxSingleCalories = 200; // 单个菜品不超过200千卡
+    targetMealCount = 2; // 推荐2-3个菜品
+  } else {
+    // 未达标：正常推荐
+    maxMealCalories = Math.max(300, remainingCalories * 1.2); // 允许略超剩余需求
+    maxSingleCalories = Math.max(400, remainingCalories * 0.8);
+    targetMealCount = 3; // 推荐3-5个菜品
+  }
 
   const selected = [];
-  let currentCalories = 0;
-  let currentProtein = 0;
+  let comboCalories = 0;
+  let comboProtein = 0;
 
   // 策略1：从候选中选择，增加随机性
   // 将候选分为不同类别，确保多样性
   const mealsByCategory = {
-    staple: scoredMeals.filter(m => m.category === "staple"),
-    meat: scoredMeals.filter(m => m.category === "meat"),
-    vegetable: scoredMeals.filter(m => m.category === "vegetable"),
-    mixed: scoredMeals.filter(m => m.category === "mixed"),
-    other: scoredMeals.filter(m => !["staple", "meat", "vegetable", "mixed"].includes(m.category))
+    staple: scoredMeals.filter(m => m.category === "staple" && m.calories <= maxSingleCalories),
+    meat: scoredMeals.filter(m => m.category === "meat" && m.calories <= maxSingleCalories),
+    vegetable: scoredMeals.filter(m => m.category === "vegetable" && m.calories <= maxSingleCalories),
+    mixed: scoredMeals.filter(m => m.category === "mixed" && m.calories <= maxSingleCalories),
+    other: scoredMeals.filter(m => !["staple", "meat", "vegetable", "mixed"].includes(m.category) && m.calories <= maxSingleCalories)
   };
 
   // 优先确保有主食
   if (mealsByCategory.staple.length > 0) {
     const stapleOptions = mealsByCategory.staple.slice(0, Math.min(3, mealsByCategory.staple.length));
     const randomStaple = stapleOptions[Math.floor(Math.random() * stapleOptions.length)];
-    if (randomStaple) {
+    if (randomStaple && comboCalories + randomStaple.calories <= maxMealCalories) {
       selected.push(randomStaple);
-      currentCalories += randomStaple.calories || 0;
-      currentProtein += randomStaple.protein || 0;
+      comboCalories += randomStaple.calories || 0;
+      comboProtein += randomStaple.protein || 0;
     }
   }
 
-  // 优先确保有主菜（肉类或混合）
-  const mainDishOptions = [...mealsByCategory.meat, ...mealsByCategory.mixed]
-    .filter(m => !selected.some(s => s.id === m.id))
-    .slice(0, Math.min(5, mealsByCategory.meat.length + mealsByCategory.mixed.length));
-  
-  if (mainDishOptions.length > 0) {
-    const randomMainDish = mainDishOptions[Math.floor(Math.random() * mainDishOptions.length)];
-    if (randomMainDish) {
-      // 检查热量限制
-      if (!(remainingCalories <= 0 && randomMainDish.calories > 300) &&
-          !(remainingCalories > 0 && randomMainDish.calories > targetCalories * 2)) {
+  // 优先确保有蔬菜（特别是在超标或接近达标时）
+  if (mealsByCategory.vegetable.length > 0 && selected.length < targetMealCount) {
+    const vegetableOptions = mealsByCategory.vegetable.slice(0, Math.min(3, mealsByCategory.vegetable.length));
+    const randomVegetable = vegetableOptions[Math.floor(Math.random() * vegetableOptions.length)];
+    if (randomVegetable && comboCalories + randomVegetable.calories <= maxMealCalories) {
+      selected.push(randomVegetable);
+      comboCalories += randomVegetable.calories || 0;
+      comboProtein += randomVegetable.protein || 0;
+    }
+  }
+
+  // 优先确保有主菜（肉类或混合）- 但在超标时可以跳过
+  if (!isDailyOverTarget && mealsByCategory.meat.length + mealsByCategory.mixed.length > 0 && selected.length < targetMealCount) {
+    const mainDishOptions = [...mealsByCategory.meat, ...mealsByCategory.mixed]
+      .filter(m => !selected.some(s => s.id === m.id))
+      .slice(0, Math.min(5, mealsByCategory.meat.length + mealsByCategory.mixed.length));
+    
+    if (mainDishOptions.length > 0) {
+      const randomMainDish = mainDishOptions[Math.floor(Math.random() * mainDishOptions.length)];
+      if (randomMainDish && comboCalories + randomMainDish.calories <= maxMealCalories) {
         selected.push(randomMainDish);
-        currentCalories += randomMainDish.calories || 0;
-        currentProtein += randomMainDish.protein || 0;
+        comboCalories += randomMainDish.calories || 0;
+        comboProtein += randomMainDish.protein || 0;
       }
     }
   }
 
-  // 从剩余候选中随机选择，直到达到目标数量
-  const remaining = scoredMeals.filter(m => !selected.some(s => s.id === m.id));
+  // 从剩余候选中随机选择，直到达到目标数量或热量上限
+  const remaining = scoredMeals.filter(m => 
+    !selected.some(s => s.id === m.id) && 
+    m.calories <= maxSingleCalories
+  );
   
   for (const meal of remaining) {
-    if (selected.length >= 5) break;
-    
-    // 热量检查
-    if (remainingCalories <= 0 && meal.calories > 300) continue;
-    if (remainingCalories > 0 && meal.calories > targetCalories * 2) continue;
+    if (selected.length >= Math.min(5, targetMealCount + 2)) break;
+    if (comboCalories + meal.calories > maxMealCalories) continue;
     
     // 增加随机性：不是每个符合条件的都选，而是有一定概率跳过
     // 前3个必选，后面的有70%概率选择
-    if (selected.length >= 3 && Math.random() > 0.7) continue;
+    if (selected.length >= targetMealCount && Math.random() > 0.7) continue;
     
     selected.push(meal);
-    currentCalories += meal.calories || 0;
-    currentProtein += meal.protein || 0;
+    comboCalories += meal.calories || 0;
+    comboProtein += meal.protein || 0;
 
-    if (selected.length >= 3 && currentCalories >= targetCalories * 0.7 && currentProtein >= targetProtein * 0.6) break;
+    // 达到目标数量且营养充足时停止
+    if (selected.length >= targetMealCount && 
+        comboCalories >= maxMealCalories * 0.6) break;
   }
 
-  // 补足至少3个
-  if (selected.length < 3) {
+  // 补足至少2个（超标时）或3个（正常时）
+  const minCount = isDailyOverTarget || isMealSufficient ? 2 : 3;
+  if (selected.length < minCount) {
     for (const meal of scoredMeals) {
-      if (selected.length >= 3) break;
-      if (!selected.some((m) => m.id === meal.id)) selected.push(meal);
+      if (selected.length >= minCount) break;
+      if (!selected.some((m) => m.id === meal.id) && 
+          meal.calories <= maxSingleCalories &&
+          comboCalories + meal.calories <= maxMealCalories) {
+        selected.push(meal);
+        comboCalories += meal.calories || 0;
+        comboProtein += meal.protein || 0;
+      }
     }
   }
 
@@ -559,6 +635,14 @@ const generateRecommendationReason = (meals, nutritionNeeds, todayNutrition, use
   const reasons = [];
   const hour = new Date().getHours();
 
+  // 计算当前餐次的推荐热量
+  let mealRatio = 0.35; // 默认午餐
+  if (hour >= 6 && hour < 9)
+    mealRatio = 0.25; // 早餐
+  else if (hour >= 11 && hour < 14)
+    mealRatio = 0.35; // 午餐
+  else if (hour >= 17 && hour < 20) mealRatio = 0.35; // 晚餐
+
   // 餐次提示
   if (hour >= 6 && hour < 9) reasons.push("早餐推荐");
   else if (hour >= 11 && hour < 14) reasons.push("午餐推荐");
@@ -567,17 +651,22 @@ const generateRecommendationReason = (meals, nutritionNeeds, todayNutrition, use
   const targetCal = nutritionNeeds?.targetCalories || 2000;
   const currentCal = todayNutrition.calories || 0;
   const caloriesPercent = (currentCal / targetCal) * 100;
+  const recommendedMealCalories = targetCal * mealRatio;
+  const mealCaloriesPercent = (currentCal / recommendedMealCalories) * 100;
 
   // 根据热量摄入情况给出不同的建议
-  if (caloriesPercent < 50) {
-    reasons.push("您今日热量摄入不足，推荐营养均衡的菜品组合");
-  } else if (caloriesPercent >= 100) {
-    // 已达标或超标
+  if (caloriesPercent >= 100) {
+    // 全天已达标或超标
     if (caloriesPercent > 120) {
       reasons.push("您今日热量已超标，推荐清淡低热量的菜品");
     } else {
       reasons.push("您今日热量已达标，推荐适量清淡的菜品");
     }
+  } else if (mealCaloriesPercent >= 80) {
+    // 当前餐次接近达标
+    reasons.push("根据您的营养需求，推荐以下均衡搭配，本餐提供热量约" + Math.round(meals.reduce((sum, m) => sum + (m.calories || 0), 0)) + "千卡");
+  } else if (caloriesPercent < 50) {
+    reasons.push("您今日热量摄入不足，推荐营养均衡的菜品组合");
   } else {
     reasons.push("根据您的营养需求，推荐以下均衡搭配");
   }
@@ -593,8 +682,8 @@ const generateRecommendationReason = (meals, nutritionNeeds, todayNutrition, use
   const totalProtein = meals.reduce((sum, m) => sum + (m.protein || 0), 0);
   
   // 根据是否超标，使用不同的描述
-  if (caloriesPercent >= 100) {
-    // 已达标或超标，不说"补充"，改为"提供"
+  if (caloriesPercent >= 100 || mealCaloriesPercent >= 80) {
+    // 已达标或接近达标，不说"补充"，改为"提供"
     reasons.push(`本餐提供热量约${Math.round(totalCalories)}千卡，蛋白质${Math.round(totalProtein)}g`);
   } else {
     // 未达标，可以说"补充"

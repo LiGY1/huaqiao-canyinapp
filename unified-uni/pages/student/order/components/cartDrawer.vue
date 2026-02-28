@@ -22,25 +22,25 @@
             <view class="nutrition-grid">
               <view class="nutrition-grid-item">
                 <div class="nutrition-value text-orange-500">
-                  {{ Math.round((item.calories || 0) * item.quantity) }}
+                  {{ Math.round(((item.calories ?? item.nutrition?.calories ?? 0) * item.quantity)) }}
                 </div>
                 <div class="nutrition-unit">千卡</div>
               </view>
               <view class="nutrition-grid-item">
-                <div class="nutrition-value text-blue-500">{{ ((item.protein || 0) * item.quantity).toFixed(1) }}</div>
+                <div class="nutrition-value text-blue-500">{{ (((item.protein ?? item.nutrition?.protein ?? 0) * item.quantity)).toFixed(1) }}</div>
                 <div class="nutrition-unit">蛋白质(g)</div>
               </view>
               <view class="nutrition-grid-item">
-                <div class="nutrition-value text-purple-500">{{ ((item.fat || 0) * item.quantity).toFixed(1) }}</div>
+                <div class="nutrition-value text-purple-500">{{ (((item.fat ?? item.nutrition?.fat ?? 0) * item.quantity)).toFixed(1) }}</div>
                 <div class="nutrition-unit">脂肪(g)</div>
               </view>
               <view class="nutrition-grid-item">
-                <div class="nutrition-value text-green-500">{{ ((item.carbs || 0) * item.quantity).toFixed(1) }}</div>
+                <div class="nutrition-value text-green-500">{{ (((item.carbs ?? item.nutrition?.carbs ?? 0) * item.quantity)).toFixed(1) }}</div>
                 <div class="nutrition-unit">碳水(g)</div>
               </view>
             </view>
-            <view v-if="item.fiber > 0" class="fiber-info">
-              膳食纤维: <span class="fiber-value">{{ ((item.fiber || 0) * item.quantity).toFixed(1) }}g</span>
+            <view v-if="(item.fiber ?? item.nutrition?.fiber ?? 0) > 0" class="fiber-info">
+              膳食纤维: <span class="fiber-value">{{ (((item.fiber ?? item.nutrition?.fiber ?? 0) * item.quantity)).toFixed(1) }}g</span>
             </view>
           </view>
 
